@@ -1,3 +1,7 @@
 {
-    "name": "Aprilaire"
+    "name": "Aprilaire",
+    "domains": [
+        "climate"
+    ],
+    "render_readme": true
 }

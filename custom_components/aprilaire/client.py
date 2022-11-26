@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from collections.abc import Callable
 from typing import Any
@@ -11,6 +12,7 @@ from .const import Action, FunctionalDomain
 from .crc import generate_crc
 from .response import decode_response
 
+_LOGGER = logging.getLogger(__name__)
 
 class _AprilaireProtocol(asyncio.Protocol):
     """Protocol for interacting with the thermostat over socket connection"""
@@ -75,6 +77,7 @@ class _AprilaireProtocol(asyncio.Protocol):
 
     def connection_made(self, transport: asyncio.Transport):
         """Called when a connection has been made to the socket"""
+        _LOGGER.info("Apprilaire connection made")
         self.transport = transport
 
         asyncio.ensure_future(self.read_sensors())
@@ -82,6 +85,7 @@ class _AprilaireProtocol(asyncio.Protocol):
 
     def data_received(self, data: bytes) -> None:
         """Called when data has been received from the socket"""
+        _LOGGER.info("Aprilaire data received")
 
         parsed_data = decode_response(data)
 
@@ -90,6 +94,7 @@ class _AprilaireProtocol(asyncio.Protocol):
 
     def connection_lost(self, exc: Exception | None) -> None:
         """Called when the connection to the socket has been lost"""
+        _LOGGER.ERROR("Aprilaire connection lost")
 
 
 class AprilaireClient:

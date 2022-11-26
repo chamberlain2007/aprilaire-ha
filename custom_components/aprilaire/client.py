@@ -94,7 +94,7 @@ class _AprilaireProtocol(asyncio.Protocol):
 
     def connection_lost(self, exc: Exception | None) -> None:
         """Called when the connection to the socket has been lost"""
-        _LOGGER.ERROR("Aprilaire connection lost")
+        _LOGGER.error("Aprilaire connection lost")
 
 
 class AprilaireClient:

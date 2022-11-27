@@ -8,19 +8,27 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from .const import Action, FunctionalDomain
+from .const import Action, FunctionalDomain, DOMAIN
 from .crc import generate_crc
 from .response import decode_response
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(DOMAIN)
+
+RECONNECT_INTERVAL = 10
+SYNC_INTERVAL = 60
 
 class _AprilaireProtocol(asyncio.Protocol):
     """Protocol for interacting with the thermostat over socket connection"""
 
-    def __init__(self, data_callback: Callable[[dict[str, Any]], None]) -> None:
+    def __init__(self, data_callback: Callable[[dict[str, Any]], None], reconnect_action: Callable[[], None]) -> None:
         """Initialize the protocol"""
         self.data_callback = data_callback
+        self.reconnect_action = reconnect_action
+
         self.transport: asyncio.Transport = None
+
+        self.command_buffer: list[int] = []
+
 
     def __generate_command_bytes(
         self,
@@ -50,7 +58,16 @@ class _AprilaireProtocol(asyncio.Protocol):
             action, functional_domain, attribute, extra_payload=extra_payload
         )
 
-        self.transport.write(command_bytes)
+        _LOGGER.debug("Sending data, action=%s, functional_domain=%s, attribute=%d", str(action), str(functional_domain), attribute)
+
+        if self.transport:
+            self.transport.write(command_bytes)
+        else:
+            self.command_buffer.append(command_bytes)
+    
+    async def __send_raw_command(self, command_bytes: list[int]):
+        if self.transport:
+            self.transport.write(command_bytes)
 
     async def read_sensors(self):
         """Send a request for updated sensor data"""
@@ -74,14 +91,26 @@ class _AprilaireProtocol(asyncio.Protocol):
             1,
             extra_payload=[0, 0, heat_setpoint, cool_setpoint],
         )
+    
+    async def sync(self):
+        await self.__send_command(
+            Action.WRITE,
+            FunctionalDomain.STATUS,
+            2,
+            extra_payload=[1],
+        )
 
     def connection_made(self, transport: asyncio.Transport):
         """Called when a connection has been made to the socket"""
-        _LOGGER.info("Apprilaire connection made")
+        _LOGGER.info("Aprilaire connection made")
         self.transport = transport
 
-        asyncio.ensure_future(self.read_sensors())
-        asyncio.ensure_future(self.read_control())
+        asyncio.ensure_future(self.sync())
+
+        for command_bytes in self.command_buffer:
+            asyncio.ensure_future(self.__send_raw_command(command_bytes))
+        
+        self.command_buffer = []
 
     def data_received(self, data: bytes) -> None:
         """Called when data has been received from the socket"""
@@ -89,12 +118,20 @@ class _AprilaireProtocol(asyncio.Protocol):
 
         parsed_data = decode_response(data)
 
-        if parsed_data and self.data_callback:
-            self.data_callback(parsed_data)
+        if parsed_data:
+            (action, functional_domain, attribute) = parsed_data["event"]
+
+            _LOGGER.warn("Received data, action=%s, functional_domain=%s, attribute=%d", action, functional_domain, attribute)
+
+            if self.data_callback:
+                self.data_callback(parsed_data)
 
     def connection_lost(self, exc: Exception | None) -> None:
         """Called when the connection to the socket has been lost"""
-        _LOGGER.error("Aprilaire connection lost")
+        _LOGGER.info("Aprilaire connection lost")
+
+        if self.reconnect_action:
+            asyncio.ensure_future(self.reconnect_action())
 
 
 class AprilaireClient:
@@ -108,6 +145,7 @@ class AprilaireClient:
         self.port = port
         self.data_callback = data_callback
 
+        self.connected = False
         self.protocol: _AprilaireProtocol = None
 
     async def read_sensors(self):
@@ -125,18 +163,43 @@ class AprilaireClient:
     async def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
         """Send a request to update the setpoint"""
         await self.protocol.update_setpoint(cool_setpoint, heat_setpoint)
+    
+    async def sync(self):
+        await self.protocol.sync()
+
+    async def _keep_alive(self):
+        while True:
+            await asyncio.sleep(SYNC_INTERVAL)
+            
+            if self.connected:
+                await self.sync()
 
     async def _start_listen_inner(self):
         """Start listening to the socket"""
-        self.protocol = _AprilaireProtocol(self.data_callback)
 
-        asyncio.ensure_future(
-            asyncio.get_event_loop().create_connection(
-                lambda: self.protocol,
-                self.host,
-                self.port,
-            )
-        )
+        async def reconnect_action():
+            self.connected = False
+
+            while True:
+                try:
+                    await asyncio.get_event_loop().create_connection(
+                        lambda: self.protocol,
+                        self.host,
+                        self.port,
+                    )
+
+                    self.connected = True
+
+                    break
+                except ConnectionRefusedError as e:
+                    _LOGGER.error("Failed to connect to thermostat: %s", str(e))
+
+                    await asyncio.sleep(RECONNECT_INTERVAL)
+        
+        self.protocol = _AprilaireProtocol(self.data_callback, reconnect_action)
+
+        asyncio.ensure_future(reconnect_action())
+        asyncio.ensure_future(self._keep_alive())
 
     async def start_listen(self):
         """Start listening to the socket"""
@@ -144,4 +207,6 @@ class AprilaireClient:
 
     def stop_listen(self):
         """Stop listening to the socket"""
-        self.protocol.transport.close()
+
+        if self.protocol and self.protocol.transport:
+            self.protocol.transport.close()

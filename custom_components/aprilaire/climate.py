@@ -33,7 +33,7 @@ HVAC_MODE_MAP = {
     5: HVACMode.AUTO,
 }
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(DOMAIN)
 
 
 async def async_setup_entry(

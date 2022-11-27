@@ -20,7 +20,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(DOMAIN)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

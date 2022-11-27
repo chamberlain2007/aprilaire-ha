@@ -7,7 +7,7 @@ import logging
 from enum import Enum
 from typing import Any
 
-from .const import Action, FunctionalDomain
+from .const import Action, FunctionalDomain, DOMAIN
 from .utils import decode_humidity, decode_temperature, read_packet_header
 
 
@@ -59,12 +59,17 @@ MAPPING = {
                 ("outdoor_humidity_controlling_sensor_value", ValueType.HUMIDITY),
             ],
         },
+        FunctionalDomain.STATUS: {
+            2: [
+                ("synced", ValueType.INTEGER),
+            ],
+        },
     }
 }
 
 MAPPING[Action.COS] = MAPPING[Action.READ_RESPONSE]
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(DOMAIN)
 
 
 def decode_response(data: bytes) -> dict[str, Any]:
@@ -77,8 +82,8 @@ def decode_response(data: bytes) -> dict[str, Any]:
         or functional_domain not in MAPPING[action]
         or attribute not in MAPPING[action][functional_domain]
     ):
-        _LOGGER.debug(
-            "Unhandled command %s %s %d", str(action), str(functional_domain), attribute
+        _LOGGER.warn(
+            "Unhandled command, action=%s, functional_domain=%s, attribute=%d", str(action), str(functional_domain), attribute
         )
 
         return None

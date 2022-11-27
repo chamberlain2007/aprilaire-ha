@@ -15,7 +15,7 @@ from .response import decode_response
 _LOGGER = logging.getLogger(LOG_NAME)
 
 RECONNECT_INTERVAL = 10
-SYNC_INTERVAL = 60
+SYNC_INTERVAL = 120
 
 class _AprilaireProtocol(asyncio.Protocol):
     """Protocol for interacting with the thermostat over socket connection"""

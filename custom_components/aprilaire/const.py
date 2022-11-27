@@ -5,6 +5,7 @@ from __future__ import annotations
 from enum import IntEnum
 
 DOMAIN = "aprilaire"
+LOG_NAME = "custom_components.aprilaire"
 
 
 class Action(IntEnum):

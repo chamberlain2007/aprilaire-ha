@@ -13,11 +13,11 @@ from typing import Any
 
 from .client import AprilaireClient
 
-from .const import DOMAIN
+from .const import DOMAIN, LOG_NAME
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-_LOGGER = logging.getLogger(DOMAIN)
+_LOGGER = logging.getLogger(LOG_NAME)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

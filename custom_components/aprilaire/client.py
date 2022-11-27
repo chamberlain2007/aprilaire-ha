@@ -8,11 +8,11 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from .const import Action, FunctionalDomain, DOMAIN
+from .const import Action, FunctionalDomain, LOG_NAME
 from .crc import generate_crc
 from .response import decode_response
 
-_LOGGER = logging.getLogger(DOMAIN)
+_LOGGER = logging.getLogger(LOG_NAME)
 
 RECONNECT_INTERVAL = 10
 SYNC_INTERVAL = 60
@@ -131,6 +131,12 @@ class _AprilaireProtocol(asyncio.Protocol):
             (action, functional_domain, attribute) = parsed_data["event"]
 
             _LOGGER.debug("Received data, action=%s, functional_domain=%s, attribute=%d", action, functional_domain, attribute)
+
+            if "error" in parsed_data:
+                error = parsed_data["error"]
+
+                if error != 0:
+                    _LOGGER.error("Thermostat error: %d", error)
 
             if self.data_callback:
                 self.data_callback(parsed_data)

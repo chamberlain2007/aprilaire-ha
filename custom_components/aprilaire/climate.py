@@ -22,7 +22,7 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AprilaireCoordinator
-from .const import Action, FunctionalDomain, DOMAIN
+from .const import Action, FunctionalDomain, DOMAIN, LOG_NAME
 from .utils import encode_temperature
 
 HVAC_MODE_MAP = {
@@ -33,7 +33,7 @@ HVAC_MODE_MAP = {
     5: HVACMode.AUTO,
 }
 
-_LOGGER = logging.getLogger(DOMAIN)
+_LOGGER = logging.getLogger(LOG_NAME)
 
 
 async def async_setup_entry(

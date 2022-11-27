@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DOMAIN, LOG_NAME
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -20,7 +20,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-_LOGGER = logging.getLogger(DOMAIN)
+_LOGGER = logging.getLogger(LOG_NAME)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

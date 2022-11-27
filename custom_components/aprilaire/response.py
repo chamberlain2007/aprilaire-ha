@@ -7,7 +7,7 @@ import logging
 from enum import Enum
 from typing import Any
 
-from .const import Action, FunctionalDomain, DOMAIN
+from .const import Action, FunctionalDomain, LOG_NAME
 from .utils import decode_humidity, decode_temperature, read_packet_header
 
 
@@ -63,13 +63,16 @@ MAPPING = {
             2: [
                 ("synced", ValueType.INTEGER),
             ],
+            8: [
+                ("error", ValueType.INTEGER),
+            ],
         },
     }
 }
 
 MAPPING[Action.COS] = MAPPING[Action.READ_RESPONSE]
 
-_LOGGER = logging.getLogger(DOMAIN)
+_LOGGER = logging.getLogger(LOG_NAME)
 
 
 def decode_response(data: bytes) -> dict[str, Any]:

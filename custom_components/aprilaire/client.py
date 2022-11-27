@@ -99,12 +99,21 @@ class _AprilaireProtocol(asyncio.Protocol):
             2,
             extra_payload=[1],
         )
+    
+    async def configure_cos(self):
+        await self.__send_command(
+            Action.WRITE,
+            FunctionalDomain.STATUS,
+            1,
+            extra_payload=[0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        )
 
     def connection_made(self, transport: asyncio.Transport):
         """Called when a connection has been made to the socket"""
         _LOGGER.info("Aprilaire connection made")
         self.transport = transport
 
+        asyncio.ensure_future(self.configure_cos())
         asyncio.ensure_future(self.sync())
 
         for command_bytes in self.command_buffer:
@@ -121,7 +130,7 @@ class _AprilaireProtocol(asyncio.Protocol):
         if parsed_data:
             (action, functional_domain, attribute) = parsed_data["event"]
 
-            _LOGGER.warn("Received data, action=%s, functional_domain=%s, attribute=%d", action, functional_domain, attribute)
+            _LOGGER.debug("Received data, action=%s, functional_domain=%s, attribute=%d", action, functional_domain, attribute)
 
             if self.data_callback:
                 self.data_callback(parsed_data)

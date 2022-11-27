@@ -82,7 +82,7 @@ def decode_response(data: bytes) -> dict[str, Any]:
         or functional_domain not in MAPPING[action]
         or attribute not in MAPPING[action][functional_domain]
     ):
-        _LOGGER.warn(
+        _LOGGER.debug(
             "Unhandled command, action=%s, functional_domain=%s, attribute=%d", str(action), str(functional_domain), attribute
         )
 

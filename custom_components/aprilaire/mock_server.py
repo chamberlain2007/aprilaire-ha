@@ -50,7 +50,7 @@ class _AprilaireServerProtocol(asyncio.Protocol):
         self.transport: asyncio.Transport = None
 
         self.mode = 5
-        self.fan_mode = 0
+        self.fan_mode = 2
         self.cool_setpoint = 22
         self.heat_setpoint = 10
 
@@ -79,6 +79,8 @@ class _AprilaireServerProtocol(asyncio.Protocol):
         ))
 
     async def cos_loop(self):
+        await asyncio.sleep(2)
+
         while self.transport:
             await self.send_status()
             await asyncio.sleep(COS_FREQUENCY)

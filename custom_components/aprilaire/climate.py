@@ -8,6 +8,10 @@ from homeassistant.components.climate import (
     HVAC_MODES,
     ClimateEntityFeature,
     HVACMode,
+    FAN_AUTO,
+    FAN_OFF,
+    FAN_ON,
+    FAN_MEDIUM
 )
 
 from homeassistant.const import (
@@ -31,6 +35,13 @@ HVAC_MODE_MAP = {
     3: HVACMode.COOL,
     4: HVACMode.HEAT,
     5: HVACMode.AUTO,
+}
+
+FAN_MODE_MAP = {
+    0: FAN_OFF,
+    1: FAN_ON,
+    2: FAN_AUTO,
+    3: FAN_MEDIUM,
 }
 
 _LOGGER = logging.getLogger(LOG_NAME)
@@ -60,6 +71,8 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+
+        _LOGGER.debug(self._coordinator.data)
 
         for key in self._coordinator.data:
             self._data[key] = self._coordinator.data[key]
@@ -109,6 +122,8 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
             else:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE
 
+        features = features | ClimateEntityFeature.FAN_MODE
+
         return features
 
     @property
@@ -157,6 +172,24 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
         """Get supported HVAC modes"""
         return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
 
+    @property
+    def fan_mode(self):
+        """Get fan mode"""
+        if "fan_mode" not in self._data:
+            return None
+
+        fan_mode = self._data["fan_mode"]
+
+        if fan_mode not in FAN_MODE_MAP:
+            return None
+
+        return FAN_MODE_MAP[fan_mode]
+
+    @property
+    def fan_modes(self):
+        """Get supported fan modes"""
+        return [FAN_AUTO, FAN_OFF, FAN_ON, FAN_MEDIUM]
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode"""
         try:
@@ -182,5 +215,20 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
             cool_setpoint = encode_temperature(kwargs.get("target_temp_high"))
 
         self._coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
+
+        self._coordinator.client.read_control()
+
+    def set_fan_mode(self, fan_mode: str) -> None:
+        """Set the fan mode."""
+
+        try:
+            fan_mode_value_index = list(FAN_MODE_MAP.values()).index(fan_mode)
+        except ValueError:
+            _LOGGER.error("Invalid fan mode %s", fan_mode)
+            return
+
+        fan_mode_value = list(FAN_MODE_MAP.keys())[fan_mode_value_index]
+
+        self._coordinator.client.update_fan_mode(fan_mode_value)
 
         self._coordinator.client.read_control()

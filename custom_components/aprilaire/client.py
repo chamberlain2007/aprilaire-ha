@@ -128,6 +128,15 @@ class _AprilaireClientProtocol(asyncio.Protocol):
             extra_payload=[mode, 0, 0, 0]
         )
 
+    def update_fan_mode(self, fan_mode: int):
+        """Send a request to update the fan mode"""
+        self._send_command(
+            Action.WRITE,
+            FunctionalDomain.CONTROL,
+            1,
+            extra_payload=[0, fan_mode, 0, 0]
+        )
+
     def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
         """Send a request to update the setpoint"""
         self._send_command(
@@ -227,6 +236,10 @@ class AprilaireClient:
     def update_mode(self, mode: int):
         """Send a request to update the mode"""
         self.protocol.update_mode(mode)
+
+    def update_fan_mode(self, fan_mode: int):
+        """Send a request to update the fan mode"""
+        self.protocol.update_fan_mode(fan_mode)
 
     def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
         """Send a request to update the setpoint"""

@@ -26,3 +26,17 @@ Once aprilaire-ha is installed, you can set it up by adding it as an integration
 Currently, the integration supports creating a climate entity in Home Assistant, which has the ability to view current temperature and humidity, viewing and changing the HVAC mode (heat, cool, auto, off), and setting the heat/cool setpoint.
 
 Further support for additional sensors is planned.
+
+# Development
+
+## Mock server
+
+During development, it is necessary to connect to a thermostat, but this can be problematic as a thermostat only allows a single connection at a time. There is a mock server that can be run to expose a local server for development that emulates a thermostat.
+
+From within the `custom_components/aprilaire` directory:
+
+```
+python3 -m aprilaire.mock_server
+```
+
+The port can be specified with `-p PORT_NUMBER`. The default port is 7001.

@@ -9,8 +9,8 @@ from collections.abc import Callable
 from typing import Any
 
 from .const import Action, FunctionalDomain, LOG_NAME
-from .crc import generate_crc
-from .response import decode_response
+from .packet import decode_packet
+from .utils import generate_command_bytes
 
 _LOGGER = logging.getLogger(LOG_NAME)
 
@@ -29,24 +29,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
 
         self.command_buffer: list[int] = []
 
-
-    def __generate_command_bytes(
-        self,
-        action: Action,
-        functional_domain: FunctionalDomain,
-        attribute: int,
-        extra_payload: list[int] = None,
-    ) -> list[int]:
-        """Generate the data to send to the thermostat"""
-        payload = [int(action), int(functional_domain), attribute]
-        if extra_payload:
-            payload.extend(extra_payload)
-        result = [1, 0, 0, len(payload)]
-        result.extend(payload)
-        result.append(generate_crc(result))
-        return bytes(result)
-
-    async def __send_command(
+    async def _send_command(
         self,
         action: Action,
         functional_domain: FunctionalDomain,
@@ -54,7 +37,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         extra_payload: list[int] = None,
     ) -> None:
         """Send a command to the thermostat"""
-        command_bytes = self.__generate_command_bytes(
+        command_bytes = generate_command_bytes(
             action, functional_domain, attribute, extra_payload=extra_payload
         )
 
@@ -65,27 +48,27 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         else:
             self.command_buffer.append(command_bytes)
     
-    async def __send_raw_command(self, command_bytes: list[int]):
+    async def _send_raw_command(self, command_bytes: list[int]):
         if self.transport:
             self.transport.write(command_bytes)
 
     async def read_sensors(self):
         """Send a request for updated sensor data"""
-        await self.__send_command(Action.READ_REQUEST, FunctionalDomain.SENSORS, 2)
+        await self._send_command(Action.READ_REQUEST, FunctionalDomain.SENSORS, 2)
 
     async def read_control(self):
         """Send a request for updated control data"""
-        await self.__send_command(Action.READ_REQUEST, FunctionalDomain.CONTROL, 1)
+        await self._send_command(Action.READ_REQUEST, FunctionalDomain.CONTROL, 1)
 
     async def update_mode(self, mode: int):
         """Send a request to update the mode"""
-        await self.__send_command(
+        await self._send_command(
             Action.WRITE, FunctionalDomain.CONTROL, 1, extra_payload=[mode, 0, 0, 0]
         )
 
     async def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
         """Send a request to update the setpoint"""
-        await self.__send_command(
+        await self._send_command(
             Action.WRITE,
             FunctionalDomain.CONTROL,
             1,
@@ -93,7 +76,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         )
     
     async def sync(self):
-        await self.__send_command(
+        await self._send_command(
             Action.WRITE,
             FunctionalDomain.STATUS,
             2,
@@ -101,7 +84,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         )
     
     async def configure_cos(self):
-        await self.__send_command(
+        await self._send_command(
             Action.WRITE,
             FunctionalDomain.STATUS,
             1,
@@ -117,7 +100,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         asyncio.ensure_future(self.sync())
 
         for command_bytes in self.command_buffer:
-            asyncio.ensure_future(self.__send_raw_command(command_bytes))
+            asyncio.ensure_future(self._send_raw_command(command_bytes))
         
         self.command_buffer = []
 
@@ -125,7 +108,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         """Called when data has been received from the socket"""
         _LOGGER.info("Aprilaire data received")
 
-        parsed_data = decode_response(data)
+        parsed_data = decode_packet(data)
 
         if parsed_data:
             (action, functional_domain, attribute) = parsed_data["event"]
@@ -168,6 +151,8 @@ class AprilaireClient:
         self.connected = False
         self.protocol: _AprilaireClientProtocol = None
 
+        self.stopped = False
+
     async def read_sensors(self):
         """Send a request for updated sensor data"""
         await self.protocol.read_sensors()
@@ -188,10 +173,10 @@ class AprilaireClient:
         await self.protocol.sync()
 
     async def _keep_alive(self):
-        while True:
+        while not self.stopped:
             await asyncio.sleep(SYNC_INTERVAL)
             
-            if self.connected:
+            if self.connected and not self.stopped:
                 await self.sync()
 
     async def _start_listen_inner(self):
@@ -200,7 +185,7 @@ class AprilaireClient:
         async def reconnect_action():
             self.connected = False
 
-            while True:
+            while not self.stopped:
                 try:
                     await asyncio.get_event_loop().create_connection(
                         lambda: self.protocol,
@@ -229,4 +214,5 @@ class AprilaireClient:
         """Stop listening to the socket"""
 
         if self.protocol and self.protocol.transport:
+            self.stopped = True
             self.protocol.transport.close()

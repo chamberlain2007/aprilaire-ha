@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Any
 
 from .const import Action, FunctionalDomain, LOG_NAME
-from .utils import decode_humidity, decode_temperature, read_packet_header
+from .utils import decode_humidity, decode_temperature
 
 
 class ValueType(Enum):
@@ -71,20 +71,22 @@ MAPPING = {
 }
 
 MAPPING[Action.COS] = MAPPING[Action.READ_RESPONSE]
+MAPPING[Action.WRITE] = MAPPING[Action.READ_RESPONSE]
 
 _LOGGER = logging.getLogger(LOG_NAME)
 
 
-def decode_response(data: bytes) -> dict[str, Any]:
+def decode_packet(data: bytes) -> dict[str, Any]:
     """Decode the response data from the thermostat"""
 
-    (action, functional_domain, attribute) = read_packet_header(data)
+    (action, functional_domain, attribute) = decode_packet_header(data)
 
     if (
         action not in MAPPING
         or functional_domain not in MAPPING[action]
         or attribute not in MAPPING[action][functional_domain]
     ):
+        print("boo")
         _LOGGER.debug(
             "Unhandled command, action=%s, functional_domain=%s, attribute=%d", str(action), str(functional_domain), attribute
         )
@@ -129,3 +131,11 @@ def decode_response(data: bytes) -> dict[str, Any]:
         i += 1
 
     return result
+
+def decode_packet_header(data):
+    """Read the header from a packet"""
+    action = Action(int(data[4]))
+    functional_domain = FunctionalDomain(int(data[5]))
+    attribute = int(data[6])
+
+    return (action, functional_domain, attribute)

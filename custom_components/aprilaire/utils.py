@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 
+from .crc import generate_crc
 from .const import Action, FunctionalDomain
 
 
@@ -17,7 +18,6 @@ def encode_temperature(temperature: float) -> int:
         + (64 if is_fraction else 0)
         + (128 if is_negative else 0)
     )
-
 
 def decode_temperature(raw_value: int) -> float:
     """Decode a temperature value from the thermostat"""
@@ -42,11 +42,17 @@ def decode_humidity(raw_value: int) -> int:
         return None
     return raw_value
 
-
-def read_packet_header(data):
-    """Read the header from a packet"""
-    action = Action(int(data[4]))
-    functional_domain = FunctionalDomain(int(data[5]))
-    attribute = int(data[6])
-
-    return (action, functional_domain, attribute)
+def generate_command_bytes(
+    action: Action,
+    functional_domain: FunctionalDomain,
+    attribute: int,
+    extra_payload: list[int] = None,
+) -> list[int]:
+    """Generate the data to send to the thermostat"""
+    payload = [int(action), int(functional_domain), attribute]
+    if extra_payload:
+        payload.extend(extra_payload)
+    result = [1, 0, 0, len(payload)]
+    result.extend(payload)
+    result.append(generate_crc(result))
+    return bytes(result)

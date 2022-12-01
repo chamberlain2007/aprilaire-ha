@@ -137,6 +137,8 @@ class _AprilaireProtocol(asyncio.Protocol):
 
                 if error != 0:
                     _LOGGER.error("Thermostat error: %d", error)
+            else:
+                parsed_data["available"] = True
 
             if self.data_callback:
                 self.data_callback(parsed_data)
@@ -144,6 +146,9 @@ class _AprilaireProtocol(asyncio.Protocol):
     def connection_lost(self, exc: Exception | None) -> None:
         """Called when the connection to the socket has been lost"""
         _LOGGER.info("Aprilaire connection lost")
+
+        if self.data_callback:
+            self.data_callback({"available": False})
 
         if self.reconnect_action:
             asyncio.ensure_future(self.reconnect_action())

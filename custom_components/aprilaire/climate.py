@@ -61,17 +61,11 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        (action, functional_domain, attribute) = self._coordinator.data["event"]
-
         for key in self._coordinator.data:
             self._data[key] = self._coordinator.data[key]
 
-        if (
-            (action == Action.READ_RESPONSE or action == Action.COS)
-            and functional_domain == FunctionalDomain.CONTROL
-            and attribute == 1
-        ):
-            self._available = True
+        if "available" in self._data:
+            self._available = self._data["available"]
 
         self.async_write_ha_state()
 

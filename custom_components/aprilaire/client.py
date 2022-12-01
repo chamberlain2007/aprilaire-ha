@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(LOG_NAME)
 RECONNECT_INTERVAL = 10
 SYNC_INTERVAL = 120
 
-class _AprilaireProtocol(asyncio.Protocol):
+class _AprilaireClientProtocol(asyncio.Protocol):
     """Protocol for interacting with the thermostat over socket connection"""
 
     def __init__(self, data_callback: Callable[[dict[str, Any]], None], reconnect_action: Callable[[], None]) -> None:
@@ -166,7 +166,7 @@ class AprilaireClient:
         self.data_callback = data_callback
 
         self.connected = False
-        self.protocol: _AprilaireProtocol = None
+        self.protocol: _AprilaireClientProtocol = None
 
     async def read_sensors(self):
         """Send a request for updated sensor data"""
@@ -216,7 +216,7 @@ class AprilaireClient:
 
                     await asyncio.sleep(RECONNECT_INTERVAL)
         
-        self.protocol = _AprilaireProtocol(self.data_callback, reconnect_action)
+        self.protocol = _AprilaireClientProtocol(self.data_callback, reconnect_action)
 
         asyncio.ensure_future(reconnect_action())
         asyncio.ensure_future(self._keep_alive())

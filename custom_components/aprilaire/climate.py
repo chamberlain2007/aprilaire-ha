@@ -29,6 +29,8 @@ from . import AprilaireCoordinator
 from .const import Action, FunctionalDomain, DOMAIN, LOG_NAME
 from .utils import encode_temperature
 
+FAN_CIRCULATE = "Circulate"
+
 HVAC_MODE_MAP = {
     1: HVACMode.OFF,
     2: HVACMode.HEAT,
@@ -38,10 +40,9 @@ HVAC_MODE_MAP = {
 }
 
 FAN_MODE_MAP = {
-    0: FAN_OFF,
     1: FAN_ON,
     2: FAN_AUTO,
-    3: FAN_MEDIUM,
+    3: FAN_CIRCULATE,
 }
 
 _LOGGER = logging.getLogger(LOG_NAME)
@@ -188,7 +189,7 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
     @property
     def fan_modes(self):
         """Get supported fan modes"""
-        return [FAN_AUTO, FAN_OFF, FAN_ON, FAN_MEDIUM]
+        return [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode"""

@@ -206,7 +206,7 @@ class AprilaireClient:
                     self.connected = True
 
                     break
-                except ConnectionRefusedError as e:
+                except Exception as e:
                     _LOGGER.error("Failed to connect to thermostat: %s", str(e))
 
                     await asyncio.sleep(RECONNECT_INTERVAL)

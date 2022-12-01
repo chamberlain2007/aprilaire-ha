@@ -86,7 +86,6 @@ def decode_packet(data: bytes) -> dict[str, Any]:
         or functional_domain not in MAPPING[action]
         or attribute not in MAPPING[action][functional_domain]
     ):
-        print("boo")
         _LOGGER.debug(
             "Unhandled command, action=%s, functional_domain=%s, attribute=%d", str(action), str(functional_domain), attribute
         )
@@ -96,6 +95,8 @@ def decode_packet(data: bytes) -> dict[str, Any]:
     result: dict[str, Any] = {"event": (action, functional_domain, attribute)}
 
     i = 0
+
+    extra_data: list(int) = []
 
     while i < len(data):
         if i == 0:
@@ -126,9 +127,12 @@ def decode_packet(data: bytes) -> dict[str, Any]:
                 j += 1
             i += j
         else:
-            print(f"Extra {data[i]}")
+            extra_data.append(data[i])
 
         i += 1
+
+    if extra_data:
+        _LOGGER.warning("Received extra data from request")
 
     return result
 

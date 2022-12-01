@@ -167,9 +167,9 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
 
         mode_value = list(HVAC_MODE_MAP.keys())[mode_value_index]
 
-        await self._coordinator.client.update_mode(mode_value)
+        self._coordinator.client.update_mode(mode_value)
 
-        await self._coordinator.client.read_control()
+        self._coordinator.client.read_control()
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set the temperature setpoints"""
@@ -181,6 +181,6 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
         if "target_temp_high" in kwargs:
             cool_setpoint = encode_temperature(kwargs.get("target_temp_high"))
 
-        await self._coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
+        self._coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
 
-        await self._coordinator.client.read_control()
+        self._coordinator.client.read_control()

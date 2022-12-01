@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
 
     coordinator = AprilaireCoordinator(hass, config.get("host"), config.get("port"))
-    await coordinator.start_listen()
+    coordinator.start_listen()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
@@ -53,18 +53,12 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
         )
 
-        self.client = AprilaireClient(host, port, self.data_callback)
+        self.client = AprilaireClient(host, port, self.async_set_updated_data)
 
-        self.data = {}
-
-    async def start_listen(self):
+    def start_listen(self):
         """Start listening for data"""
-        await self.client.start_listen()
+        self.client.start_listen()
 
     def stop_listen(self):
         """Stop listening for data"""
         self.client.stop_listen()
-
-    def data_callback(self, data: dict[str, Any]):
-        """Callback when data is received"""
-        self.async_set_updated_data(data)

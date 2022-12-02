@@ -14,8 +14,7 @@ from .utils import generate_command_bytes
 
 _LOGGER = logging.getLogger(LOG_NAME)
 
-RECONNECT_INTERVAL = 10
-SYNC_INTERVAL = 300
+RECONNECT_INTERVAL = 60
 
 class _AprilaireClientProtocol(asyncio.Protocol):
     """Protocol for interacting with the thermostat over socket connection"""
@@ -27,30 +26,50 @@ class _AprilaireClientProtocol(asyncio.Protocol):
 
         self.transport: asyncio.Transport = None
 
-        self.command_buffer: list[int] = []
+        self.command_queue = asyncio.Queue()
 
-    def _send_command(
+        self.sequence = 1
+
+    async def _send_command(
         self,
         action: Action,
         functional_domain: FunctionalDomain,
         attribute: int,
         extra_payload: list[int] = None,
     ) -> None:
+
         """Send a command to the thermostat"""
         command_bytes = generate_command_bytes(
-            action, functional_domain, attribute, extra_payload=extra_payload
+            self.sequence,
+            action,
+            functional_domain,
+            attribute,
+            extra_payload=extra_payload
         )
+        _LOGGER.debug("Sending data, sequence=%d, action=%s, functional_domain=%s, attribute=%d", self.sequence, str(action), str(functional_domain), attribute)
 
-        _LOGGER.debug("Sending data, action=%s, functional_domain=%s, attribute=%d", str(action), str(functional_domain), attribute)
+        self.sequence = (self.sequence + 1) % 128
 
-        if self.transport:
-            self.transport.write(command_bytes)
-        else:
-            self.command_buffer.append(command_bytes)
-    
-    def _send_raw_command(self, command_bytes: list[int]):
-        """Send raw command data to the thermostat"""
-        if self.transport:
+        await self.command_queue.put(command_bytes)
+
+    def _empty_command_queue(self):
+        try:
+            for _ in range(self.command_queue.qsize()):
+                self.command_queue.get_nowait()
+                self.command_queue.task_done()
+        except:
+            pass
+
+    async def _process_command_queue(self):
+        while True:
+            command_bytes = await self.command_queue.get()
+
+            if not command_bytes:
+                continue
+
+            if not self.transport:
+                break
+
             self.transport.write(command_bytes)
 
     def connection_made(self, transport: asyncio.Transport):
@@ -58,14 +77,12 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         _LOGGER.info("Aprilaire connection made")
 
         self.transport = transport
+        self._empty_command_queue()
 
-        self.configure_cos()
-        self.sync()
+        asyncio.ensure_future(self._process_command_queue())
 
-        for command_bytes in self.command_buffer:
-            self._send_raw_command(command_bytes)
-        
-        self.command_buffer = []
+        asyncio.ensure_future(self.configure_cos())
+        asyncio.ensure_future(self.sync())
 
     def data_received(self, data: bytes) -> None:
         """Called when data has been received from the socket"""
@@ -103,65 +120,112 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         if self.reconnect_action:
             asyncio.ensure_future(self.reconnect_action())
 
-    def read_sensors(self):
+    async def read_sensors(self):
         """Send a request for updated sensor data"""
-        self._send_command(
+        await self._send_command(
             Action.READ_REQUEST,
             FunctionalDomain.SENSORS,
             2
         )
 
-    def read_control(self):
+    async def read_control(self):
         """Send a request for updated control data"""
-        self._send_command(
+        await self._send_command(
             Action.READ_REQUEST,
             FunctionalDomain.CONTROL,
             1
         )
 
-    def update_mode(self, mode: int):
+    async def update_mode(self, mode: int):
         """Send a request to update the mode"""
-        self._send_command(
+        await self._send_command(
             Action.WRITE,
             FunctionalDomain.CONTROL,
             1,
-            extra_payload=[mode, 0, 0, 0]
+            extra_payload=[
+                mode, # Mode
+                0, # Fan Mode (0 to not set)
+                0, # Heat Setpoint (0 to not set)
+                0, # Cool Setpoint (0 to not set)
+            ]
         )
 
-    def update_fan_mode(self, fan_mode: int):
+    async def update_fan_mode(self, fan_mode: int):
         """Send a request to update the fan mode"""
-        self._send_command(
+        await self._send_command(
             Action.WRITE,
             FunctionalDomain.CONTROL,
             1,
-            extra_payload=[0, fan_mode, 0, 0]
+            extra_payload=[
+                0, # Mode (0 to not set)
+                fan_mode, # Fan Mode
+                0, # Heat Setpoint (0 to not set)
+                0, # Cool Setpoint (0 to not set)
+            ]
         )
 
-    def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
+    async def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
         """Send a request to update the setpoint"""
-        self._send_command(
+        await self._send_command(
             Action.WRITE,
             FunctionalDomain.CONTROL,
             1,
-            extra_payload=[0, 0, heat_setpoint, cool_setpoint],
+            extra_payload=[
+                0, # Mode
+                0, # Fan
+                heat_setpoint, # Heat Setpoint
+                cool_setpoint, # Cool Setpoint
+            ],
         )
 
-    def sync(self):
+    async def sync(self):
         """Send a request to sync data"""
-        self._send_command(
+        await self._send_command(
             Action.WRITE,
             FunctionalDomain.STATUS,
             2,
-            extra_payload=[1],
+            extra_payload=[
+                1, # Sync
+            ],
         )
 
-    def configure_cos(self):
+    async def configure_cos(self):
         """Send a request to configure the COS settings"""
-        self._send_command(
+        await self._send_command(
             Action.WRITE,
             FunctionalDomain.STATUS,
             1,
-            extra_payload=[0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+            extra_payload=[
+                0, # Installer Thermostat Settings
+                0, # Contractor Information
+                0, # Air Cleaning Installer Variable
+                0, # Humidity Control Installer Settings
+                0, # Fresh Air Installer Settings
+                1, # Thermostate Setpoint & Mode Settings
+                0, # Dehumidification Setpoint
+                0, # Humidification Setpoint
+                0, # Fresh Air Setting
+                0, # Air Cleaning Settings
+                0, # Thermostat IAQ Available
+                0, # Schedule Settings
+                0, # Away Settings
+                0, # Schedule Day
+                0, # Schedule Hold
+                0, # Heat Blast
+                0, # Service Reminders Status
+                0, # Alerts Status
+                0, # Alerts Settings
+                0, # Backlight Settings
+                0, # Thermostat Location & Name
+                0, # Reserved
+                1, # Controlling Sensor Values
+                0, # Over the air ODT update timeout
+                0, # Thermostat Status
+                0, # IAQ Status
+                0, # Model & Revision
+                0, # Support Module
+                0, # Lockouts
+            ]
         )
 
 class AprilaireClient:
@@ -179,14 +243,6 @@ class AprilaireClient:
         self.stopped = True
 
         self.protocol: _AprilaireClientProtocol = None
-
-    async def _keep_alive(self):
-        """Continuously make sync requests to keep connection alive"""
-        while not self.stopped:
-            await asyncio.sleep(SYNC_INTERVAL)
-            
-            if self.connected and not self.stopped:
-                self.sync()
 
     def start_listen(self):
         """Start listening to the socket"""
@@ -215,7 +271,6 @@ class AprilaireClient:
         self.protocol = _AprilaireClientProtocol(self.data_received_callback, _reconnect)
 
         asyncio.ensure_future(_reconnect())
-        asyncio.ensure_future(self._keep_alive())
 
     def stop_listen(self):
         """Stop listening to the socket"""
@@ -225,26 +280,26 @@ class AprilaireClient:
         if self.protocol and self.protocol.transport:
             self.protocol.transport.close()
 
-    def read_sensors(self):
+    async def read_sensors(self):
         """Send a request for updated sensor data"""
-        self.protocol.read_sensors()
+        await self.protocol.read_sensors()
 
-    def read_control(self):
+    async def read_control(self):
         """Send a request for updated control data"""
-        self.protocol.read_control()
+        await self.protocol.read_control()
 
-    def update_mode(self, mode: int):
+    async def update_mode(self, mode: int):
         """Send a request to update the mode"""
-        self.protocol.update_mode(mode)
+        await self.protocol.update_mode(mode)
 
-    def update_fan_mode(self, fan_mode: int):
+    async def update_fan_mode(self, fan_mode: int):
         """Send a request to update the fan mode"""
-        self.protocol.update_fan_mode(fan_mode)
+        await self.protocol.update_fan_mode(fan_mode)
 
-    def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
+    async def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
         """Send a request to update the setpoint"""
-        self.protocol.update_setpoint(cool_setpoint, heat_setpoint)
+        await self.protocol.update_setpoint(cool_setpoint, heat_setpoint)
 
-    def sync(self):
+    async def sync(self):
         """Send a request to sync data"""
-        self.protocol.sync()
+        await self.protocol.sync()

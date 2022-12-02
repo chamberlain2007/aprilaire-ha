@@ -55,28 +55,39 @@ class _AprilaireServerProtocol(asyncio.Protocol):
         self.heat_setpoint = 10
 
         self.queue = Queue()
+
+        self.sequence = 1
     
     async def send_status(self):
         await self.queue.put(generate_command_bytes(
+            self.sequence + 127,
             Action.COS,
             FunctionalDomain.CONTROL,
             1,
             [self.mode, self.fan_mode, encode_temperature(self.heat_setpoint), encode_temperature(self.cool_setpoint)]
         ))
 
+        self.sequence = (self.sequence + 1) % 128
+
         await self.queue.put(generate_command_bytes(
+            self.sequence + 127,
             Action.COS,
             FunctionalDomain.SENSORS,
             2,
             [0, encode_temperature(22), 0, encode_temperature(10), 0, 50, 0, 40]
         ))
-        
+
+        self.sequence = (self.sequence + 1) % 128
+
         await self.queue.put(generate_command_bytes(
+            self.sequence + 127,
             Action.COS,
             FunctionalDomain.STATUS,
             2,
             [1]
         ))
+
+        self.sequence = (self.sequence + 1) % 128
 
     async def cos_loop(self):
         await asyncio.sleep(2)
@@ -113,11 +124,14 @@ class _AprilaireServerProtocol(asyncio.Protocol):
             if functional_domain == FunctionalDomain.SENSORS:
                 if attribute == 2:
                     self.queue.put_nowait(generate_command_bytes(
+                        self.sequence + 127,
                         Action.READ_RESPONSE,
                         FunctionalDomain.SENSORS,
                         2,
                         [0, encode_temperature(22), 0, encode_temperature(10), 0, 50, 0, 40]
                     ))
+
+                    self.sequence = (self.sequence + 1) % 128
         elif action == Action.WRITE:
             if functional_domain == FunctionalDomain.CONTROL:
                 if attribute == 1:
@@ -148,11 +162,14 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                             self.cool_setpoint = new_cool_setpoint
                     
                     self.queue.put_nowait(generate_command_bytes(
+                        self.sequence + 127,
                         Action.COS,
                         FunctionalDomain.CONTROL,
                         1,
                         [self.mode, self.fan_mode, encode_temperature(self.heat_setpoint), encode_temperature(self.cool_setpoint)]
                     ))
+                    
+                    self.sequence = (self.sequence + 1) % 128
 
             if functional_domain == FunctionalDomain.STATUS:
                 if attribute == 2:

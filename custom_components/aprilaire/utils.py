@@ -43,6 +43,7 @@ def decode_humidity(raw_value: int) -> int:
     return raw_value
 
 def generate_command_bytes(
+    sequence: int,
     action: Action,
     functional_domain: FunctionalDomain,
     attribute: int,
@@ -52,7 +53,11 @@ def generate_command_bytes(
     payload = [int(action), int(functional_domain), attribute]
     if extra_payload:
         payload.extend(extra_payload)
-    result = [1, 0, 0, len(payload)]
+    (payload_length_high, payload_length_low) = _encode_int_value(len(payload))
+    result = [1, sequence, payload_length_high, payload_length_low]
     result.extend(payload)
     result.append(generate_crc(result))
     return bytes(result)
+
+def _encode_int_value(value: int):
+    return ((value >> 8) & 0xFF, value & 0xFF)

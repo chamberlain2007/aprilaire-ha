@@ -17,6 +17,7 @@ class ValueType(Enum):
     INTEGER = 1
     TEMPERATURE = 2
     HUMIDITY = 3
+    MAC_ADDRESS = 4
 
 
 MAPPING = {
@@ -67,6 +68,11 @@ MAPPING = {
                 ("error", ValueType.INTEGER),
             ],
         },
+        FunctionalDomain.IDENTIFICATION: {
+            2: [
+                ("mac_address", ValueType.MAC_ADDRESS),
+            ],
+        }
     }
 }
 
@@ -87,10 +93,19 @@ def decode_packet(data: bytes) -> dict[str, Any]:
         or attribute not in MAPPING[action][functional_domain]
     ):
         _LOGGER.debug(
-            "Unhandled command, action=%s, functional_domain=%s, attribute=%d", str(action), str(functional_domain), attribute
+            "Unhandled command, action=%s, functional_domain=%s, attribute=%d, data=%s",
+            str(action),
+            str(functional_domain),
+            attribute,
+            data.hex(" ", 1)
         )
 
         return None
+
+    _LOGGER.debug(
+        "Reading data=%s",
+        data.hex(" ", 1)
+    )
 
     result: dict[str, Any] = {"event": (action, functional_domain, attribute)}
 
@@ -110,13 +125,18 @@ def decode_packet(data: bytes) -> dict[str, Any]:
             if data[i] == "\06":
                 break
             j = 0
+
+            attribute_index = 0
+
             while j < result["count"]:
                 if j < 3:
+                    pass
+                elif attribute_index >= len(MAPPING[action][functional_domain][attribute]):
                     pass
                 else:
                     (attribute_name, value_type) = MAPPING[action][functional_domain][
                         attribute
-                    ][j - 3]
+                    ][attribute_index]
 
                     if value_type == ValueType.INTEGER:
                         result[attribute_name] = data[i + j]
@@ -124,6 +144,16 @@ def decode_packet(data: bytes) -> dict[str, Any]:
                         result[attribute_name] = decode_humidity(data[i + j])
                     elif value_type == ValueType.TEMPERATURE:
                         result[attribute_name] = decode_temperature(data[i + j])
+                    elif value_type == ValueType.MAC_ADDRESS:
+                        mac_address_components = []
+
+                        for _ in range(0, 6):
+                            mac_address_components.append(f"{data[i + j]:x}")
+                            j += 1
+
+                        result[attribute_name] = ":".join(mac_address_components)
+
+                    attribute_index += 1
                 j += 1
             i += j
         else:
@@ -138,8 +168,11 @@ def decode_packet(data: bytes) -> dict[str, Any]:
 
 def decode_packet_header(data):
     """Read the header from a packet"""
-    action = Action(int(data[4]))
-    functional_domain = FunctionalDomain(int(data[5]))
-    attribute = int(data[6])
+    try:
+        action = Action(int(data[4]))
+        functional_domain = FunctionalDomain(int(data[5]))
+        attribute = int(data[6])
+    except ValueError:
+        return (Action.NONE, FunctionalDomain.NONE, 0)
 
     return (action, functional_domain, attribute)

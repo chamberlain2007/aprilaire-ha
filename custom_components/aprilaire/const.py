@@ -11,6 +11,7 @@ LOG_NAME = "custom_components.aprilaire"
 class Action(IntEnum):
     """An action for commands"""
 
+    NONE = 0
     WRITE = 1
     READ_REQUEST = 2
     READ_RESPONSE = 3
@@ -21,6 +22,7 @@ class Action(IntEnum):
 class FunctionalDomain(IntEnum):
     """A functional domain for commands"""
 
+    NONE = 0
     SETUP = 1
     CONTROL = 2
     SCHEDULING = 3

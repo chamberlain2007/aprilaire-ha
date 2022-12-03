@@ -21,6 +21,7 @@ from homeassistant.const import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -55,7 +56,14 @@ async def async_setup_entry(
 ) -> None:
     """Add climates for passed config_entry in HA."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    if not coordinator.data or "mac_address" not in coordinator.data:
+        data = await coordinator.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 2, 30)
+
+        if not data or "mac_address" not in data:
+            _LOGGER.error("Missing MAC address, cannot create unique ID")
+            return
 
     async_add_entities([AprilaireClimate(coordinator)])
 
@@ -67,8 +75,10 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
         """Initialize the entity"""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._data = {}
+        self._data = coordinator.data
         self._available = False
+
+        _LOGGER.debug("Current data: %s", self._data)
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -78,10 +88,19 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
         for key in self._coordinator.data:
             self._data[key] = self._coordinator.data[key]
 
+        _LOGGER.debug("Current data: %s", self._data)
+
         if "available" in self._data:
             self._available = self._data["available"]
 
         self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            identifiers = {(DOMAIN, self._data['mac_address'])},
+            name = self.name,
+        )
 
     @property
     def should_poll(self):
@@ -96,7 +115,13 @@ class AprilaireClimate(CoordinatorEntity, ClimateEntity):
     @property
     def name(self):
         """Get name of entity"""
-        return "Aprilaire Thermostat"
+        if "mac_address" in self._data:
+            return f"Aprilaire Thermostat {self._data['mac_address']}"
+        return None
+
+    @property
+    def unique_id(self):
+        return f"thermostat_{self._data['mac_address']}"
 
     @property
     def temperature_unit(self):

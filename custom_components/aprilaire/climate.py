@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.climate import ClimateEntity
 
 from . import AprilaireCoordinator
-from .const import FunctionalDomain, DOMAIN, LOG_NAME
+from .const import DOMAIN, LOG_NAME
 from .entity import BaseAprilaireEntity
 from .utils import encode_temperature
 
@@ -55,12 +55,8 @@ async def async_setup_entry(
 
     coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    if not coordinator.data or "mac_address" not in coordinator.data:
-        data = await coordinator.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 2, 30)
-
-        if not data or "mac_address" not in data:
-            _LOGGER.error("Missing MAC address, cannot create unique ID")
-            return
+    if not await coordinator.wait_for_ready():
+        return
 
     async_add_entities([AprilaireClimate(coordinator)])
 
@@ -72,7 +68,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def name(self):
         """Get name of entity"""
         
-        return f"Aprilaire Thermostat Climate"
+        return f"Aprilaire Thermostat"
 
     @property
     def temperature_unit(self):

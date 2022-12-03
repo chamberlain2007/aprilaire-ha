@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 
+from typing import Any
+
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -15,7 +17,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         """Initialize the entity"""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._data = coordinator.data
+        self._data: dict[str, Any] = coordinator.data
         self._available = False
 
         _LOGGER.debug("Current data: %s", self._data)

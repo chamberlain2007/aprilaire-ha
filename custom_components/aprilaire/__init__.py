@@ -13,9 +13,9 @@ from typing import Any
 
 from .client import AprilaireClient
 
-from .const import DOMAIN, LOG_NAME
+from .const import FunctionalDomain, DOMAIN, LOG_NAME
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(LOG_NAME)
 
@@ -62,3 +62,13 @@ class AprilaireCoordinator(DataUpdateCoordinator):
     def stop_listen(self):
         """Stop listening for data"""
         self.client.stop_listen()
+
+    async def wait_for_ready(self):
+        if not self.data or "mac_address" not in self.data:
+            data = await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 2, 30)
+
+            if not data or "mac_address" not in data:
+                _LOGGER.error("Missing MAC address, cannot create unique ID")
+                return False
+
+        return True

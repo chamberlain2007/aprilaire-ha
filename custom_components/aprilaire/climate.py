@@ -9,9 +9,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
     FAN_AUTO,
-    FAN_OFF,
     FAN_ON,
-    FAN_MEDIUM
 )
 
 from homeassistant.const import (
@@ -21,13 +19,12 @@ from homeassistant.const import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AprilaireCoordinator
-from .const import Action, FunctionalDomain, DOMAIN, LOG_NAME
+from .const import FunctionalDomain, DOMAIN, LOG_NAME
+from .entity import BaseAprilaireEntity
 from .utils import encode_temperature
 
 FAN_CIRCULATE = "Circulate"
@@ -68,60 +65,14 @@ async def async_setup_entry(
     async_add_entities([AprilaireClimate(coordinator)])
 
 
-class AprilaireClimate(CoordinatorEntity, ClimateEntity):
+class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     """Climate entity for Aprilaire"""
-
-    def __init__(self, coordinator: AprilaireCoordinator) -> None:
-        """Initialize the entity"""
-        super().__init__(coordinator)
-        self._coordinator = coordinator
-        self._data = coordinator.data
-        self._available = False
-
-        _LOGGER.debug("Current data: %s", self._data)
-
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-
-        _LOGGER.debug(self._coordinator.data)
-
-        for key in self._coordinator.data:
-            self._data[key] = self._coordinator.data[key]
-
-        _LOGGER.debug("Current data: %s", self._data)
-
-        if "available" in self._data:
-            self._available = self._data["available"]
-
-        self.async_write_ha_state()
-
-    @property
-    def device_info(self):
-        return DeviceInfo(
-            identifiers = {(DOMAIN, self._data['mac_address'])},
-            name = self.name,
-        )
-
-    @property
-    def should_poll(self):
-        """Do not need to poll"""
-        return False
-
-    @property
-    def available(self):
-        """Get entity availability"""
-        return self._available
 
     @property
     def name(self):
         """Get name of entity"""
-        if "mac_address" in self._data:
-            return f"Aprilaire Thermostat {self._data['mac_address']}"
-        return None
-
-    @property
-    def unique_id(self):
-        return f"thermostat_{self._data['mac_address']}"
+        
+        return f"Aprilaire Thermostat Climate"
 
     @property
     def temperature_unit(self):

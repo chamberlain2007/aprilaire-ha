@@ -41,8 +41,8 @@ async def async_setup_entry(
 
 class AprilaireIndoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntity):
     @property
-    def available(self):
-        return super().available() and self._data.get("indoor_humidity_controlling_sensor_status", None) == 0
+    def is_available(self):
+        return super().is_available() and self._data.get("indoor_humidity_controlling_sensor_status", None) == 0
 
     @property
     def name(self) -> str | None:
@@ -66,8 +66,8 @@ class AprilaireIndoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntity
 
 class AprilaireOutdoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntity):
     @property
-    def available(self):
-        return super().available() and self._data.get("outdoor_humidity_controlling_sensor_status", None) == 0
+    def is_available(self):
+        return super().is_available() and self._data.get("outdoor_humidity_controlling_sensor_status", None) == 0
 
     @property
     def name(self) -> str | None:
@@ -91,8 +91,8 @@ class AprilaireOutdoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntit
 
 class AprilaireIndoorTemperatureControllingSensor(BaseAprilaireEntity, SensorEntity):
     @property
-    def available(self):
-        return super().available() and self._data.get("indoor_temperature_controlling_sensor_status", None) == 0
+    def is_available(self):
+        return super().is_available() and self._data.get("indoor_temperature_controlling_sensor_status", None) == 0
 
     @property
     def name(self) -> str | None:
@@ -116,8 +116,8 @@ class AprilaireIndoorTemperatureControllingSensor(BaseAprilaireEntity, SensorEnt
 
 class AprilaireOutdoorTemperatureControllingSensor(BaseAprilaireEntity, SensorEntity):
     @property
-    def available(self):
-        return super().available() and self._data.get("outdoor_temperature_controlling_sensor_status", None) == 0
+    def is_available(self):
+        return super().is_available() and self._data.get("outdoor_temperature_controlling_sensor_status", None) == 0
 
     @property
     def name(self) -> str | None:

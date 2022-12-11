@@ -19,6 +19,8 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(LOG_NAME)
 
+RECONNECT_INTERVAL = 60 * 60
+RETRY_CONNECTION_INTERVAL = 10
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Setup Aprilaire from config entry"""
@@ -53,7 +55,20 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
         )
 
-        self.client = AprilaireClient(host, port, self.async_set_updated_data)
+        self.all_data: dict[str, Any] = {}
+
+        self.client = AprilaireClient(
+            host,
+            port,
+            self.async_set_updated_data,
+            RECONNECT_INTERVAL,
+            RETRY_CONNECTION_INTERVAL)
+
+    def async_set_updated_data(self, data: _T) -> None:
+        for key in data:
+            self.all_data[key] = data[key]
+
+        super().async_set_updated_data(data)
 
     def start_listen(self):
         """Start listening for data"""

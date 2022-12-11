@@ -61,6 +61,16 @@ class _AprilaireServerProtocol(asyncio.Protocol):
     async def send_status(self):
         await self.queue.put(generate_command_bytes(
             self.sequence + 127,
+            Action.READ_RESPONSE,
+            FunctionalDomain.IDENTIFICATION,
+            2,
+            [1, 2, 3, 4, 5, 6]
+        ))
+
+        self.sequence = (self.sequence + 1) % 128
+
+        await self.queue.put(generate_command_bytes(
+            self.sequence + 127,
             Action.COS,
             FunctionalDomain.CONTROL,
             1,

@@ -10,11 +10,10 @@ from typing import Any
 
 from .const import Action, FunctionalDomain, LOG_NAME
 from .packet import decode_packet
+from .socket_client import SocketClient
 from .utils import generate_command_bytes
 
 _LOGGER = logging.getLogger(LOG_NAME)
-
-RECONNECT_INTERVAL = 60
 
 class _AprilaireClientProtocol(asyncio.Protocol):
     """Protocol for interacting with the thermostat over socket connection"""
@@ -86,10 +85,15 @@ class _AprilaireClientProtocol(asyncio.Protocol):
 
         asyncio.ensure_future(self._process_command_queue())
 
-        asyncio.ensure_future(self.read_mac_address())
-        asyncio.ensure_future(self.configure_cos())
-        asyncio.ensure_future(self.sync())
-        asyncio.ensure_future(self.read_sensors())
+        async def _update_status():
+            await asyncio.sleep(2)
+
+            await self.read_mac_address()
+            await self.configure_cos()
+            await self.sync()
+            await self.read_sensors()
+
+        asyncio.ensure_future(_update_status())
 
     def data_received(self, data: bytes) -> None:
         """Called when data has been received from the socket"""
@@ -111,8 +115,6 @@ class _AprilaireClientProtocol(asyncio.Protocol):
 
                 if error != 0:
                     _LOGGER.error("Thermostat error: %d", error)
-            else:
-                decoded_data["available"] = True
 
             if self.data_received_callback:
                 asyncio.ensure_future(self.data_received_callback(functional_domain, attribute, decoded_data))
@@ -242,70 +244,53 @@ class _AprilaireClientProtocol(asyncio.Protocol):
             2,
         )
 
-class AprilaireClient:
+class AprilaireClient(SocketClient):
     """Client for sending/receiving data"""
 
     def __init__(
-        self, host: str, port: int, data_received_callback: Callable[[dict[str, Any]], None]
+        self,
+        host: str,
+        port: int,
+        data_received_callback: Callable[[dict[str, Any]], None],
+        reconnect_interval: int = None,
+        retry_connection_interval: int = None
     ) -> None:
-        """Initialize client"""
-        self.host = host
-        self.port = port
-        self.data_received_callback = data_received_callback
-        self.data: dict[str, Any] = {}
-
-        self.connected = False
-        self.stopped = True
-
-        self.protocol: _AprilaireClientProtocol = None
+        super().__init__(
+            host,
+            port,
+            data_received_callback,
+            reconnect_interval,
+            retry_connection_interval)
 
         self.futures: dict[tuple[FunctionalDomain, int], list[asyncio.Future]] = {}
 
+    def create_protocol(self):
+        return _AprilaireClientProtocol(self.data_received, self._reconnect)
+
     async def data_received(self, functional_domain: FunctionalDomain, attribute: int, data: dict[str, Any]):
         self.data_received_callback(data)
+
+        if not functional_domain or not attribute:
+            return
 
         future_key = (functional_domain, attribute)
 
         futures_to_complete = self.futures.pop(future_key, [])
 
         for future in futures_to_complete:
-            future.set_result(data)
+            try:
+                future.set_result(data)
+            except asyncio.exceptions.InvalidStateError:
+                pass
 
-    def start_listen(self):
-        """Start listening to the socket"""
+    def state_changed(self):
+        data = {
+            "connected": self.connected,
+            "stopped": self.stopped,
+            "reconnecting": self.reconnecting,
+        }
 
-        async def _reconnect():
-            self.connected = False
-
-            while not self.stopped:
-                try:
-                    await asyncio.get_event_loop().create_connection(
-                        lambda: self.protocol,
-                        self.host,
-                        self.port,
-                    )
-
-                    self.connected = True
-
-                    break
-                except Exception as e:
-                    _LOGGER.error("Failed to connect to thermostat: %s", str(e))
-
-                    await asyncio.sleep(RECONNECT_INTERVAL)
-
-        self.stopped = False
-
-        self.protocol = _AprilaireClientProtocol(self.data_received, _reconnect)
-
-        asyncio.ensure_future(_reconnect())
-
-    def stop_listen(self):
-        """Stop listening to the socket"""
-
-        self.stopped = True
-
-        if self.protocol and self.protocol.transport:
-            self.protocol.transport.close()
+        self.data_received_callback(data)
 
     async def wait_for_response(
         self,
@@ -324,7 +309,7 @@ class AprilaireClient:
 
         try:
             return await asyncio.wait_for(future, timeout)
-        except TimeoutError:
+        except asyncio.exceptions.TimeoutError:
             _LOGGER.error("Hit timeout of %d waiting for %s, %d", timeout, int(functional_domain), attribute)
             return None
 

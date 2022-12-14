@@ -119,6 +119,17 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         return self._data["cool_setpoint"] if "cool_setpoint" in self._data else None
 
     @property
+    def target_temperature(self) -> float | None:
+        hvac_mode = self.hvac_mode
+
+        if hvac_mode == HVACMode.COOL:
+            return self.target_temperature_high
+        elif hvac_mode == HVACMode.HEAT:
+            return self.target_temperature_low
+
+        return None
+
+    @property
     def current_humidity(self):
         """Get current humidity"""
         return (
@@ -163,6 +174,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get supported fan modes"""
         return [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 
+    @property
+    def min_temp(self) -> float:
+        return 10
+
+    @property
+    def max_temp(self) -> float:
+        return 32
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode"""
         try:
@@ -182,10 +201,19 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         cool_setpoint = 0
         heat_setpoint = 0
 
-        if "target_temp_low" in kwargs:
-            heat_setpoint = encode_temperature(kwargs.get("target_temp_low"))
-        if "target_temp_high" in kwargs:
-            cool_setpoint = encode_temperature(kwargs.get("target_temp_high"))
+        if "temperature" in kwargs:
+            if self._data["mode"] == 3:
+                cool_setpoint = encode_temperature(kwargs.get("temperature"))
+            else:
+                heat_setpoint = encode_temperature(kwargs.get("temperature"))
+        else:
+            if "target_temp_low" in kwargs:
+                heat_setpoint = encode_temperature(kwargs.get("target_temp_low"))
+            if "target_temp_high" in kwargs:
+                cool_setpoint = encode_temperature(kwargs.get("target_temp_high"))
+
+        if cool_setpoint == 0 and heat_setpoint == 0:
+            return
 
         await self._coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
 

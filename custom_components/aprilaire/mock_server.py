@@ -51,8 +51,8 @@ class _AprilaireServerProtocol(asyncio.Protocol):
 
         self.mode = 5
         self.fan_mode = 2
-        self.cool_setpoint = 22
-        self.heat_setpoint = 10
+        self.cool_setpoint = 25
+        self.heat_setpoint = 20
 
         self.queue = Queue()
 
@@ -84,7 +84,7 @@ class _AprilaireServerProtocol(asyncio.Protocol):
             Action.COS,
             FunctionalDomain.SENSORS,
             2,
-            [0, encode_temperature(22), 0, encode_temperature(10), 0, 50, 0, 40]
+            [0, encode_temperature(25), 0, encode_temperature(20), 0, 50, 0, 40]
         ))
 
         self.sequence = (self.sequence + 1) % 128

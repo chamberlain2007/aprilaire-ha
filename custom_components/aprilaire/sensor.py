@@ -10,6 +10,7 @@ from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, Sen
 
 from homeassistant.const import (
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     PERCENTAGE,
 )
 
@@ -89,7 +90,61 @@ class AprilaireOutdoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntit
     def native_unit_of_measurement(self) -> str | None:
         return PERCENTAGE
 
-class AprilaireIndoorTemperatureControllingSensor(BaseAprilaireEntity, SensorEntity):
+class BaseAprilaireTemperatureSensor(SensorEntity):
+    @property
+    def device_class(self) -> str | None:
+        return SensorDeviceClass.TEMPERATURE
+    
+    @property
+    def state_class(self) -> SensorStateClass | str | None:
+        return SensorStateClass.MEASUREMENT
+
+    @property
+    def safe_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the entity, after unit conversion. Uses custom logic for native unit of measurement."""
+        # Highest priority, for registered entities: unit set by user, with fallback to unit suggested
+        # by integration or secondary fallback to unit conversion rules
+        if self._sensor_option_unit_of_measurement:
+            return self._sensor_option_unit_of_measurement
+
+        # Second priority, for non registered entities: unit suggested by integration
+        if not self.registry_entry and self.suggested_unit_of_measurement:
+            return self.suggested_unit_of_measurement
+
+        # Third priority: Legacy temperature conversion, which applies
+        # to both registered and non registered entities
+        return self.hass.config.units.temperature_unit
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        unit_of_measurement = self.hass.config.units.temperature_unit
+
+        sensor_value = self.get_native_value()
+
+        if sensor_value is None:
+            return None
+
+        if unit_of_measurement == TEMP_FAHRENHEIT:
+            return round((sensor_value * 9 / 5 + 32) * 2) / 2
+        
+        return sensor_value
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        unit_of_measurement = self.safe_unit_of_measurement
+
+        if unit_of_measurement == TEMP_FAHRENHEIT:
+            return TEMP_FAHRENHEIT
+
+        return TEMP_CELSIUS
+
+    def get_native_value(self):
+        return None
+
+class AprilaireIndoorTemperatureControllingSensor(
+    BaseAprilaireEntity,
+    BaseAprilaireTemperatureSensor,
+    SensorEntity):
     @property
     def available(self):
         return super().available and self._data.get("indoor_temperature_controlling_sensor_status", None) == 0
@@ -98,23 +153,13 @@ class AprilaireIndoorTemperatureControllingSensor(BaseAprilaireEntity, SensorEnt
     def name(self) -> str | None:
         return "Aprilaire Indoor Temperature Controlling Sensor"
 
-    @property
-    def device_class(self) -> str | None:
-        return SensorDeviceClass.TEMPERATURE
-    
-    @property
-    def state_class(self) -> SensorStateClass | str | None:
-        return SensorStateClass.MEASUREMENT
-    
-    @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
-        return self._data["indoor_temperature_controlling_sensor_value"]
+    def get_native_value(self):
+        return self._data.get("indoor_temperature_controlling_sensor_value")
 
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        return TEMP_CELSIUS
-
-class AprilaireOutdoorTemperatureControllingSensor(BaseAprilaireEntity, SensorEntity):
+class AprilaireOutdoorTemperatureControllingSensor(
+    BaseAprilaireEntity,
+    BaseAprilaireTemperatureSensor,
+    SensorEntity):
     @property
     def available(self):
         return super().available and self._data.get("outdoor_temperature_controlling_sensor_status", None) == 0
@@ -123,18 +168,5 @@ class AprilaireOutdoorTemperatureControllingSensor(BaseAprilaireEntity, SensorEn
     def name(self) -> str | None:
         return "Aprilaire Outdoor Temperature Controlling Sensor"
 
-    @property
-    def device_class(self) -> str | None:
-        return SensorDeviceClass.TEMPERATURE
-    
-    @property
-    def state_class(self) -> SensorStateClass | str | None:
-        return SensorStateClass.MEASUREMENT
-    
-    @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
-        return self._data["outdoor_temperature_controlling_sensor_value"]
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        return TEMP_CELSIUS
+    def get_native_value(self):
+        return self._data.get("outdoor_temperature_controlling_sensor_value")

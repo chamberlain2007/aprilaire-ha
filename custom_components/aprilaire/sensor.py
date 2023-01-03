@@ -125,7 +125,7 @@ class BaseAprilaireTemperatureSensor(SensorEntity):
             return None
 
         if unit_of_measurement == TEMP_FAHRENHEIT:
-            return round((sensor_value * 9 / 5 + 32) * 2) / 2
+            return round(sensor_value * 9 / 5 + 32)
         
         return sensor_value
 

@@ -185,12 +185,12 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     def hvac_action(self) -> HVACAction | str | None:
-        heating_equipment_status = self._data.get("heating_equipment_status")
+        heating_equipment_status = self._data.get("heating_equipment_status", 0)
 
         if heating_equipment_status > 0:
             return HVACAction.HEATING
 
-        cooling_equipment_status = self._data.get("cooling_equipment_status")
+        cooling_equipment_status = self._data.get("cooling_equipment_status", 0)
 
         if cooling_equipment_status > 0:
             return HVACAction.COOLING

@@ -7,6 +7,7 @@ import logging
 from homeassistant.components.climate import (
     HVAC_MODES,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
     FAN_AUTO,
     FAN_ON,
@@ -181,6 +182,20 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         return 32
+
+    @property
+    def hvac_action(self) -> HVACAction | str | None:
+        heating_equipment_status = self._data.get("heating_equipment_status")
+
+        if heating_equipment_status > 0:
+            return HVACAction.HEATING
+
+        cooling_equipment_status = self._data.get("cooling_equipment_status")
+
+        if cooling_equipment_status > 0:
+            return HVACAction.COOLING
+
+        return HVACAction.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode"""

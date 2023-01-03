@@ -229,7 +229,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
                 0, # Reserved
                 1, # Controlling Sensor Values
                 0, # Over the air ODT update timeout
-                0, # Thermostat Status
+                1, # Thermostat Status
                 0, # IAQ Status
                 0, # Model & Revision
                 0, # Support Module

@@ -57,6 +57,27 @@ class _AprilaireServerProtocol(asyncio.Protocol):
         self.queue = Queue()
 
         self.sequence = 1
+
+    def _generate_thermostat_status_command_bytes(self):
+        heating_equipment_status = {
+            2: 2,
+            4: 7
+        }.get(self.mode, 0)
+
+        cooling_equipment_status = {
+            3: 2,
+            5: 2
+        }.get(self.mode, 0)
+
+        fan_status = 1 if self.fan_mode == 1 or self.fan_mode == 2 else 0
+
+        return generate_command_bytes(
+            self.sequence + 127,
+            Action.COS,
+            FunctionalDomain.STATUS,
+            6,
+            [heating_equipment_status, cooling_equipment_status, 0, fan_status]
+        )
     
     async def send_status(self):
         await self.queue.put(generate_command_bytes(
@@ -96,6 +117,10 @@ class _AprilaireServerProtocol(asyncio.Protocol):
             2,
             [1]
         ))
+
+        self.sequence = (self.sequence + 1) % 128
+
+        await self.queue.put(self._generate_thermostat_status_command_bytes())
 
         self.sequence = (self.sequence + 1) % 128
 
@@ -180,6 +205,8 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                     ))
                     
                     self.sequence = (self.sequence + 1) % 128
+
+                    self.queue.put_nowait(self._generate_thermostat_status_command_bytes())
 
             if functional_domain == FunctionalDomain.STATUS:
                 if attribute == 2:

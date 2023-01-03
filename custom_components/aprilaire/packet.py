@@ -64,6 +64,12 @@ MAPPING = {
             2: [
                 ("synced", ValueType.INTEGER),
             ],
+            6: [
+                ("heating_equipment_status", ValueType.INTEGER),
+                ("cooling_equipment_status", ValueType.INTEGER),
+                ("progressive_recovery", ValueType.INTEGER),
+                ("fan_status", ValueType.INTEGER),
+            ],
             8: [
                 ("error", ValueType.INTEGER),
             ],

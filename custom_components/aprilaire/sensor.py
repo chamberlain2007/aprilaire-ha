@@ -43,7 +43,7 @@ async def async_setup_entry(
 class AprilaireIndoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntity):
     @property
     def available(self):
-        return super().available and self._data.get("indoor_humidity_controlling_sensor_status", None) == 0
+        return super().available and self._coordinator.data.get("indoor_humidity_controlling_sensor_status", None) == 0
 
     @property
     def name(self) -> str | None:
@@ -59,7 +59,7 @@ class AprilaireIndoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntity
     
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
-        return self._data["indoor_humidity_controlling_sensor_value"]
+        return self._coordinator.data["indoor_humidity_controlling_sensor_value"]
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -68,7 +68,7 @@ class AprilaireIndoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntity
 class AprilaireOutdoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntity):
     @property
     def available(self):
-        return super().available and self._data.get("outdoor_humidity_controlling_sensor_status", None) == 0
+        return super().available and self._coordinator.data.get("outdoor_humidity_controlling_sensor_status", None) == 0
 
     @property
     def name(self) -> str | None:
@@ -84,7 +84,7 @@ class AprilaireOutdoorHumidityControllingSensor(BaseAprilaireEntity, SensorEntit
     
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
-        return self._data["outdoor_humidity_controlling_sensor_value"]
+        return self._coordinator.data["outdoor_humidity_controlling_sensor_value"]
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -147,14 +147,14 @@ class AprilaireIndoorTemperatureControllingSensor(
     SensorEntity):
     @property
     def available(self):
-        return super().available and self._data.get("indoor_temperature_controlling_sensor_status", None) == 0
+        return super().available and self._coordinator.data.get("indoor_temperature_controlling_sensor_status", None) == 0
 
     @property
     def name(self) -> str | None:
         return "Aprilaire Indoor Temperature Controlling Sensor"
 
     def get_native_value(self):
-        return self._data.get("indoor_temperature_controlling_sensor_value")
+        return self._coordinator.data.get("indoor_temperature_controlling_sensor_value")
 
 class AprilaireOutdoorTemperatureControllingSensor(
     BaseAprilaireEntity,
@@ -162,11 +162,11 @@ class AprilaireOutdoorTemperatureControllingSensor(
     SensorEntity):
     @property
     def available(self):
-        return super().available and self._data.get("outdoor_temperature_controlling_sensor_status", None) == 0
+        return super().available and self._coordinator.data.get("outdoor_temperature_controlling_sensor_status", None) == 0
 
     @property
     def name(self) -> str | None:
         return "Aprilaire Outdoor Temperature Controlling Sensor"
 
     def get_native_value(self):
-        return self._data.get("outdoor_temperature_controlling_sensor_value")
+        return self._coordinator.data.get("outdoor_temperature_controlling_sensor_value")

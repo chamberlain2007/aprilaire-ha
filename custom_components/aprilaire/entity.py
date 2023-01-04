@@ -17,42 +17,34 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         """Initialize the entity"""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._data: dict[str, Any] = coordinator.all_data
         self._available = False
-
-        _LOGGER.debug("Current data: %s", self._data)
 
         self._update_available()
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        _LOGGER.debug(self._coordinator.data)
-
-        for key in self._coordinator.data:
-            self._data[key] = self._coordinator.data[key]
-
-        _LOGGER.debug("Current data: %s", self._data)
+        _LOGGER.debug("Current data: %s", self._coordinator.data)
 
         self._update_available()
 
         self.async_write_ha_state()
 
     def _update_available(self):
-        connected: bool = self._data.get("connected", None) or self._data.get("reconnecting", None)
-        stopped: bool = self._data.get("stopped", None)
+        connected: bool = self._coordinator.data.get("connected", None) or self._coordinator.data.get("reconnecting", None)
+        stopped: bool = self._coordinator.data.get("stopped", None)
 
         if stopped:
             self._available = False
         elif not connected:
             self._available = False
         else:
-            self._available = "mac_address" in self._data
+            self._available = "mac_address" in self._coordinator.data
 
     @property
     def device_info(self):
         return DeviceInfo(
-            identifiers = {(DOMAIN, self._data['mac_address'])},
+            identifiers = {(DOMAIN, self._coordinator.data['mac_address'])},
             name = "Aprilaire Thermostat",
         )
 

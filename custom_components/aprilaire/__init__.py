@@ -55,7 +55,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
         )
 
-        self.all_data: dict[str, Any] = {}
+        self.data: dict[str, Any] = {}
 
         self.client = AprilaireClient(
             host,
@@ -65,8 +65,8 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             RETRY_CONNECTION_INTERVAL)
 
     def async_set_updated_data(self, data: _T) -> None:
-        for key in data:
-            self.all_data[key] = data[key]
+        if self.data is not None:
+            data = self.data | data
 
         super().async_set_updated_data(data)
 

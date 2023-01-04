@@ -86,10 +86,10 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get supported features"""
         features = 0
 
-        if "mode" not in self._data:
+        if "mode" not in self._coordinator.data:
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE
         else:
-            mode = self._data["mode"]
+            mode = self._coordinator.data["mode"]
 
             if mode == 5:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -104,20 +104,20 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def current_temperature(self):
         """Get current temperature"""
         return (
-            self._data["indoor_temperature_controlling_sensor_value"]
-            if "indoor_temperature_controlling_sensor_value" in self._data
+            self._coordinator.data["indoor_temperature_controlling_sensor_value"]
+            if "indoor_temperature_controlling_sensor_value" in self._coordinator.data
             else None
         )
 
     @property
     def target_temperature_low(self):
         """Get heat setpoint"""
-        return self._data["heat_setpoint"] if "heat_setpoint" in self._data else None
+        return self._coordinator.data["heat_setpoint"] if "heat_setpoint" in self._coordinator.data else None
 
     @property
     def target_temperature_high(self):
         """Get cool setpoint"""
-        return self._data["cool_setpoint"] if "cool_setpoint" in self._data else None
+        return self._coordinator.data["cool_setpoint"] if "cool_setpoint" in self._coordinator.data else None
 
     @property
     def target_temperature(self) -> float | None:
@@ -134,18 +134,18 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def current_humidity(self):
         """Get current humidity"""
         return (
-            self._data["indoor_humidity_controlling_sensor_value"]
-            if "indoor_humidity_controlling_sensor_value" in self._data
+            self._coordinator.data["indoor_humidity_controlling_sensor_value"]
+            if "indoor_humidity_controlling_sensor_value" in self._coordinator.data
             else None
         )
 
     @property
     def hvac_mode(self) -> HVAC_MODES:
         """Get HVAC mode"""
-        if "mode" not in self._data:
+        if "mode" not in self._coordinator.data:
             return None
 
-        mode = self._data["mode"]
+        mode = self._coordinator.data["mode"]
 
         if mode not in HVAC_MODE_MAP:
             return None
@@ -160,10 +160,10 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def fan_mode(self):
         """Get fan mode"""
-        if "fan_mode" not in self._data:
+        if "fan_mode" not in self._coordinator.data:
             return None
 
-        fan_mode = self._data["fan_mode"]
+        fan_mode = self._coordinator.data["fan_mode"]
 
         if fan_mode not in FAN_MODE_MAP:
             return None
@@ -185,12 +185,12 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     def hvac_action(self) -> HVACAction | str | None:
-        heating_equipment_status = self._data.get("heating_equipment_status", 0)
+        heating_equipment_status = self._coordinator.data.get("heating_equipment_status", 0)
 
         if heating_equipment_status > 0:
             return HVACAction.HEATING
 
-        cooling_equipment_status = self._data.get("cooling_equipment_status", 0)
+        cooling_equipment_status = self._coordinator.data.get("cooling_equipment_status", 0)
 
         if cooling_equipment_status > 0:
             return HVACAction.COOLING
@@ -217,7 +217,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         heat_setpoint = 0
 
         if "temperature" in kwargs:
-            if self._data["mode"] == 3:
+            if self._coordinator.data["mode"] == 3:
                 cool_setpoint = encode_temperature(kwargs.get("temperature"))
             else:
                 heat_setpoint = encode_temperature(kwargs.get("temperature"))

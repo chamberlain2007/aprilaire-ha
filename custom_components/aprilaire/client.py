@@ -268,17 +268,6 @@ class AprilaireClient(SocketClient):
         return _AprilaireClientProtocol(self.data_received, self._reconnect)
 
     async def data_received(self, functional_domain: FunctionalDomain, attribute: int, data: dict[str, Any]):
-        # This call generates null (0) values which should not override the existing values
-        if functional_domain == FunctionalDomain.CONTROL and attribute == 1:
-            if data.get("mode") == 0:
-                data.pop("mode")
-            if data.get("fan_mode") == 0:
-                data.pop("fan_mode")
-            if data.get("heat_setpoint") == 0:
-                data.pop("heat_setpoint")
-            if data.get("cool_setpoint") == 0:
-                data.pop("cool_setpoint")
-
         self.data_received_callback(data)
 
         if not functional_domain or not attribute:

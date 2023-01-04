@@ -15,19 +15,21 @@ class ValueType(Enum):
     """Parsable value types from data"""
 
     INTEGER = 1
-    TEMPERATURE = 2
-    HUMIDITY = 3
-    MAC_ADDRESS = 4
+    INTEGER_REQUIRED = 2
+    TEMPERATURE = 3
+    TEMPERATURE_REQUIRED = 4
+    HUMIDITY = 5
+    MAC_ADDRESS = 6
 
 
 MAPPING = {
     Action.READ_RESPONSE: {
         FunctionalDomain.CONTROL: {
             1: [
-                ("mode", ValueType.INTEGER),
-                ("fan_mode", ValueType.INTEGER),
-                ("heat_setpoint", ValueType.TEMPERATURE),
-                ("cool_setpoint", ValueType.TEMPERATURE),
+                ("mode", ValueType.INTEGER_REQUIRED),
+                ("fan_mode", ValueType.INTEGER_REQUIRED),
+                ("heat_setpoint", ValueType.TEMPERATURE_REQUIRED),
+                ("cool_setpoint", ValueType.TEMPERATURE_REQUIRED),
             ]
         },
         FunctionalDomain.SENSORS: {
@@ -144,12 +146,20 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
                         attribute
                     ][attribute_index]
 
+                    data_value = data[i + j]
+
                     if value_type == ValueType.INTEGER:
-                        current_result[attribute_name] = data[i + j]
+                        current_result[attribute_name] = data_value
+                    elif value_type == ValueType.INTEGER_REQUIRED:
+                        if data_value is not None and data_value != 0:
+                            current_result[attribute_name] = data_value
                     elif value_type == ValueType.HUMIDITY:
-                        current_result[attribute_name] = decode_humidity(data[i + j])
+                        current_result[attribute_name] = decode_humidity(data_value)
                     elif value_type == ValueType.TEMPERATURE:
-                        current_result[attribute_name] = decode_temperature(data[i + j])
+                        current_result[attribute_name] = decode_temperature(data_value)
+                    elif value_type == ValueType.TEMPERATURE_REQUIRED:
+                        if data_value is not None and data_value != 0:
+                            current_result[attribute_name] = decode_temperature(data_value)
                     elif value_type == ValueType.MAC_ADDRESS:
                         mac_address_components = []
 

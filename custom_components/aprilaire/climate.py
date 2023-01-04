@@ -143,11 +143,13 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def hvac_mode(self) -> HVAC_MODES:
         """Get HVAC mode"""
         if "mode" not in self._coordinator.data:
+            _LOGGER.warn("No mode found in coordinator data")
             return None
 
         mode = self._coordinator.data["mode"]
 
         if mode not in HVAC_MODE_MAP:
+            _LOGGER.warn("Invalid mode %d found in coordinator data", mode)
             return None
 
         return HVAC_MODE_MAP[mode]

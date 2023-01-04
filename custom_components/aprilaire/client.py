@@ -99,25 +99,25 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         """Called when data has been received from the socket"""
         _LOGGER.info("Aprilaire data received")
 
-        decoded_data = decode_packet(data)
+        decoded_packets = decode_packet(data)
 
-        if decoded_data:
-            if "event" not in decoded_data:
+        for decoded_packet in decoded_packets:
+            if "event" not in decoded_packet:
                 _LOGGER.warning("Event data missing")
                 return
 
-            (action, functional_domain, attribute) = decoded_data["event"]
+            (action, functional_domain, attribute) = decoded_packet["event"]
 
             _LOGGER.debug("Received data, action=%s, functional_domain=%s, attribute=%d", action, functional_domain, attribute)
 
-            if "error" in decoded_data:
-                error = decoded_data["error"]
+            if "error" in decoded_packet:
+                error = decoded_packet["error"]
 
                 if error != 0:
                     _LOGGER.error("Thermostat error: %d", error)
 
             if self.data_received_callback:
-                asyncio.ensure_future(self.data_received_callback(functional_domain, attribute, decoded_data))
+                asyncio.ensure_future(self.data_received_callback(functional_domain, attribute, decoded_packet))
 
     def connection_lost(self, exc: Exception | None) -> None:
         """Called when the connection to the socket has been lost"""

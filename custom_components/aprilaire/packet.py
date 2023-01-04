@@ -88,7 +88,7 @@ MAPPING[Action.WRITE] = MAPPING[Action.READ_RESPONSE]
 _LOGGER = logging.getLogger(LOG_NAME)
 
 
-def decode_packet(data: bytes) -> dict[str, Any]:
+def decode_packet(data: bytes) -> list[dict[str, Any]]:
     """Decode the response data from the thermostat"""
 
     (action, functional_domain, attribute) = decode_packet_header(data)
@@ -106,26 +106,26 @@ def decode_packet(data: bytes) -> dict[str, Any]:
             data.hex(" ", 1)
         )
 
-        return None
+        return []
 
     _LOGGER.debug(
         "Reading data=%s",
         data.hex(" ", 1)
     )
 
-    result: dict[str, Any] = {"event": (action, functional_domain, attribute)}
+    results: list[dict[str, Any]] = []
+
+    current_result =  {"event": (action, functional_domain, attribute)}
 
     i = 0
 
-    extra_data: list(int) = []
-
     while i < len(data):
         if i == 0:
-            result["revision"] = data[i]
+            current_result["revision"] = data[i]
         elif i == 1:
-            result["sequence"] = data[i]
+            current_result["sequence"] = data[i]
         elif i == 2:
-            result["count"] = data[2] << 2 | data[3]
+            current_result["count"] = data[2] << 2 | data[3]
             i += 1
         elif i == 4:
             if data[i] == "\06":
@@ -134,7 +134,7 @@ def decode_packet(data: bytes) -> dict[str, Any]:
 
             attribute_index = 0
 
-            while j < result["count"]:
+            while j < current_result["count"]:
                 if j < 3:
                     pass
                 elif attribute_index >= len(MAPPING[action][functional_domain][attribute]):
@@ -145,11 +145,11 @@ def decode_packet(data: bytes) -> dict[str, Any]:
                     ][attribute_index]
 
                     if value_type == ValueType.INTEGER:
-                        result[attribute_name] = data[i + j]
+                        current_result[attribute_name] = data[i + j]
                     elif value_type == ValueType.HUMIDITY:
-                        result[attribute_name] = decode_humidity(data[i + j])
+                        current_result[attribute_name] = decode_humidity(data[i + j])
                     elif value_type == ValueType.TEMPERATURE:
-                        result[attribute_name] = decode_temperature(data[i + j])
+                        current_result[attribute_name] = decode_temperature(data[i + j])
                     elif value_type == ValueType.MAC_ADDRESS:
                         mac_address_components = []
 
@@ -157,20 +157,20 @@ def decode_packet(data: bytes) -> dict[str, Any]:
                             mac_address_components.append(f"{data[i + j]:x}")
                             j += 1
 
-                        result[attribute_name] = ":".join(mac_address_components)
+                        current_result[attribute_name] = ":".join(mac_address_components)
 
                     attribute_index += 1
                 j += 1
             i += j
         else:
-            extra_data.append(data[i])
+            results.extend(decode_packet(data[i:]))
+            break
 
         i += 1
 
-    if extra_data:
-        _LOGGER.warning("Received extra data from request")
+    results.insert(0, current_result)
 
-    return result
+    return results
 
 def decode_packet_header(data):
     """Read the header from a packet"""

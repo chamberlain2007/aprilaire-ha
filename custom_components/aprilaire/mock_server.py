@@ -96,31 +96,19 @@ class _AprilaireServerProtocol(asyncio.Protocol):
             FunctionalDomain.CONTROL,
             1,
             [self.mode, self.fan_mode, encode_temperature(self.heat_setpoint), encode_temperature(self.cool_setpoint)]
-        ))
-
-        self.sequence = (self.sequence + 1) % 128
-
-        await self.queue.put(generate_command_bytes(
+        ) + generate_command_bytes(
             self.sequence + 127,
             Action.COS,
             FunctionalDomain.SENSORS,
             2,
             [0, encode_temperature(25), 0, encode_temperature(20), 0, 50, 0, 40]
-        ))
-
-        self.sequence = (self.sequence + 1) % 128
-
-        await self.queue.put(generate_command_bytes(
+        ) + generate_command_bytes(
             self.sequence + 127,
             Action.COS,
             FunctionalDomain.STATUS,
             2,
             [1]
-        ))
-
-        self.sequence = (self.sequence + 1) % 128
-
-        await self.queue.put(self._generate_thermostat_status_command_bytes())
+        ) + self._generate_thermostat_status_command_bytes())
 
         self.sequence = (self.sequence + 1) % 128
 
@@ -170,43 +158,44 @@ class _AprilaireServerProtocol(asyncio.Protocol):
         elif action == Action.WRITE:
             if functional_domain == FunctionalDomain.CONTROL:
                 if attribute == 1:
-                    parsed_request = decode_packet(data)
+                    decoded_packets = decode_packet(data)
 
-                    if "mode" in parsed_request:
-                        new_mode = parsed_request["mode"]
+                    for decoded_packet in decoded_packets:
+                        if "mode" in decoded_packet:
+                            new_mode = decoded_packet["mode"]
 
-                        if new_mode != 0:
-                            self.mode = new_mode
-                    
-                    if "fan_mode" in parsed_request:
-                        new_fan_mode = parsed_request["fan_mode"]
+                            if new_mode != 0:
+                                self.mode = new_mode
 
-                        if new_fan_mode != 0:
-                            self.fan_mode = new_fan_mode
-                    
-                    if "heat_setpoint" in parsed_request:
-                        new_heat_setpoint = parsed_request["heat_setpoint"]
+                        if "fan_mode" in decoded_packet:
+                            new_fan_mode = decoded_packet["fan_mode"]
 
-                        if new_heat_setpoint != 0:
-                            self.heat_setpoint = new_heat_setpoint
-                    
-                    if "cool_setpoint" in parsed_request:
-                        new_cool_setpoint = parsed_request["cool_setpoint"]
+                            if new_fan_mode != 0:
+                                self.fan_mode = new_fan_mode
 
-                        if new_cool_setpoint != 0:
-                            self.cool_setpoint = new_cool_setpoint
-                    
-                    self.queue.put_nowait(generate_command_bytes(
-                        self.sequence + 127,
-                        Action.COS,
-                        FunctionalDomain.CONTROL,
-                        1,
-                        [self.mode, self.fan_mode, encode_temperature(self.heat_setpoint), encode_temperature(self.cool_setpoint)]
-                    ))
-                    
-                    self.sequence = (self.sequence + 1) % 128
+                        if "heat_setpoint" in decoded_packet:
+                            new_heat_setpoint = decoded_packet["heat_setpoint"]
 
-                    self.queue.put_nowait(self._generate_thermostat_status_command_bytes())
+                            if new_heat_setpoint != 0:
+                                self.heat_setpoint = new_heat_setpoint
+
+                        if "cool_setpoint" in decoded_packet:
+                            new_cool_setpoint = decoded_packet["cool_setpoint"]
+
+                            if new_cool_setpoint != 0:
+                                self.cool_setpoint = new_cool_setpoint
+
+                        self.queue.put_nowait(generate_command_bytes(
+                            self.sequence + 127,
+                            Action.COS,
+                            FunctionalDomain.CONTROL,
+                            1,
+                            [self.mode, self.fan_mode, encode_temperature(self.heat_setpoint), encode_temperature(self.cool_setpoint)]
+                        ))
+
+                        self.sequence = (self.sequence + 1) % 128
+
+                        self.queue.put_nowait(self._generate_thermostat_status_command_bytes())
 
             if functional_domain == FunctionalDomain.STATUS:
                 if attribute == 2:

@@ -195,7 +195,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         if cooling_equipment_status > 0:
             return HVACAction.COOLING
 
-        return HVACAction.OFF
+        return HVACAction.IDLE
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode"""

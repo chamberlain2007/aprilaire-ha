@@ -178,6 +178,10 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         return [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 
     @property
+    def fan(self):
+        return "on" if self._coordinator.data.get("fan_status", 0) == 1 else "off"
+
+    @property
     def min_temp(self) -> float:
         return 10
 
@@ -198,6 +202,13 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             return HVACAction.COOLING
 
         return HVACAction.IDLE
+
+    @property
+    def extra_state_attributes(self):
+        """Return device specific state attributes."""
+        return {
+            "fan": self.fan,
+        }
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode"""

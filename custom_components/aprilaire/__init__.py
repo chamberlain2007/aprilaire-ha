@@ -15,7 +15,7 @@ from .client import AprilaireClient
 
 from .const import FunctionalDomain, DOMAIN, LOG_NAME
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(LOG_NAME)
 

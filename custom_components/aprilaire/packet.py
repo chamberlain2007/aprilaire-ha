@@ -72,6 +72,12 @@ MAPPING = {
                 ("progressive_recovery", ValueType.INTEGER),
                 ("fan_status", ValueType.INTEGER),
             ],
+            7: [
+                ("dehumidification_status", ValueType.INTEGER),
+                ("humidification_status", ValueType.INTEGER),
+                ("ventilation_status", ValueType.INTEGER),
+                ("air_cleaning_status", ValueType.INTEGER),
+            ],
             8: [
                 ("error", ValueType.INTEGER),
             ],

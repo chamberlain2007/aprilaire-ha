@@ -35,6 +35,10 @@ async def async_setup_entry(
         AprilaireOutdoorHumidityControllingSensor(coordinator),
         AprilaireIndoorTemperatureControllingSensor(coordinator),
         AprilaireOutdoorTemperatureControllingSensor(coordinator),
+        AprilaireDehumidificationStatusSensor(coordinator),
+        AprilaireHumidificationStatusSensor(coordinator),
+        AprilaireVentilationStatusSensor(coordinator),
+        AprilaireAirCleaningStatusSensor(coordinator),
     ]
 
     async_add_entities(entities)
@@ -170,3 +174,95 @@ class AprilaireOutdoorTemperatureControllingSensor(
 
     def get_native_value(self):
         return self._coordinator.data.get("outdoor_temperature_controlling_sensor_value")
+
+class AprilaireDehumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
+    @property
+    def available(self):
+        return super().available and "dehumidification_status" in self._coordinator.data
+
+    @property
+    def name(self) -> str | None:
+        return "Aprilaire Dehumidification Status"
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        dehumidification_status = self._coordinator.data.get("dehumidification_status")
+
+        dehumidification_status_map = {
+            0: "Idle",
+            1: "Idle",
+            2: "On",
+            3: "On",
+            4: "Off",
+        }
+
+        return dehumidification_status_map.get(dehumidification_status)
+
+class AprilaireHumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
+    @property
+    def available(self):
+        return super().available and "humidification_status" in self._coordinator.data
+
+    @property
+    def name(self) -> str | None:
+        return "Aprilaire Humidification Status"
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        humidification_status = self._coordinator.data.get("humidification_status")
+
+        humidification_status_map = {
+            0: "Idle",
+            1: "Idle",
+            2: "On",
+            3: "Off",
+        }
+
+        return humidification_status_map.get(humidification_status)
+
+class AprilaireVentilationStatusSensor(BaseAprilaireEntity, SensorEntity):
+    @property
+    def available(self):
+        return super().available and "ventilation_status" in self._coordinator.data
+
+    @property
+    def name(self) -> str | None:
+        return "Aprilaire Ventilation Status"
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        ventilation_status = self._coordinator.data.get("ventilation_status")
+
+        ventilation_status_map = {
+            0: "Idle",
+            1: "Idle",
+            2: "On",
+            3: "Idle",
+            4: "Idle",
+            5: "Idle",
+            6: "Off",
+        }
+
+        return ventilation_status_map.get(ventilation_status)
+
+class AprilaireAirCleaningStatusSensor(BaseAprilaireEntity, SensorEntity):
+    @property
+    def available(self):
+        return super().available and "air_cleaning_status" in self._coordinator.data
+
+    @property
+    def name(self) -> str | None:
+        return "Aprilaire Air Cleaning Status"
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        air_cleaning_status = self._coordinator.data.get("air_cleaning_status")
+
+        air_cleaning_status_map = {
+            0: "Idle",
+            1: "Idle",
+            2: "On",
+            3: "Off",
+        }
+
+        return air_cleaning_status_map.get(air_cleaning_status)

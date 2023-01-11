@@ -108,6 +108,12 @@ class _AprilaireServerProtocol(asyncio.Protocol):
             FunctionalDomain.STATUS,
             2,
             [1]
+        ) + generate_command_bytes(
+            self.sequence + 127,
+            Action.COS,
+            FunctionalDomain.STATUS,
+            7,
+            [2, 2, 2, 2]
         ) + self._generate_thermostat_status_command_bytes())
 
         self.sequence = (self.sequence + 1) % 128

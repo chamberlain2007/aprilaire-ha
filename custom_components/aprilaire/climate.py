@@ -154,7 +154,19 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVAC_MODES]:
         """Get supported HVAC modes"""
-        return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
+
+        thermostat_modes = self._coordinator.data.get("thermostat_modes")
+
+        thermostat_modes_map = {
+            1: [HVACMode.OFF, HVACMode.HEAT],
+            2: [HVACMode.OFF, HVACMode.COOL],
+            3: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL],
+            4: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL],
+            5: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO],
+            5: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO],
+        }
+
+        return thermostat_modes_map.get(thermostat_modes, [])
 
     @property
     def fan_mode(self):

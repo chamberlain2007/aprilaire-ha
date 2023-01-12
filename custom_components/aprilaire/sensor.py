@@ -28,15 +28,31 @@ async def async_setup_entry(
     coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
-        AprilaireIndoorHumidityControllingSensor(coordinator),
-        AprilaireOutdoorHumidityControllingSensor(coordinator),
-        AprilaireIndoorTemperatureControllingSensor(coordinator),
-        AprilaireOutdoorTemperatureControllingSensor(coordinator),
-        AprilaireDehumidificationStatusSensor(coordinator),
-        AprilaireHumidificationStatusSensor(coordinator),
-        AprilaireVentilationStatusSensor(coordinator),
-        AprilaireAirCleaningStatusSensor(coordinator),
     ]
+
+    if coordinator.data.get("indoor_humidity_controlling_sensor_status") != 3:
+        entities.append(AprilaireIndoorHumidityControllingSensor(coordinator))
+
+    if coordinator.data.get("outdoor_humidity_controlling_sensor_status") != 3:
+        entities.append(AprilaireOutdoorHumidityControllingSensor(coordinator))
+
+    if coordinator.data.get("indoor_temperature_controlling_sensor_status") != 3:
+        entities.append(AprilaireIndoorTemperatureControllingSensor(coordinator))
+
+    if coordinator.data.get("outdoor_temperature_controlling_sensor_status") != 3:
+        entities.append(AprilaireOutdoorTemperatureControllingSensor(coordinator))
+
+    if coordinator.data.get('dehumidification_available') == 1:
+        entities.append(AprilaireDehumidificationStatusSensor(coordinator))
+
+    if coordinator.data.get('humidification_available') == 1:
+        entities.append(AprilaireHumidificationStatusSensor(coordinator))
+
+    if coordinator.data.get('ventilation_available') == 1:
+        entities.append(AprilaireVentilationStatusSensor(coordinator))
+
+    if coordinator.data.get('air_cleaning_available') == 1:
+        entities.append(AprilaireAirCleaningStatusSensor(coordinator))
 
     async_add_entities(entities)
 

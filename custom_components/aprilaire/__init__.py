@@ -97,6 +97,12 @@ class AprilaireCoordinator(DataUpdateCoordinator):
 
                     return
 
+            if not self.data or "thermostat_modes" not in self.data:
+                await self.client.wait_for_response(FunctionalDomain.CONTROL, 7, 30)
+
+            if not self.data or "indoor_temperature_controlling_sensor_status" not in self.data:
+                await self.client.wait_for_response(FunctionalDomain.SENSORS, 2, 30)
+
             await ready_callback(True)
 
         asyncio.ensure_future(_run())

@@ -30,6 +30,13 @@ MAPPING = {
                 ("fan_mode", ValueType.INTEGER_REQUIRED),
                 ("heat_setpoint", ValueType.TEMPERATURE_REQUIRED),
                 ("cool_setpoint", ValueType.TEMPERATURE_REQUIRED),
+            ],
+            7: [
+                ("thermostat_modes", ValueType.INTEGER),
+                ("air_cleaning_available", ValueType.INTEGER),
+                ("ventilation_available", ValueType.INTEGER),
+                ("dehumidification_available", ValueType.INTEGER),
+                ("humidification_available", ValueType.INTEGER),
             ]
         },
         FunctionalDomain.SENSORS: {

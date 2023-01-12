@@ -89,9 +89,10 @@ class _AprilaireClientProtocol(asyncio.Protocol):
             await asyncio.sleep(2)
 
             await self.read_mac_address()
+            await self.read_thermostat_status()
+            await self.read_sensors()
             await self.configure_cos()
             await self.sync()
-            await self.read_sensors()
 
         asyncio.ensure_future(_update_status())
 
@@ -215,7 +216,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
                 0, # Humidification Setpoint
                 0, # Fresh Air Setting
                 0, # Air Cleaning Settings
-                0, # Thermostat IAQ Available
+                1, # Thermostat IAQ Available
                 0, # Schedule Settings
                 0, # Away Settings
                 0, # Schedule Day
@@ -242,6 +243,13 @@ class _AprilaireClientProtocol(asyncio.Protocol):
             Action.READ_REQUEST,
             FunctionalDomain.IDENTIFICATION,
             2,
+        )
+
+    async def read_thermostat_status(self):
+        await self._send_command(
+            Action.READ_REQUEST,
+            FunctionalDomain.CONTROL,
+            7,
         )
 
 class AprilaireClient(SocketClient):

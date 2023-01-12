@@ -163,7 +163,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             3: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL],
             4: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL],
             5: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO],
-            5: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO],
+            6: [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO],
         }
 
         return thermostat_modes_map.get(thermostat_modes, [])

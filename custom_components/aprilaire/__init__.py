@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,6 +10,7 @@ from homeassistant.const import Platform, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, Event
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from .client import AprilaireClient
@@ -32,14 +34,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    async def ready_callback(ready: bool):
+        if ready:
+            hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def _async_close(_: Event) -> None:
-        coordinator.stop_listen()
+            async def _async_close(_: Event) -> None:
+                coordinator.stop_listen()
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
-    )
+            entry.async_on_unload(
+                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+            )
+        else:
+            _LOGGER.error("Failed to wait for ready")
+
+    coordinator.wait_for_ready(ready_callback)
 
     return True
 
@@ -78,12 +86,17 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         """Stop listening for data"""
         self.client.stop_listen()
 
-    async def wait_for_ready(self):
-        if not self.data or "mac_address" not in self.data:
-            data = await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 2, 30)
+    def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
+        async def _run():
+            if not self.data or "mac_address" not in self.data:
+                data = await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 2, 30)
 
-            if not data or "mac_address" not in data:
-                _LOGGER.error("Missing MAC address, cannot create unique ID")
-                return False
+                if not data or "mac_address" not in data:
+                    _LOGGER.error("Missing MAC address, cannot create unique ID")
+                    await ready_callback(False)
 
-        return True
+                    return
+
+            await ready_callback(True)
+
+        asyncio.ensure_future(_run())

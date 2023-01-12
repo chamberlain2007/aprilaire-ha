@@ -27,9 +27,6 @@ async def async_setup_entry(
 
     coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    if not await coordinator.wait_for_ready():
-        return
-    
     entities = [
         AprilaireIndoorHumidityControllingSensor(coordinator),
         AprilaireOutdoorHumidityControllingSensor(coordinator),

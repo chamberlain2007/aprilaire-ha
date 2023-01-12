@@ -17,9 +17,6 @@ async def async_setup_entry(
     """Add climates for passed config_entry in HA."""
 
     coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    if not await coordinator.wait_for_ready():
-        return
     
     entities = [
         AprilaireFanStatusSensor(coordinator),

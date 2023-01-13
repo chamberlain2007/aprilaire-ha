@@ -37,7 +37,7 @@ MAPPING = {
                 ("ventilation_available", ValueType.INTEGER),
                 ("dehumidification_available", ValueType.INTEGER),
                 ("humidification_available", ValueType.INTEGER),
-            ]
+            ],
         },
         FunctionalDomain.SENSORS: {
             1: [
@@ -93,7 +93,7 @@ MAPPING = {
             2: [
                 ("mac_address", ValueType.MAC_ADDRESS),
             ],
-        }
+        },
     }
 }
 
@@ -118,19 +118,16 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
             str(action),
             str(functional_domain),
             attribute,
-            data.hex(" ", 1)
+            data.hex(" ", 1),
         )
 
         return []
 
-    _LOGGER.debug(
-        "Reading data=%s",
-        data.hex(" ", 1)
-    )
+    _LOGGER.debug("Reading data=%s", data.hex(" ", 1))
 
     results: list[dict[str, Any]] = []
 
-    current_result =  {"event": (action, functional_domain, attribute)}
+    current_result = {"event": (action, functional_domain, attribute)}
 
     i = 0
 
@@ -152,7 +149,9 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
             while j < current_result["count"]:
                 if j < 3:
                     pass
-                elif attribute_index >= len(MAPPING[action][functional_domain][attribute]):
+                elif attribute_index >= len(
+                    MAPPING[action][functional_domain][attribute]
+                ):
                     pass
                 else:
                     (attribute_name, value_type) = MAPPING[action][functional_domain][
@@ -172,7 +171,9 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
                         current_result[attribute_name] = decode_temperature(data_value)
                     elif value_type == ValueType.TEMPERATURE_REQUIRED:
                         if data_value is not None and data_value != 0:
-                            current_result[attribute_name] = decode_temperature(data_value)
+                            current_result[attribute_name] = decode_temperature(
+                                data_value
+                            )
                     elif value_type == ValueType.MAC_ADDRESS:
                         mac_address_components = []
 
@@ -180,7 +181,9 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
                             mac_address_components.append(f"{data[i + j]:x}")
                             j += 1
 
-                        current_result[attribute_name] = ":".join(mac_address_components)
+                        current_result[attribute_name] = ":".join(
+                            mac_address_components
+                        )
 
                     attribute_index += 1
                 j += 1
@@ -194,6 +197,7 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
     results.insert(0, current_result)
 
     return results
+
 
 def decode_packet_header(data):
     """Read the header from a packet"""

@@ -65,8 +65,8 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def name(self):
         """Get name of entity"""
-        
-        return f"Aprilaire Thermostat"
+
+        return "Aprilaire Thermostat"
 
     @property
     def temperature_unit(self):
@@ -100,29 +100,27 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_temperature(self):
         """Get current temperature"""
-        return (
-            self._coordinator.data["indoor_temperature_controlling_sensor_value"]
-            if "indoor_temperature_controlling_sensor_value" in self._coordinator.data
-            else None
-        )
+        return self._coordinator.data.get("indoor_temperature_controlling_sensor_value")
 
     @property
     def target_temperature_low(self):
         """Get heat setpoint"""
-        return self._coordinator.data["heat_setpoint"] if "heat_setpoint" in self._coordinator.data else None
+        return self._coordinator.data.get("heat_setpoint")
 
     @property
     def target_temperature_high(self):
         """Get cool setpoint"""
-        return self._coordinator.data["cool_setpoint"] if "cool_setpoint" in self._coordinator.data else None
+        return self._coordinator.data.get("cool_setpoint")
 
     @property
     def target_temperature(self) -> float | None:
+        """Get the target temperature"""
+
         hvac_mode = self.hvac_mode
 
         if hvac_mode == HVACMode.COOL:
             return self.target_temperature_high
-        elif hvac_mode == HVACMode.HEAT:
+        if hvac_mode == HVACMode.HEAT:
             return self.target_temperature_low
 
         return None
@@ -130,23 +128,19 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_humidity(self):
         """Get current humidity"""
-        return (
-            self._coordinator.data["indoor_humidity_controlling_sensor_value"]
-            if "indoor_humidity_controlling_sensor_value" in self._coordinator.data
-            else None
-        )
+        return self._coordinator.data.get("indoor_humidity_controlling_sensor_value")
 
     @property
     def hvac_mode(self) -> HVAC_MODES:
         """Get HVAC mode"""
         if "mode" not in self._coordinator.data:
-            _LOGGER.warn("No mode found in coordinator data")
+            _LOGGER.warning("No mode found in coordinator data")
             return None
 
         mode = self._coordinator.data["mode"]
 
         if mode not in HVAC_MODE_MAP:
-            _LOGGER.warn("Invalid mode %d found in coordinator data", mode)
+            _LOGGER.warning("Invalid mode %d found in coordinator data", mode)
             return None
 
         return HVAC_MODE_MAP[mode]
@@ -188,24 +182,33 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     def fan(self):
+        """Get the fan status"""
         return "on" if self._coordinator.data.get("fan_status", 0) == 1 else "off"
 
     @property
     def min_temp(self) -> float:
+        """Get the minimum temperature"""
         return 10
 
     @property
     def max_temp(self) -> float:
+        """Get the maximum temperature"""
         return 32
 
     @property
     def hvac_action(self) -> HVACAction | str | None:
-        heating_equipment_status = self._coordinator.data.get("heating_equipment_status", 0)
+        """Get the current HVAC action"""
+
+        heating_equipment_status = self._coordinator.data.get(
+            "heating_equipment_status", 0
+        )
 
         if heating_equipment_status > 0:
             return HVACAction.HEATING
 
-        cooling_equipment_status = self._coordinator.data.get("cooling_equipment_status", 0)
+        cooling_equipment_status = self._coordinator.data.get(
+            "cooling_equipment_status", 0
+        )
 
         if cooling_equipment_status > 0:
             return HVACAction.COOLING
@@ -239,7 +242,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         heat_setpoint = 0
 
         if "temperature" in kwargs:
-            if self._coordinator.data["mode"] == 3:
+            if self._coordinator.data.get("mode") == 3:
                 cool_setpoint = encode_temperature(kwargs.get("temperature"))
             else:
                 heat_setpoint = encode_temperature(kwargs.get("temperature"))

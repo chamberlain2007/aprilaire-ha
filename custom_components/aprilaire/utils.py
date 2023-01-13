@@ -19,6 +19,7 @@ def encode_temperature(temperature: float) -> int:
         + (128 if is_negative else 0)
     )
 
+
 def decode_temperature(raw_value: int) -> float:
     """Decode a temperature value from the thermostat"""
     temperature_value = float(int(raw_value & 63))
@@ -42,6 +43,7 @@ def decode_humidity(raw_value: int) -> int:
         return None
     return raw_value
 
+
 def generate_command_bytes(
     sequence: int,
     action: Action,
@@ -58,6 +60,7 @@ def generate_command_bytes(
     result.extend(payload)
     result.append(generate_crc(result))
     return bytes(result)
+
 
 def _encode_int_value(value: int):
     return ((value >> 8) & 0xFF, value & 0xFF)

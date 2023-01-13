@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, Event
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from collections.abc import Awaitable, Callable
-from typing import Any
 
 from .client import AprilaireClient
 
@@ -23,6 +22,7 @@ _LOGGER = logging.getLogger(LOG_NAME)
 
 RECONNECT_INTERVAL = 60 * 60
 RETRY_CONNECTION_INTERVAL = 10
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Setup Aprilaire from config entry"""
@@ -70,9 +70,10 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             port,
             self.async_set_updated_data,
             RECONNECT_INTERVAL,
-            RETRY_CONNECTION_INTERVAL)
+            RETRY_CONNECTION_INTERVAL,
+        )
 
-    def async_set_updated_data(self, data: _T) -> None:
+    def async_set_updated_data(self, data: Any) -> None:
         if self.data is not None:
             data = self.data | data
 
@@ -87,9 +88,13 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         self.client.stop_listen()
 
     def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
+        """Makes requests needed for startup and waits for necessary data to be retrieved"""
+
         async def _run():
             if not self.data or "mac_address" not in self.data:
-                data = await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 2, 30)
+                data = await self.client.wait_for_response(
+                    FunctionalDomain.IDENTIFICATION, 2, 30
+                )
 
                 if not data or "mac_address" not in data:
                     _LOGGER.error("Missing MAC address, cannot create unique ID")
@@ -100,7 +105,10 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             if not self.data or "thermostat_modes" not in self.data:
                 await self.client.wait_for_response(FunctionalDomain.CONTROL, 7, 30)
 
-            if not self.data or "indoor_temperature_controlling_sensor_status" not in self.data:
+            if (
+                not self.data
+                or "indoor_temperature_controlling_sensor_status" not in self.data
+            ):
                 await self.client.wait_for_response(FunctionalDomain.SENSORS, 2, 30)
 
             await ready_callback(True)

@@ -1,8 +1,8 @@
+"""Base functionality for Aprilaire entities"""
+
 from __future__ import annotations
 
 import logging
-
-from typing import Any
 
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -12,7 +12,10 @@ from .const import DOMAIN, LOG_NAME
 
 _LOGGER = logging.getLogger(LOG_NAME)
 
+
 class BaseAprilaireEntity(CoordinatorEntity, Entity):
+    """Base for Aprilaire entities"""
+
     def __init__(self, coordinator: AprilaireCoordinator) -> None:
         """Initialize the entity"""
         super().__init__(coordinator)
@@ -31,7 +34,10 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         self.async_write_ha_state()
 
     def _update_available(self):
-        connected: bool = self._coordinator.data.get("connected", None) or self._coordinator.data.get("reconnecting", None)
+        connected: bool = self._coordinator.data.get(
+            "connected", None
+        ) or self._coordinator.data.get("reconnecting", None)
+
         stopped: bool = self._coordinator.data.get("stopped", None)
 
         if stopped:
@@ -44,8 +50,8 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
     @property
     def device_info(self):
         return DeviceInfo(
-            identifiers = {(DOMAIN, self._coordinator.data['mac_address'])},
-            name = "Aprilaire Thermostat",
+            identifiers={(DOMAIN, self._coordinator.data["mac_address"])},
+            name="Aprilaire Thermostat",
         )
 
     @property

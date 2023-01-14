@@ -47,6 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else:
             _LOGGER.error("Failed to wait for ready")
 
+            coordinator.stop_listen()
+
     coordinator.wait_for_ready(ready_callback)
 
     return True

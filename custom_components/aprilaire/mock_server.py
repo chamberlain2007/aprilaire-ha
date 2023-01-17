@@ -259,7 +259,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     coro = loop.create_server(_AprilaireServerProtocol, args.host, args.port)
 

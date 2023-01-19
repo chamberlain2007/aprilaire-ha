@@ -59,6 +59,7 @@ class _AprilaireServerProtocol(asyncio.Protocol):
         self.fan_mode = 2
         self.cool_setpoint = 25
         self.heat_setpoint = 20
+        self.hold = 0
 
         self.queue = Queue()
 
@@ -131,6 +132,20 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                 7,
                 [6, 1, 1, 1],
             )
+            + generate_command_bytes(
+                self.sequence + 127,
+                Action.COS,
+                FunctionalDomain.SETUP,
+                1,
+                list([0] * 26) + [1] + list([0] * 17),
+            )
+            + generate_command_bytes(
+                self.sequence + 127,
+                Action.COS,
+                FunctionalDomain.SCHEDULING,
+                4,
+                [self.hold] + list([0] * 9),
+            )
             + self._generate_thermostat_status_command_bytes()
         )
 
@@ -192,6 +207,19 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                     )
 
                     self.sequence = (self.sequence + 1) % 128
+            elif functional_domain == FunctionalDomain.SCHEDULING:
+                if attribute == 4:
+                    self.queue.put_nowait(
+                        generate_command_bytes(
+                            self.sequence + 127,
+                            Action.COS,
+                            FunctionalDomain.SCHEDULING,
+                            4,
+                            [self.hold] + list([0] * 9),
+                        )
+                    )
+
+                    self.sequence = (self.sequence + 1) % 128
         elif action == Action.WRITE:
             if functional_domain == FunctionalDomain.CONTROL:
                 if attribute == 1:
@@ -242,8 +270,26 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                         self.queue.put_nowait(
                             self._generate_thermostat_status_command_bytes()
                         )
+            elif functional_domain == FunctionalDomain.SCHEDULING:
+                if attribute == 4:
+                    decoded_packets = decode_packet(data)
 
-            if functional_domain == FunctionalDomain.STATUS:
+                    for decoded_packet in decoded_packets:
+                        if "hold" in decoded_packet:
+                            self.hold = decoded_packet["hold"]
+
+                    self.queue.put_nowait(
+                        generate_command_bytes(
+                            self.sequence + 127,
+                            Action.COS,
+                            FunctionalDomain.SCHEDULING,
+                            4,
+                            [self.hold] + list([0] * 9),
+                        )
+                    )
+
+                    self.sequence = (self.sequence + 1) % 128
+            elif functional_domain == FunctionalDomain.STATUS:
                 if attribute == 2:
                     asyncio.ensure_future(self.send_status())
 

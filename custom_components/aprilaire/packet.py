@@ -24,6 +24,54 @@ class ValueType(Enum):
 
 MAPPING = {
     Action.READ_RESPONSE: {
+        FunctionalDomain.SETUP: {
+            1: [
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                ("away_available", ValueType.INTEGER),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+            ]
+        },
         FunctionalDomain.CONTROL: {
             1: [
                 ("mode", ValueType.INTEGER_REQUIRED),
@@ -37,6 +85,20 @@ MAPPING = {
                 ("ventilation_available", ValueType.INTEGER),
                 ("dehumidification_available", ValueType.INTEGER),
                 ("humidification_available", ValueType.INTEGER),
+            ],
+        },
+        FunctionalDomain.SCHEDULING: {
+            4: [
+                ("hold", ValueType.INTEGER),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
+                (None, None),
             ],
         },
         FunctionalDomain.SENSORS: {
@@ -157,6 +219,11 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
                     (attribute_name, value_type) = MAPPING[action][functional_domain][
                         attribute
                     ][attribute_index]
+
+                    if attribute_name is None or value_type is None:
+                        j += 1
+                        attribute_index += 1
+                        continue
 
                     data_value = data[i + j]
 

@@ -5,12 +5,14 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.climate import (
-    HVAC_MODES,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
     FAN_AUTO,
     FAN_ON,
+    HVAC_MODES,
+    PRESET_AWAY,
+    PRESET_NONE,
 )
 
 from homeassistant.const import (
@@ -92,6 +94,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             else:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE
+
+        if self._coordinator.data.get("away_available") == 1:
+            features = features | ClimateEntityFeature.PRESET_MODE
 
         features = features | ClimateEntityFeature.FAN_MODE
 
@@ -216,6 +221,25 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         return HVACAction.IDLE
 
     @property
+    def preset_modes(self) -> list[str] | None:
+        if self._coordinator.data.get("away_available") == 1:
+            return [PRESET_NONE, PRESET_AWAY]
+
+        return None
+
+    @property
+    def preset_mode(self) -> str | None:
+        hold: int = self._coordinator.data.get("hold")
+
+        if hold == 3:
+            return PRESET_AWAY
+
+        if hold == 4:
+            return "Vacation"
+
+        return PRESET_NONE
+
+    @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
@@ -273,3 +297,13 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         await self._coordinator.client.update_fan_mode(fan_mode_value)
 
         await self._coordinator.client.read_control()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode."""
+
+        if preset_mode == PRESET_AWAY:
+            await self._coordinator.client.set_away(True)
+        else:
+            await self._coordinator.client.set_away(False)
+
+        await self._coordinator.client.read_scheduling()

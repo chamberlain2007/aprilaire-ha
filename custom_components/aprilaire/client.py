@@ -160,6 +160,10 @@ class _AprilaireClientProtocol(asyncio.Protocol):
         """Send a request for updated control data"""
         await self._send_command(Action.READ_REQUEST, FunctionalDomain.CONTROL, 1)
 
+    async def read_scheduling(self):
+        """Send a request for updated scheduling data"""
+        await self._send_command(Action.READ_REQUEST, FunctionalDomain.SCHEDULING, 4)
+
     async def update_mode(self, mode: int):
         """Send a request to update the mode"""
         await self._send_command(
@@ -202,6 +206,26 @@ class _AprilaireClientProtocol(asyncio.Protocol):
             ],
         )
 
+    async def set_away(self, away: bool):
+        """Send a request to set the away status"""
+        await self._send_command(
+            Action.WRITE,
+            FunctionalDomain.SCHEDULING,
+            4,
+            extra_payload=[
+                3 if away else 0,  # Hold
+                0,  # Fan
+                0,  # Heat Setpoint
+                0,  # Cool Setpoint
+                0,  # DEH Vacation
+                0,  # End Minute
+                0,  # End Hour
+                0,  # End Date
+                0,  # End Month
+                0,  # End Year
+            ],
+        )
+
     async def sync(self):
         """Send a request to sync data"""
         await self._send_command(
@@ -220,7 +244,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
             FunctionalDomain.STATUS,
             1,
             extra_payload=[
-                0,  # Installer Thermostat Settings
+                1,  # Installer Thermostat Settings
                 0,  # Contractor Information
                 0,  # Air Cleaning Installer Variable
                 0,  # Humidity Control Installer Settings
@@ -234,7 +258,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
                 0,  # Schedule Settings
                 0,  # Away Settings
                 0,  # Schedule Day
-                0,  # Schedule Hold
+                1,  # Schedule Hold
                 0,  # Heat Blast
                 0,  # Service Reminders Status
                 0,  # Alerts Status
@@ -356,6 +380,10 @@ class AprilaireClient(SocketClient):
         """Send a request for updated control data"""
         await self.protocol.read_control()
 
+    async def read_scheduling(self):
+        """Send a request for updated scheduling data"""
+        await self.protocol.read_scheduling()
+
     async def update_mode(self, mode: int):
         """Send a request to update the mode"""
         await self.protocol.update_mode(mode)
@@ -367,6 +395,10 @@ class AprilaireClient(SocketClient):
     async def update_setpoint(self, cool_setpoint: int, heat_setpoint: int):
         """Send a request to update the setpoint"""
         await self.protocol.update_setpoint(cool_setpoint, heat_setpoint)
+
+    async def set_away(self, away: bool):
+        """Send a request to update the away status"""
+        await self.protocol.set_away(away)
 
     async def sync(self):
         """Send a request to sync data"""

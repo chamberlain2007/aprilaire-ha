@@ -32,6 +32,10 @@ from .utils import encode_temperature
 
 FAN_CIRCULATE = "Circulate"
 
+PRESET_TEMPORARY_HOLD = "Temporary"
+PRESET_PERMANENT_HOLD = "Permanent"
+PRESET_VACATION = "Vacation"
+
 HVAC_MODE_MAP = {
     1: HVACMode.OFF,
     2: HVACMode.HEAT,
@@ -95,8 +99,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             else:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE
 
-        if self._coordinator.data.get("away_available") == 1:
-            features = features | ClimateEntityFeature.PRESET_MODE
+        features = features | ClimateEntityFeature.PRESET_MODE
 
         features = features | ClimateEntityFeature.FAN_MODE
 
@@ -222,20 +225,35 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     def preset_modes(self) -> list[str] | None:
-        if self._coordinator.data.get("away_available") == 1:
-            return [PRESET_NONE, PRESET_AWAY]
+        presets = [PRESET_NONE, PRESET_VACATION]
 
-        return None
+        if self._coordinator.data.get("away_available") == 1:
+            presets.append(PRESET_AWAY)
+
+        hold: int = self._coordinator.data.get("hold")
+
+        if hold == 1:
+            presets.append(PRESET_TEMPORARY_HOLD)
+        elif hold == 1:
+            presets.append(PRESET_PERMANENT_HOLD)
+
+        return presets
 
     @property
     def preset_mode(self) -> str | None:
         hold: int = self._coordinator.data.get("hold")
 
+        if hold == 1:
+            return PRESET_TEMPORARY_HOLD
+
+        if hold == 2:
+            return PRESET_PERMANENT_HOLD
+
         if hold == 3:
             return PRESET_AWAY
 
         if hold == 4:
-            return "Vacation"
+            return PRESET_VACATION
 
         return PRESET_NONE
 
@@ -302,8 +320,12 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Set the preset mode."""
 
         if preset_mode == PRESET_AWAY:
-            await self._coordinator.client.set_away(True)
+            await self._coordinator.client.set_hold(3)
+        elif preset_mode == PRESET_VACATION:
+            await self._coordinator.client.set_hold(4)
+        elif preset_mode == PRESET_NONE:
+            await self._coordinator.client.set_hold(0)
         else:
-            await self._coordinator.client.set_away(False)
+            return
 
         await self._coordinator.client.read_scheduling()

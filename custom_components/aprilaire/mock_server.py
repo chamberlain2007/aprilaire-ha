@@ -231,6 +231,7 @@ class _AprilaireServerProtocol(asyncio.Protocol):
 
                             if new_mode != 0:
                                 self.mode = new_mode
+                                self.hold = 0
 
                         if "fan_mode" in decoded_packet:
                             new_fan_mode = decoded_packet["fan_mode"]
@@ -243,12 +244,14 @@ class _AprilaireServerProtocol(asyncio.Protocol):
 
                             if new_heat_setpoint != 0:
                                 self.heat_setpoint = new_heat_setpoint
+                                self.hold = 1
 
                         if "cool_setpoint" in decoded_packet:
                             new_cool_setpoint = decoded_packet["cool_setpoint"]
 
                             if new_cool_setpoint != 0:
                                 self.cool_setpoint = new_cool_setpoint
+                                self.hold = 1
 
                         self.queue.put_nowait(
                             generate_command_bytes(
@@ -270,6 +273,18 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                         self.queue.put_nowait(
                             self._generate_thermostat_status_command_bytes()
                         )
+
+                        self.queue.put_nowait(
+                            generate_command_bytes(
+                                self.sequence + 127,
+                                Action.COS,
+                                FunctionalDomain.SCHEDULING,
+                                4,
+                                [self.hold] + list([0] * 9),
+                            )
+                        )
+
+                        self.sequence = (self.sequence + 1) % 128
             elif functional_domain == FunctionalDomain.SCHEDULING:
                 if attribute == 4:
                     decoded_packets = decode_packet(data)

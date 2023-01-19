@@ -206,14 +206,14 @@ class _AprilaireClientProtocol(asyncio.Protocol):
             ],
         )
 
-    async def set_away(self, away: bool):
-        """Send a request to set the away status"""
+    async def set_hold(self, hold: int):
+        """Send a request to set the hold status"""
         await self._send_command(
             Action.WRITE,
             FunctionalDomain.SCHEDULING,
             4,
             extra_payload=[
-                3 if away else 0,  # Hold
+                hold,  # Hold
                 0,  # Fan
                 0,  # Heat Setpoint
                 0,  # Cool Setpoint
@@ -396,9 +396,9 @@ class AprilaireClient(SocketClient):
         """Send a request to update the setpoint"""
         await self.protocol.update_setpoint(cool_setpoint, heat_setpoint)
 
-    async def set_away(self, away: bool):
+    async def set_hold(self, hold: int):
         """Send a request to update the away status"""
-        await self.protocol.set_away(away)
+        await self.protocol.set_hold(hold)
 
     async def sync(self):
         """Send a request to sync data"""

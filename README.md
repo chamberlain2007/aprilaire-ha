@@ -4,7 +4,7 @@ aprilaire-ha is a custom integration for [Home Assistant](https://www.home-assis
 
 # Compatibility
 
-aprilaire-ha is compatible with many models of Aprilaire thermostats. It is tested with an Aprilaire 6045m, but it should work with other 6000- and 8000-series thermostats.
+aprilaire-ha is compatible with Aprilaire [Home Automation](https://www.aprilairepartners.com/technical-information-options/home-automation-technical-information) 8800 series and [Zone Control](https://www.aprilairepartners.com/technical-information-options/zoning-technical-information) 6000 series thermostats.
 
 # Prerequisites
 
@@ -19,7 +19,7 @@ Add the respository URL as a custom [repository integration](https://hacs.xyz/do
 Copy the aprilaire folder from this repo to config/custom_components (create custom_components folder if it doesn't exist already)
 
 ## Setup
-Once aprilaire-ha is installed, you can set it up by adding it as an integration.  You'll need to know the IP Address of thermostat and the port (defaults to 7000 which is the standard port). It is recommended to assign a static IP to the thermostat.
+Once aprilaire-ha is installed, you can set it up by adding it as an integration.  You'll need to know the IP Address of thermostat and the port (typically 7000 for 6000 series, and 8000 for 8800 series thermostats). It is recommended to assign a static IP to the thermostat to ensure HA knows were to find your thermostat on your network.
 
 # Supported functionality
 

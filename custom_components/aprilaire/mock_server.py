@@ -151,7 +151,7 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                 Action.COS,
                 FunctionalDomain.IDENTIFICATION,
                 1,
-                [1, 10, 2, 15, 1, 14, 3],
+                [66, 10, 2, 15, 1, 14, 3],
             )
             + self._generate_thermostat_status_command_bytes()
         )

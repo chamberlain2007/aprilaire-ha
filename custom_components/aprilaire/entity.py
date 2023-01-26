@@ -50,16 +50,24 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
     @property
     def device_info(self):
 
-        return DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, self._coordinator.data["mac_address"])},
             name="Aprilaire Thermostat",
             manufacturer="Aprilaire",
             model=MODELS.get(self._coordinator.data.get("model_number")),
-            hw_version=self._coordinator.data.get("hardware_revision"),
             sw_version=f'{self._coordinator.data.get("firmware_major_revision")}.{self._coordinator.data.get("firmware_minor_revision")}'
-                if "firmware_major_revision" in self._coordinator.data
-                else None
+            if "firmware_major_revision" in self._coordinator.data
+            else None,
         )
+
+        hardware_revision = self._coordinator.data.get("hardware_revision")
+        if hardware_revision is not None:
+            if hardware_revision > ord("A"):
+                device_info["hw_version"] = f"Rev. {chr(hardware_revision)}"
+            else:
+                device_info["hw_version"] = hardware_revision
+
+        return device_info
 
     @property
     def should_poll(self):

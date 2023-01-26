@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AprilaireCoordinator
-from .const import DOMAIN, LOG_NAME
+from .const import DOMAIN, LOG_NAME, MODELS
 
 _LOGGER = logging.getLogger(LOG_NAME)
 
@@ -49,9 +49,16 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
     @property
     def device_info(self):
+
         return DeviceInfo(
             identifiers={(DOMAIN, self._coordinator.data["mac_address"])},
             name="Aprilaire Thermostat",
+            manufacturer="Aprilaire",
+            model=MODELS.get(self._coordinator.data.get("model_number")),
+            hw_version=self._coordinator.data.get("hardware_revision"),
+            sw_version=f'{self._coordinator.data.get("firmware_major_revision")}.{self._coordinator.data.get("firmware_minor_revision")}'
+                if "firmware_major_revision" in self._coordinator.data
+                else None
         )
 
     @property

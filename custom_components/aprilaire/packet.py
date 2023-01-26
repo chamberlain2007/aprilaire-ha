@@ -152,6 +152,15 @@ MAPPING = {
             ],
         },
         FunctionalDomain.IDENTIFICATION: {
+            1: [
+                ("hardware_revision", ValueType.INTEGER),
+                ("firmware_major_revision", ValueType.INTEGER),
+                ("firmware_minor_revision", ValueType.INTEGER),
+                ("protocol_major_revision", ValueType.INTEGER),
+                ("model_number", ValueType.INTEGER),
+                ("gainspan_firmware_major_revision", ValueType.INTEGER),
+                ("gainspan_firmware_minor_revision", ValueType.INTEGER),
+            ],
             2: [
                 ("mac_address", ValueType.MAC_ADDRESS),
             ],

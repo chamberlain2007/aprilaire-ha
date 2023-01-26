@@ -146,6 +146,13 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                 4,
                 [self.hold] + list([0] * 9),
             )
+            + generate_command_bytes(
+                self.sequence + 127,
+                Action.COS,
+                FunctionalDomain.IDENTIFICATION,
+                1,
+                [1, 10, 2, 15, 1, 14, 3],
+            )
             + self._generate_thermostat_status_command_bytes()
         )
 

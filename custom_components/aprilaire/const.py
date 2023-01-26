@@ -37,3 +37,15 @@ class FunctionalDomain(IntEnum):
     FIRMWARE_UPDATE = 14
     DEBUG_COMMANDS = 15
     NACK = 16
+
+
+MODELS = {
+    0: "8476W",
+    1: "8810",
+    2: "8620W",
+    3: "8820",
+    4: "8910W",
+    5: "8830",
+    6: "8920W",
+    7: "8840",
+}

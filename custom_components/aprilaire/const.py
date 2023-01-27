@@ -39,6 +39,7 @@ class FunctionalDomain(IntEnum):
     NACK = 16
 
 
+# Known model numbers per Aprilaire. Additional models may be discovered.
 MODELS = {
     0: "8476W",
     1: "8810",
@@ -48,4 +49,5 @@ MODELS = {
     5: "8830",
     6: "8920W",
     7: "8840",
+    28: "6045M",
 }

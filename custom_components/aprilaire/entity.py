@@ -54,11 +54,15 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
             identifiers={(DOMAIN, self._coordinator.data["mac_address"])},
             name="Aprilaire Thermostat",
             manufacturer="Aprilaire",
-            model=MODELS.get(self._coordinator.data.get("model_number")),
-            sw_version=f'{self._coordinator.data.get("firmware_major_revision")}.{self._coordinator.data.get("firmware_minor_revision")}'
-            if "firmware_major_revision" in self._coordinator.data
-            else None,
         )
+
+        model_number = self._coordinator.data.get("model_number")
+        if model_number is not None:
+            device_info["model"] = (
+                MODELS[model_number]
+                if model_number in MODELS
+                else f"Unknown ({model_number})"
+            )
 
         hardware_revision = self._coordinator.data.get("hardware_revision")
         if hardware_revision is not None:
@@ -66,6 +70,15 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
                 device_info["hw_version"] = f"Rev. {chr(hardware_revision)}"
             else:
                 device_info["hw_version"] = hardware_revision
+
+        firmware_major_revision = self._coordinator.data.get("firmware_major_revision")
+        firmware_minor_revision = self._coordinator.data.get("firmware_minor_revision")
+        if firmware_major_revision is not None:
+            device_info["sw_version"] = (
+                str(firmware_major_revision)
+                if firmware_minor_revision is None
+                else f'{firmware_major_revision}.{firmware_minor_revision}'
+            )
 
         return device_info
 

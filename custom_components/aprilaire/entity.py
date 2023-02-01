@@ -94,7 +94,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
     @property
     def unique_id(self):
-        return f'{self._coordinator.data["mac_address"]}_{self.name}'
+        return self.name
 
     @property
     def extra_state_attributes(self):

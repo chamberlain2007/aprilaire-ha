@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "An integration is already configured for this host/post combination",
+            "connection_failed": "Connection failed. Please check that the host and port is correct."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostname",
+                    "port": "Port (usually 7000 or 8000)"
+                },
+                "description": "Enter the address for your thermostat",
+                "title": "Connection information"
+            }
+        }
+    }
+}

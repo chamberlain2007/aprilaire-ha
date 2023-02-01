@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import logging
 from typing import Any
 
@@ -9,9 +11,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .const import DOMAIN, LOG_NAME
+from .client import AprilaireClient
+from .const import DOMAIN, LOG_NAME, FunctionalDomain
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -44,11 +47,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 f'aprilaire_{user_input[CONF_HOST].replace(".", "")}{user_input[CONF_PORT]}'
             )
             self._abort_if_unique_id_configured()
-        except Exception:  # pylint: disable=broad-except
+        except AbortFlow as err:
+            errors["base"] = err.reason
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            errors["base"] = err
         else:
-            return self.async_create_entry(title="Aprilaire", data=user_input)
+            client = AprilaireClient(
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                lambda data: None,
+            )
+
+            client.start_listen()
+
+            data = await client.wait_for_response(
+                FunctionalDomain.IDENTIFICATION, 2, 30
+            )
+
+            client.stop_listen()
+
+            if data and "mac_address" in data:
+                # Sleeping to not overload the socket
+                await asyncio.sleep(5)
+
+                return self.async_create_entry(title="Aprilaire", data=user_input)
+
+            errors["base"] = "connection_failed"
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

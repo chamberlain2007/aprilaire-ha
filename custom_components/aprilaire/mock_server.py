@@ -153,6 +153,18 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                 1,
                 [66, 10, 2, 15, 1, 14, 3],
             )
+            + generate_command_bytes(
+                self.sequence + 127,
+                Action.READ_RESPONSE,
+                FunctionalDomain.IDENTIFICATION,
+                4,
+                (
+                    [ord(c) for c in "12345"]
+                    + [0, 0, 0]
+                    + [ord(c) for c in "Aprilaire_8920W"]
+                    + [0]
+                ),
+            )
             + self._generate_thermostat_status_command_bytes()
         )
 
@@ -223,6 +235,24 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                             FunctionalDomain.SCHEDULING,
                             4,
                             [self.hold] + list([0] * 9),
+                        )
+                    )
+
+                    self.sequence = (self.sequence + 1) % 128
+            elif functional_domain == FunctionalDomain.IDENTIFICATION:
+                if attribute == 4:
+                    self.queue.put_nowait(
+                        generate_command_bytes(
+                            self.sequence + 127,
+                            Action.READ_RESPONSE,
+                            FunctionalDomain.IDENTIFICATION,
+                            4,
+                            (
+                                [ord(c) for c in "12345"]
+                                + [0, 0, 0]
+                                + [ord(c) for c in "Aprilaire_8920W"]
+                                + [0]
+                            ),
                         )
                     )
 

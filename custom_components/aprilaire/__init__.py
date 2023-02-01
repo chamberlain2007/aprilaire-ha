@@ -89,6 +89,11 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         """Stop listening for data"""
         self.client.stop_listen()
 
+    @property
+    def device_name(self):
+        """Get the name of the thermostat"""
+        return self.data.get("name", "Aprilaire")
+
     def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
         """Makes requests needed for startup and waits for necessary data to be retrieved"""
 
@@ -103,6 +108,11 @@ class AprilaireCoordinator(DataUpdateCoordinator):
                     await ready_callback(False)
 
                     return
+
+            if not self.data or "name" not in self.data:
+                await self.client.wait_for_response(
+                    FunctionalDomain.IDENTIFICATION, 4, 30
+                )
 
             if not self.data or "thermostat_modes" not in self.data:
                 await self.client.wait_for_response(FunctionalDomain.CONTROL, 7, 30)

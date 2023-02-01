@@ -264,7 +264,7 @@ class _AprilaireClientProtocol(asyncio.Protocol):
                 0,  # Alerts Status
                 0,  # Alerts Settings
                 0,  # Backlight Settings
-                0,  # Thermostat Location & Name
+                1,  # Thermostat Location & Name
                 0,  # Reserved
                 1,  # Controlling Sensor Values
                 0,  # Over the air ODT update timeout
@@ -290,6 +290,14 @@ class _AprilaireClientProtocol(asyncio.Protocol):
             Action.READ_REQUEST,
             FunctionalDomain.CONTROL,
             7,
+        )
+
+    async def read_thermostat_name(self):
+        """Send a reques for the thermostat name"""
+        await self._send_command(
+            Action.READ_REQUEST,
+            FunctionalDomain.IDENTIFICATION,
+            5,
         )
 
 
@@ -407,3 +415,7 @@ class AprilaireClient(SocketClient):
     async def read_mac_address(self):
         """Send a request to read the MAC address"""
         await self.protocol.read_mac_address()
+
+    async def read_thermostat_name(self):
+        """Send a request to read the thermostat name"""
+        await self.protocol.read_thermostat_name()

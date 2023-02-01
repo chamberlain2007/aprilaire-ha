@@ -52,7 +52,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._coordinator.data["mac_address"])},
-            name="Aprilaire Thermostat",
+            name=self._coordinator.device_name,
             manufacturer="Aprilaire",
         )
 
@@ -77,7 +77,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
             device_info["sw_version"] = (
                 str(firmware_major_revision)
                 if firmware_minor_revision is None
-                else f'{firmware_major_revision}.{firmware_minor_revision}'
+                else f"{firmware_major_revision}.{firmware_minor_revision}"
             )
 
         return device_info
@@ -94,4 +94,12 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
     @property
     def unique_id(self):
-        return self.name
+        return f'{self._coordinator.data["mac_address"]}_{self.name}'
+
+    @property
+    def extra_state_attributes(self):
+        """Return device specific state attributes."""
+        return {
+            "device_name": self._coordinator.device_name,
+            "device_location": self._coordinator.data.get("location")
+        }

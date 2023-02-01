@@ -20,6 +20,7 @@ class ValueType(Enum):
     TEMPERATURE_REQUIRED = 4
     HUMIDITY = 5
     MAC_ADDRESS = 6
+    TEXT = 7
 
 
 MAPPING = {
@@ -164,6 +165,10 @@ MAPPING = {
             2: [
                 ("mac_address", ValueType.MAC_ADDRESS),
             ],
+            4: [
+                ("location", ValueType.TEXT, 7, ""),
+                ("name", ValueType.TEXT, 15, "Aprilaire Thermostat"),
+            ],
         },
     }
 }
@@ -178,6 +183,10 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
     """Decode the response data from the thermostat"""
 
     (action, functional_domain, attribute) = decode_packet_header(data)
+
+    if action == Action.NACK:
+        _LOGGER.warning("NACK received: %s", data.hex(" ", 1))
+        return []
 
     if (
         action not in MAPPING
@@ -211,8 +220,6 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
             current_result["count"] = data[2] << 2 | data[3]
             i += 1
         elif i == 4:
-            if data[i] == "\06":
-                break
             j = 0
 
             attribute_index = 0
@@ -225,9 +232,15 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
                 ):
                     pass
                 else:
-                    (attribute_name, value_type) = MAPPING[action][functional_domain][
-                        attribute
-                    ][attribute_index]
+                    attribute_info = MAPPING[action][functional_domain][attribute][
+                        attribute_index
+                    ]
+
+                    (attribute_name, value_type, extra_attribute_info) = (
+                        attribute_info[0],
+                        attribute_info[1],
+                        attribute_info[2:],
+                    )
 
                     if attribute_name is None or value_type is None:
                         j += 1
@@ -260,6 +273,27 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
                         current_result[attribute_name] = ":".join(
                             mac_address_components
                         )
+                    elif value_type == ValueType.TEXT:
+                        (text_length, default_value) = (
+                            extra_attribute_info[0],
+                            extra_attribute_info[1],
+                        )
+
+                        text = ""
+
+                        for _ in range(0, text_length):
+                            current_value = (
+                                " " if data[i + j] == 0 else chr(data[i + j])
+                            )
+                            text += current_value
+                            j += 1
+
+                        text = text.strip(" ")
+
+                        if len(text) == 0:
+                            text = default_value
+
+                        current_result[attribute_name] = text
 
                     attribute_index += 1
                 j += 1

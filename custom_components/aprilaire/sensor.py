@@ -95,8 +95,8 @@ class AprilaireIndoorHumidityControllingSensor(
         )
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Indoor Humidity Controlling Sensor"
+    def entity_name(self) -> str | None:
+        return "Indoor Humidity Controlling Sensor"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -117,8 +117,8 @@ class AprilaireOutdoorHumidityControllingSensor(
         )
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Outdoor Humidity Controlling Sensor"
+    def entity_name(self) -> str | None:
+        return "Outdoor Humidity Controlling Sensor"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -198,8 +198,8 @@ class AprilaireIndoorTemperatureControllingSensor(
         )
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Indoor Temperature Controlling Sensor"
+    def entity_name(self) -> str | None:
+        return "Indoor Temperature Controlling Sensor"
 
     def get_native_value(self):
         return self._coordinator.data.get("indoor_temperature_controlling_sensor_value")
@@ -221,8 +221,8 @@ class AprilaireOutdoorTemperatureControllingSensor(
         )
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Outdoor Temperature Controlling Sensor"
+    def entity_name(self) -> str | None:
+        return "Outdoor Temperature Controlling Sensor"
 
     def get_native_value(self):
         return self._coordinator.data.get(
@@ -238,8 +238,8 @@ class AprilaireDehumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
         return super().available and "dehumidification_status" in self._coordinator.data
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Dehumidification Status"
+    def entity_name(self) -> str | None:
+        return "Dehumidification Status"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -264,8 +264,8 @@ class AprilaireHumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
         return super().available and "humidification_status" in self._coordinator.data
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Humidification Status"
+    def entity_name(self) -> str | None:
+        return "Humidification Status"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -289,8 +289,8 @@ class AprilaireVentilationStatusSensor(BaseAprilaireEntity, SensorEntity):
         return super().available and "ventilation_status" in self._coordinator.data
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Ventilation Status"
+    def entity_name(self) -> str | None:
+        return "Ventilation Status"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -317,8 +317,8 @@ class AprilaireAirCleaningStatusSensor(BaseAprilaireEntity, SensorEntity):
         return super().available and "air_cleaning_status" in self._coordinator.data
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Air Cleaning Status"
+    def entity_name(self) -> str | None:
+        return "Air Cleaning Status"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:

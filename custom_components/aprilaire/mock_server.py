@@ -9,7 +9,7 @@ import logging
 
 from .const import Action, FunctionalDomain, LOG_NAME
 from .packet import decode_packet, decode_packet_header
-from .utils import encode_temperature, generate_command_bytes
+from .utils import encode_temperature, generate_command_bytes, pad_list
 
 COS_FREQUENCY = 30
 QUEUE_FREQUENCY = 0.5
@@ -60,6 +60,9 @@ class _AprilaireServerProtocol(asyncio.Protocol):
         self.cool_setpoint = 25
         self.heat_setpoint = 20
         self.hold = 0
+
+        self.name = "ttt12347"
+        self.location = "1234"
 
         self.queue = Queue()
 
@@ -159,10 +162,8 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                 FunctionalDomain.IDENTIFICATION,
                 4,
                 (
-                    [ord(c) for c in "12345"]
-                    + [0, 0, 0]
-                    + [ord(c) for c in "Aprilaire_8920W"]
-                    + [0]
+                    pad_list([ord(c) for c in self.location], 8, 0)
+                    + pad_list([ord(c) for c in self.name], 16, 0)
                 ),
             )
             + self._generate_thermostat_status_command_bytes()
@@ -248,10 +249,8 @@ class _AprilaireServerProtocol(asyncio.Protocol):
                             FunctionalDomain.IDENTIFICATION,
                             4,
                             (
-                                [ord(c) for c in "12345"]
-                                + [0, 0, 0]
-                                + [ord(c) for c in "Aprilaire_8920W"]
-                                + [0]
+                                pad_list([ord(c) for c in self.location], 8, 0)
+                                + pad_list([ord(c) for c in self.name], 16, 0)
                             ),
                         )
                     )

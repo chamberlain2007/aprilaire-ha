@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 from .crc import generate_crc
 from .const import Action, FunctionalDomain
@@ -60,6 +61,11 @@ def generate_command_bytes(
     result.extend(payload)
     result.append(generate_crc(result))
     return bytes(result)
+
+
+def pad_list(lst: list[Any], length: int, pad: Any = 0):
+    """Pad a list to a minimum length"""
+    return lst + [pad] * (length - len(lst))
 
 
 def _encode_int_value(value: int):

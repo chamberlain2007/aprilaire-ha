@@ -35,8 +35,8 @@ class AprilaireFanStatusSensor(BaseAprilaireEntity, BinarySensorEntity):
         return super().available and "fan_status" in self._coordinator.data
 
     @property
-    def name(self) -> str | None:
-        return "Aprilaire Fan"
+    def entity_name(self) -> str | None:
+        return "Fan"
 
     @property
     def is_on(self) -> bool | None:

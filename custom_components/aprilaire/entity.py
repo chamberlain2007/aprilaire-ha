@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from . import AprilaireCoordinator
-from .const import DOMAIN, LOG_NAME, MODELS
+from .const import LOG_NAME
 
 _LOGGER = logging.getLogger(LOG_NAME)
 
@@ -49,38 +50,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
     @property
     def device_info(self):
-
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._coordinator.data["mac_address"])},
-            name=self._coordinator.device_name,
-            manufacturer="Aprilaire",
-        )
-
-        model_number = self._coordinator.data.get("model_number")
-        if model_number is not None:
-            device_info["model"] = (
-                MODELS[model_number]
-                if model_number in MODELS
-                else f"Unknown ({model_number})"
-            )
-
-        hardware_revision = self._coordinator.data.get("hardware_revision")
-        if hardware_revision is not None:
-            if hardware_revision > ord("A"):
-                device_info["hw_version"] = f"Rev. {chr(hardware_revision)}"
-            else:
-                device_info["hw_version"] = hardware_revision
-
-        firmware_major_revision = self._coordinator.data.get("firmware_major_revision")
-        firmware_minor_revision = self._coordinator.data.get("firmware_minor_revision")
-        if firmware_major_revision is not None:
-            device_info["sw_version"] = (
-                str(firmware_major_revision)
-                if firmware_minor_revision is None
-                else f"{firmware_major_revision}.{firmware_minor_revision}"
-            )
-
-        return device_info
+        return self._coordinator.device_info
 
     @property
     def should_poll(self):
@@ -94,12 +64,25 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
     @property
     def unique_id(self):
-        return self.name
+        return slugify(
+            self._coordinator.data["mac_address"].replace(":", "_")
+            + "_"
+            + self.entity_name
+        )
+
+    @property
+    def name(self) -> str | None:
+        return f"{self._coordinator.device_name} {self.entity_name}"
+
+    @property
+    def entity_name(self) -> str | None:
+        """Name of the entity"""
+        return None
 
     @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             "device_name": self._coordinator.device_name,
-            "device_location": self._coordinator.data.get("location")
+            "device_location": self._coordinator.data.get("location"),
         }

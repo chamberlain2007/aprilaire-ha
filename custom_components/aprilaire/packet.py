@@ -166,8 +166,8 @@ MAPPING = {
                 ("mac_address", ValueType.MAC_ADDRESS),
             ],
             4: [
-                ("location", ValueType.TEXT, 7, ""),
-                ("name", ValueType.TEXT, 15, "Aprilaire Thermostat"),
+                ("location", ValueType.TEXT, 7),
+                ("name", ValueType.TEXT, 15),
             ],
         },
     }
@@ -274,10 +274,7 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
                             mac_address_components
                         )
                     elif value_type == ValueType.TEXT:
-                        (text_length, default_value) = (
-                            extra_attribute_info[0],
-                            extra_attribute_info[1],
-                        )
+                        text_length = extra_attribute_info[0]
 
                         text = ""
 
@@ -289,9 +286,6 @@ def decode_packet(data: bytes) -> list[dict[str, Any]]:
                             j += 1
 
                         text = text.strip(" ")
-
-                        if len(text) == 0:
-                            text = default_value
 
                         current_result[attribute_name] = text
 

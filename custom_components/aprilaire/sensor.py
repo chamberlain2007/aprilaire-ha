@@ -102,6 +102,17 @@ class AprilaireIndoorHumidityControllingSensor(
     def native_value(self) -> StateType | date | datetime | Decimal:
         return self._coordinator.data.get("indoor_humidity_controlling_sensor_value")
 
+    @property
+    def extra_state_attributes(self):
+        return super().extra_state_attributes | {
+            "status": self._coordinator.data.get(
+                "indoor_humidity_controlling_sensor_status"
+            ),
+            "raw_sensor_value": self._coordinator.data.get(
+                "indoor_humidity_controlling_sensor_value"
+            ),
+        }
+
 
 class AprilaireOutdoorHumidityControllingSensor(
     BaseAprilaireEntity, BaseAprilaireHumiditySensor, SensorEntity
@@ -124,8 +135,19 @@ class AprilaireOutdoorHumidityControllingSensor(
     def native_value(self) -> StateType | date | datetime | Decimal:
         return self._coordinator.data.get("outdoor_humidity_controlling_sensor_value")
 
+    @property
+    def extra_state_attributes(self):
+        return super().extra_state_attributes | {
+            "status": self._coordinator.data.get(
+                "outdoor_humidity_controlling_sensor_status"
+            ),
+            "raw_sensor_value": self._coordinator.data.get(
+                "outdoor_humidity_controlling_sensor_value"
+            ),
+        }
 
-class BaseAprilaireTemperatureSensor(SensorEntity):
+
+class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
     """Base for Aprilaire temperature sensors"""
 
     @property
@@ -156,7 +178,7 @@ class BaseAprilaireTemperatureSensor(SensorEntity):
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
-        unit_of_measurement = self.hass.config.units.temperature_unit
+        unit_of_measurement = self.safe_unit_of_measurement
 
         sensor_value = self.get_native_value()  # pylint: disable=assignment-from-none
 
@@ -181,9 +203,16 @@ class BaseAprilaireTemperatureSensor(SensorEntity):
         """Get the native value (implemented in derived classes)"""
         return None
 
+    @property
+    def extra_state_attributes(self):
+        return super().extra_state_attributes | {
+            "safe_unit_of_measurement": self.safe_unit_of_measurement,
+            "native_unit_of_measurement": self.native_unit_of_measurement,
+        }
+
 
 class AprilaireIndoorTemperatureControllingSensor(
-    BaseAprilaireEntity, BaseAprilaireTemperatureSensor, SensorEntity
+    BaseAprilaireTemperatureSensor, SensorEntity
 ):
     """Sensor for indoor temperature"""
 
@@ -204,9 +233,20 @@ class AprilaireIndoorTemperatureControllingSensor(
     def get_native_value(self):
         return self._coordinator.data.get("indoor_temperature_controlling_sensor_value")
 
+    @property
+    def extra_state_attributes(self):
+        return super().extra_state_attributes | {
+            "status": self._coordinator.data.get(
+                "indoor_temperature_controlling_sensor_status"
+            ),
+            "raw_sensor_value": self._coordinator.data.get(
+                "indoor_temperature_controlling_sensor_value"
+            ),
+        }
+
 
 class AprilaireOutdoorTemperatureControllingSensor(
-    BaseAprilaireEntity, BaseAprilaireTemperatureSensor, SensorEntity
+    BaseAprilaireTemperatureSensor, SensorEntity
 ):
     """Sensor for outdoor temperature"""
 
@@ -228,6 +268,17 @@ class AprilaireOutdoorTemperatureControllingSensor(
         return self._coordinator.data.get(
             "outdoor_temperature_controlling_sensor_value"
         )
+
+    @property
+    def extra_state_attributes(self):
+        return super().extra_state_attributes | {
+            "status": self._coordinator.data.get(
+                "outdoor_temperature_controlling_sensor_status"
+            ),
+            "raw_sensor_value": self._coordinator.data.get(
+                "outdoor_temperature_controlling_sensor_value"
+            ),
+        }
 
 
 class AprilaireDehumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):

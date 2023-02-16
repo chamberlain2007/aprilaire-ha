@@ -193,7 +193,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             device_info["sw_version"] = (
                 str(firmware_major_revision)
                 if firmware_minor_revision is None
-                else f"{firmware_major_revision}.{firmware_minor_revision}"
+                else f"{firmware_major_revision}.{firmware_minor_revision:02}"
             )
 
         return device_info

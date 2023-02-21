@@ -28,7 +28,6 @@ from homeassistant.components.climate import ClimateEntity
 from . import AprilaireCoordinator
 from .const import DOMAIN, LOG_NAME
 from .entity import BaseAprilaireEntity
-from .utils import encode_temperature
 
 FAN_CIRCULATE = "Circulate"
 
@@ -285,14 +284,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if "temperature" in kwargs:
             if self._coordinator.data.get("mode") == 3:
-                cool_setpoint = encode_temperature(kwargs.get("temperature"))
+                cool_setpoint = kwargs.get("temperature")
             else:
-                heat_setpoint = encode_temperature(kwargs.get("temperature"))
+                heat_setpoint = kwargs.get("temperature")
         else:
             if "target_temp_low" in kwargs:
-                heat_setpoint = encode_temperature(kwargs.get("target_temp_low"))
+                heat_setpoint = kwargs.get("target_temp_low")
             if "target_temp_high" in kwargs:
-                cool_setpoint = encode_temperature(kwargs.get("target_temp_high"))
+                cool_setpoint = kwargs.get("target_temp_high")
 
         if cool_setpoint == 0 and heat_setpoint == 0:
             return

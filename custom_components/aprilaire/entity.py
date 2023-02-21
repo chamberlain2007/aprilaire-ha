@@ -8,8 +8,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from . import AprilaireCoordinator
 from .const import LOG_NAME
+from .coordinator import AprilaireCoordinator
 
 _LOGGER = logging.getLogger(LOG_NAME)
 

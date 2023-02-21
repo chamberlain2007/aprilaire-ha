@@ -4,7 +4,9 @@
   "config_flow": true,
   "documentation": "https://github.com/chamberlain2007/aprilaire-ha",
   "issue_tracker": "https://github.com/chamberlain2007/aprilaire-ha/issues",
-  "requirements": [],
+  "requirements": [
+    "pyaprilaire==0.1.3"
+  ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

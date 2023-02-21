@@ -25,8 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.climate import ClimateEntity
 
-from . import AprilaireCoordinator
 from .const import DOMAIN, LOG_NAME
+from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
 
 FAN_CIRCULATE = "Circulate"

@@ -6,8 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from . import AprilaireCoordinator
 from .const import DOMAIN
+from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
 
 

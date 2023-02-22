@@ -1,6 +1,6 @@
 [project]
 name = "aprilaire-ha"
-version = "0.3"
+version = "0.3.0"
 readme = "README.md"
 dependencies = []
 
@@ -8,7 +8,7 @@ dependencies = []
 dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [tool.bumpver]
-current_version = "0.3"
+current_version = "0.3.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message  = "Bump version {old_version} -> {new_version}"
 commit          = true
@@ -20,6 +20,6 @@ push            = false
     'current_version = "{version}"',
     'version = "{version}"'
 ]
-"manifest.json" = [
+"custom_components/aprilaire/manifest.json" = [
     'version = "{version}"'
 ]

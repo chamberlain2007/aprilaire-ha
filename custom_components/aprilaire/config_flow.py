@@ -13,8 +13,10 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .client import AprilaireClient
-from .const import DOMAIN, LOG_NAME, FunctionalDomain
+from pyaprilaire.client import AprilaireClient
+from pyaprilaire.const import FunctionalDomain
+
+from .const import DOMAIN, LOG_NAME
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -54,9 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = err
         else:
             client = AprilaireClient(
-                user_input[CONF_HOST],
-                user_input[CONF_PORT],
-                lambda data: None,
+                user_input[CONF_HOST], user_input[CONF_PORT], lambda data: None, _LOGGER
             )
 
             client.start_listen()

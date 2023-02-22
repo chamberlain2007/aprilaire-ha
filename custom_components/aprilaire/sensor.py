@@ -22,8 +22,8 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 
-from . import AprilaireCoordinator
 from .const import DOMAIN
+from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
 
 

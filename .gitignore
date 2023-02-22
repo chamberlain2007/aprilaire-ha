@@ -1,1 +1,102 @@
-**/__pycache__
+# File based on .gitignore from home-assistant.io
+
+# Hide sublime text stuff
+*.sublime-project
+*.sublime-workspace
+
+# Hide some OS X stuff
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Thumbnails
+._*
+
+.idea
+
+# pytest
+.cache
+
+# GITHUB Proposed Python stuff:
+*.py[cod]
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+.eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+include
+
+# Logs
+*.log
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage*
+.tox
+nosetests.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+.python-version
+
+# emacs auto backups
+*~
+*#
+*.orig
+
+# venv stuff
+pyvenv.cfg
+pip-selfcheck.json
+venv
+.venv
+
+# vimmy stuff
+*.swp
+*.swo
+
+ctags.tmp
+
+# vagrant stuff
+virtualization/vagrant/setup_done
+virtualization/vagrant/.vagrant
+virtualization/vagrant/config
+
+# Visual Studio Code
+.vscode
+
+# Windows Explorer
+desktop.ini
+
+# Other directories
+share
+htmlcov
+
+artwork.png
+.Python
+.pytest_cache
+.mypy_cache
+coverage.xml
+
+# Temporary stuff can be placed here (logs, credentials, etc.)
+work/

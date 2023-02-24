@@ -5,7 +5,7 @@
   "documentation": "https://github.com/chamberlain2007/aprilaire-ha",
   "issue_tracker": "https://github.com/chamberlain2007/aprilaire-ha/issues",
   "requirements": [
-    "pyaprilaire==0.5.0b1"
+    "pyaprilaire==0.5.0b2"
   ],
   "ssdp": [],
   "zeroconf": [],

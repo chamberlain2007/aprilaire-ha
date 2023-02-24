@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def ready_callback(ready: bool):
         if ready:
-            hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+            await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
             async def _async_close(_: Event) -> None:
                 coordinator.stop_listen()

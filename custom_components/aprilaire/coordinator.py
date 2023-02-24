@@ -65,9 +65,12 @@ class AprilaireCoordinator(DataUpdateCoordinator):
 
             device = device_registry.async_get_device(old_device_info["identifiers"])
 
-            new_device_info.pop("identifiers")
+            if device is not None:
+                new_device_info.pop("identifiers")
 
-            device_registry.async_update_device(device_id=device.id, **new_device_info)
+                device_registry.async_update_device(
+                    device_id=device.id, **new_device_info
+                )
 
     def start_listen(self):
         """Start listening for data"""

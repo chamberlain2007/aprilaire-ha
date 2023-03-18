@@ -59,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST], user_input[CONF_PORT], lambda data: None, _LOGGER
             )
 
-            client.start_listen()
+            await client.start_listen()
 
             data = await client.wait_for_response(
                 FunctionalDomain.IDENTIFICATION, 2, 30

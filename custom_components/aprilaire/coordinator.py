@@ -72,9 +72,9 @@ class AprilaireCoordinator(DataUpdateCoordinator):
                     device_id=device.id, **new_device_info
                 )
 
-    def start_listen(self):
+    async def start_listen(self):
         """Start listening for data"""
-        self.client.start_listen()
+        await self.client.start_listen()
 
     def stop_listen(self):
         """Stop listening for data"""

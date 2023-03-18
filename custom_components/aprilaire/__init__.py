@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
 
     coordinator = AprilaireCoordinator(hass, config.get("host"), config.get("port"))
-    coordinator.start_listen()
+    await coordinator.start_listen()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 

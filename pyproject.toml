@@ -1,6 +1,6 @@
 [project]
 name = "aprilaire-ha"
-version = "0.5.2"
+version = "0.5.3"
 readme = "README.md"
 dependencies = []
 
@@ -8,7 +8,7 @@ dependencies = []
 dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [tool.bumpver]
-current_version = "0.5.2"
+current_version = "0.5.3"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message  = "Bump version {old_version} -> {new_version}"
 commit          = true

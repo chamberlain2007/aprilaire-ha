@@ -46,7 +46,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         elif not connected:
             self._available = False
         else:
-            self._available = "mac_address" in self._coordinator.data
+            self._available = self._coordinator.data.get("mac_address", None) is not None
 
     @property
     def device_info(self):

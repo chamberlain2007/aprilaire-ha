@@ -3,17 +3,13 @@ from custom_components.aprilaire.const import DOMAIN, LOG_NAME
 from custom_components.aprilaire import async_setup_entry
 
 import pyaprilaire.client
-from pyaprilaire.const import FunctionalDomain
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntries
 from homeassistant.core import HomeAssistant, EventBus
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.util import uuid as uuid_util
 
 from collections.abc import Awaitable, Callable
 
-import asyncio
 import logging
 
 import unittest

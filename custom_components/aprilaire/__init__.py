@@ -21,7 +21,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     config = entry.data
 
-    coordinator = AprilaireCoordinator(hass, config.get("host"), config.get("port"))
+    host = config.get("host")
+
+    if host is None or len(host) == 0:
+        _LOGGER.error("Invalid host %s", host)
+        return False
+
+    port = config.get("port")
+    if port is None or port <= 0:
+        _LOGGER.error("Invalid port %s", port)
+        return False
+
+    coordinator = AprilaireCoordinator(hass, host, port)
     await coordinator.start_listen()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -41,6 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             coordinator.stop_listen()
 
-    coordinator.wait_for_ready(ready_callback)
+    await coordinator.wait_for_ready(ready_callback)
 
     return True

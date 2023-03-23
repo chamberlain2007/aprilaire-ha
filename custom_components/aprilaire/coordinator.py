@@ -82,7 +82,9 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         """Stop listening for data"""
         self.client.stop_listen()
 
-    async def _wait_for_ready_run(self, ready_callback: Callable[[bool], Awaitable[None]]):
+    async def _wait_for_ready_run(
+        self, ready_callback: Callable[[bool], Awaitable[None]]
+    ):
         if not self.data or "mac_address" not in self.data:
             data = await self.client.wait_for_response(
                 FunctionalDomain.IDENTIFICATION, 2, 30
@@ -95,9 +97,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
                 return
 
         if not self.data or "name" not in self.data:
-            await self.client.wait_for_response(
-                FunctionalDomain.IDENTIFICATION, 4, 30
-            )
+            await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 4, 30)
 
         if not self.data or "thermostat_modes" not in self.data:
             await self.client.wait_for_response(FunctionalDomain.CONTROL, 7, 30)
@@ -110,7 +110,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
 
         await ready_callback(True)
 
-    def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
+    async def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
         """Makes requests needed for startup and waits for necessary data to be retrieved"""
 
         asyncio.ensure_future(self._wait_for_ready_run(ready_callback))

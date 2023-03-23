@@ -180,11 +180,11 @@ class Test_Coordinator(unittest.IsolatedAsyncioTestCase):
         wait_for_response_mock.assert_any_call(FunctionalDomain.CONTROL, 7, 30)
         wait_for_response_mock.assert_any_call(FunctionalDomain.SENSORS, 2, 30)
 
-    def test_wait_for_ready_wrapper(self):
+    async def test_wait_for_ready_wrapper(self):
         self.coordinator._wait_for_ready_run = AsyncMock()
         ready_callback_mock = AsyncMock()
 
-        self.coordinator.wait_for_ready(ready_callback_mock)
+        await self.coordinator.wait_for_ready(ready_callback_mock)
 
         self.coordinator._wait_for_ready_run.assert_called_once_with(
             ready_callback_mock

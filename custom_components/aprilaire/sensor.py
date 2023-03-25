@@ -38,16 +38,16 @@ async def async_setup_entry(
 
     entities = []
 
-    if coordinator.data.get("indoor_humidity_controlling_sensor_status") != 3:
+    if coordinator.data.get("indoor_humidity_controlling_sensor_status", 3) != 3:
         entities.append(AprilaireIndoorHumidityControllingSensor(coordinator))
 
-    if coordinator.data.get("outdoor_humidity_controlling_sensor_status") != 3:
+    if coordinator.data.get("outdoor_humidity_controlling_sensor_status", 3) != 3:
         entities.append(AprilaireOutdoorHumidityControllingSensor(coordinator))
 
-    if coordinator.data.get("indoor_temperature_controlling_sensor_status") != 3:
+    if coordinator.data.get("indoor_temperature_controlling_sensor_status", 3) != 3:
         entities.append(AprilaireIndoorTemperatureControllingSensor(coordinator))
 
-    if coordinator.data.get("outdoor_temperature_controlling_sensor_status") != 3:
+    if coordinator.data.get("outdoor_temperature_controlling_sensor_status", 3) != 3:
         entities.append(AprilaireOutdoorTemperatureControllingSensor(coordinator))
 
     if coordinator.data.get("dehumidification_available") == 1:

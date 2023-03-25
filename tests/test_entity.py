@@ -1,23 +1,10 @@
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
-from custom_components.aprilaire.const import DOMAIN, LOG_NAME
 from custom_components.aprilaire.entity import BaseAprilaireEntity
-
-import pyaprilaire.client
 
 from homeassistant.helpers.entity import DeviceInfo
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntries
-from homeassistant.core import HomeAssistant, EventBus
-from homeassistant.util import uuid as uuid_util
-
-from collections.abc import Awaitable, Callable
-
-import logging
-
 import unittest
 from unittest.mock import patch, AsyncMock, Mock
-
-_LOGGER = logging.getLogger(LOG_NAME)
 
 
 class Test_Entity(unittest.IsolatedAsyncioTestCase):

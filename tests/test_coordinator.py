@@ -5,7 +5,6 @@ import pyaprilaire.client
 from pyaprilaire.const import FunctionalDomain
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 import logging

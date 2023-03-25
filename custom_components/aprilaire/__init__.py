@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
             async def _async_close(_: Event) -> None:
-                coordinator.stop_listen()
+                coordinator.stop_listen()  # pragma: no cover
 
             entry.async_on_unload(
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)

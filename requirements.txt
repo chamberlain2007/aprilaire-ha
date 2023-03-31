@@ -55,6 +55,8 @@ colorama==0.4.6
     # via bumpver
 coverage==7.2.2
     # via aprilaire-ha (pyproject.toml)
+crc==4.1.0
+    # via pyaprilaire
 cryptography==39.0.1
     # via
     #   homeassistant
@@ -111,6 +113,8 @@ pip-tools==6.12.2
     # via aprilaire-ha (pyproject.toml)
 platformdirs==3.0.0
     # via black
+pyaprilaire==0.5.3
+    # via aprilaire-ha (pyproject.toml)
 pycparser==2.21
     # via cffi
 pyjwt==2.5.0

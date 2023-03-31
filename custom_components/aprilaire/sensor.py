@@ -8,6 +8,7 @@ from decimal import Decimal
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -165,7 +166,7 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
 
         # Highest priority, for registered entities: unit set by user, with fallback
         # by integration or secondary fallback to unit conversion rules
-        if self._sensor_option_unit_of_measurement:
+        if self._sensor_option_unit_of_measurement != UNDEFINED:
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration

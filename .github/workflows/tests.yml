@@ -29,7 +29,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with coverage/unittest
       run: |
-        python -m coverage run --source="./custom_components" --omit="./tests/*" -m unittest && python -m coverage xml 
+        python -m coverage run --source="./custom_components/aprilaire" --omit="./tests/*" -m unittest && python -m coverage xml 
     - name: Coverage
       uses: orgoro/coverage@v3
       with:

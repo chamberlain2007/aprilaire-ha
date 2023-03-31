@@ -5,7 +5,7 @@ readme = "README.md"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["black", "bumpver", "isort", "pip-tools", "unittest"]
+dev = ["black", "bumpver", "isort", "pip-tools", "coverage"]
 
 [tool.bumpver]
 current_version = "0.5.3"

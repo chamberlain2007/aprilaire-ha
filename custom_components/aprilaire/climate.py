@@ -233,7 +233,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if hold == 1:
             presets.append(PRESET_TEMPORARY_HOLD)
-        elif hold == 1:
+        elif hold == 2:
             presets.append(PRESET_PERMANENT_HOLD)
 
         return presets

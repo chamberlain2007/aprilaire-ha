@@ -20,8 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, **kwargs) -
 
     logger: Logger = kwargs.get("logger")
 
-    if not logger:
-        logger = logging.getLogger(LOG_NAME)
+    if not logger:  # pragma: no cover
+        logger = logging.getLogger(LOG_NAME)  # pragma: no cover
 
     config = entry.data
 

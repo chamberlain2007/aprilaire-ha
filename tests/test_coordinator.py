@@ -28,7 +28,7 @@ class Test_Coordinator(unittest.IsolatedAsyncioTestCase):
             "pyaprilaire.client.AprilaireClient",
             return_value=self.client_mock,
         ):
-            self.coordinator = AprilaireCoordinator(self.hass_mock, "", 0)
+            self.coordinator = AprilaireCoordinator(self.hass_mock, "", 0, _LOGGER)
 
     async def test_start_listen(self):
         await self.coordinator.start_listen()
@@ -152,9 +152,9 @@ class Test_Coordinator(unittest.IsolatedAsyncioTestCase):
         ready_callback_mock = AsyncMock()
 
         with self.assertLogs(_LOGGER) as cm:
-            await self.coordinator._wait_for_ready_run(ready_callback_mock)
+            await self.coordinator.wait_for_ready(ready_callback_mock)
 
-        self.assertListEqual(
+        self.assertEqual(
             cm.output,
             [
                 "ERROR:custom_components.aprilaire:Missing MAC address, cannot create unique ID"
@@ -172,19 +172,9 @@ class Test_Coordinator(unittest.IsolatedAsyncioTestCase):
         self.coordinator.client.wait_for_response = wait_for_response_mock
 
         with self.assertNoLogs(_LOGGER):
-            await self.coordinator._wait_for_ready_run(ready_callback_mock)
+            await self.coordinator.wait_for_ready(ready_callback_mock)
 
         wait_for_response_mock.assert_any_call(FunctionalDomain.IDENTIFICATION, 2, 30)
         wait_for_response_mock.assert_any_call(FunctionalDomain.IDENTIFICATION, 4, 30)
         wait_for_response_mock.assert_any_call(FunctionalDomain.CONTROL, 7, 30)
         wait_for_response_mock.assert_any_call(FunctionalDomain.SENSORS, 2, 30)
-
-    async def test_wait_for_ready_wrapper(self):
-        self.coordinator._wait_for_ready_run = AsyncMock()
-        ready_callback_mock = AsyncMock()
-
-        await self.coordinator.wait_for_ready(ready_callback_mock)
-
-        self.coordinator._wait_for_ready_run.assert_called_once_with(
-            ready_callback_mock
-        )

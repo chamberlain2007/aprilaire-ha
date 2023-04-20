@@ -131,6 +131,7 @@ class Test_Config_Flow(unittest.IsolatedAsyncioTestCase):
         set_unique_id_mock = AsyncMock()
         abort_if_unique_id_configured_mock = Mock()
         create_entry_mock = Mock()
+        sleep_mock = AsyncMock()
 
         config_flow = ConfigFlow()
         config_flow.async_show_form = show_form_mock
@@ -141,7 +142,9 @@ class Test_Config_Flow(unittest.IsolatedAsyncioTestCase):
         client_mock = AsyncMock(AprilaireClient)
         client_mock.wait_for_response = AsyncMock(return_value={"mac_address": "test"})
 
-        with patch("pyaprilaire.client.AprilaireClient", return_value=client_mock):
+        with patch(
+            "pyaprilaire.client.AprilaireClient", return_value=client_mock
+        ), patch("asyncio.sleep", new=sleep_mock):
             await config_flow.async_step_user(
                 {
                     "host": "localhost",
@@ -154,6 +157,7 @@ class Test_Config_Flow(unittest.IsolatedAsyncioTestCase):
             FunctionalDomain.IDENTIFICATION, 2, 30
         )
         client_mock.stop_listen.assert_called_once()
+        sleep_mock.assert_awaited_once()
 
         create_entry_mock.assert_called_once_with(
             title="Aprilaire",

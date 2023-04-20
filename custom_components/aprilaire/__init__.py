@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from logging import Logger
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, EVENT_HOMEASSISTANT_STOP
@@ -13,26 +14,29 @@ from .coordinator import AprilaireCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
-_LOGGER = logging.getLogger(LOG_NAME)
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, **kwargs) -> bool:
     """Setup Aprilaire from config entry"""
+
+    logger: Logger = kwargs.get("logger")
+
+    if not logger:
+        logger = logging.getLogger(LOG_NAME)
 
     config = entry.data
 
     host = config.get("host")
 
     if host is None or len(host) == 0:
-        _LOGGER.error("Invalid host %s", host)
+        logger.error("Invalid host %s", host)
         return False
 
     port = config.get("port")
     if port is None or port <= 0:
-        _LOGGER.error("Invalid port %s", port)
+        logger.error("Invalid port %s", port)
         return False
 
-    coordinator = AprilaireCoordinator(hass, host, port)
+    coordinator = AprilaireCoordinator(hass, host, port, logger)
     await coordinator.start_listen()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -48,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
             )
         else:
-            _LOGGER.error("Failed to wait for ready")
+            logger.error("Failed to wait for ready")
 
             coordinator.stop_listen()
 

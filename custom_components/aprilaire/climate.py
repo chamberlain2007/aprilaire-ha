@@ -49,8 +49,6 @@ FAN_MODE_MAP = {
     3: FAN_CIRCULATE,
 }
 
-_LOGGER = logging.getLogger(LOG_NAME)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -141,13 +139,15 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def hvac_mode(self) -> HVAC_MODES:
         """Get HVAC mode"""
         if "mode" not in self._coordinator.data:
-            _LOGGER.warning("No mode found in coordinator data")
+            self._coordinator.logger.warning("No mode found in coordinator data")
             return None
 
         mode = self._coordinator.data["mode"]
 
         if mode not in HVAC_MODE_MAP:
-            _LOGGER.warning("Invalid mode %d found in coordinator data", mode)
+            self._coordinator.logger.warning(
+                "Invalid mode %d found in coordinator data", mode
+            )
             return None
 
         return HVAC_MODE_MAP[mode]
@@ -268,7 +268,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         try:
             mode_value_index = list(HVAC_MODE_MAP.values()).index(hvac_mode)
         except ValueError:
-            _LOGGER.error("Invalid HVAC mode %s", hvac_mode)
+            self._coordinator.logger.error("Invalid HVAC mode %s", hvac_mode)
             return
 
         mode_value = list(HVAC_MODE_MAP.keys())[mode_value_index]
@@ -306,7 +306,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         try:
             fan_mode_value_index = list(FAN_MODE_MAP.values()).index(fan_mode)
         except ValueError:
-            _LOGGER.error("Invalid fan mode %s", fan_mode)
+            self._coordinator.logger.error("Invalid fan mode %s", fan_mode)
             return
 
         fan_mode_value = list(FAN_MODE_MAP.keys())[fan_mode_value_index]

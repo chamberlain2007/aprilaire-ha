@@ -34,13 +34,21 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
         self.client_mock = AsyncMock(pyaprilaire.client.AprilaireClient)
 
     async def test_async_setup_entry(self):
-        with patch(
+        with self.assertLogs(_LOGGER) as cm, patch(
             "pyaprilaire.client.AprilaireClient",
             return_value=self.client_mock,
         ):
             setup_result = await async_setup_entry(
-                self.hass_mock, self.config_entry_mock
+                self.hass_mock, self.config_entry_mock, logger=_LOGGER
             )
+
+        self.assertEqual(
+            cm.output,
+            [
+                "ERROR:custom_components.aprilaire:Missing MAC address, cannot create unique ID",
+                "ERROR:custom_components.aprilaire:Failed to wait for ready",
+            ],
+        )
 
         self.assertTrue(setup_result)
 
@@ -64,7 +72,7 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
             new=wait_for_ready,
         ):
             setup_result = await async_setup_entry(
-                self.hass_mock, self.config_entry_mock
+                self.hass_mock, self.config_entry_mock, _LOGGER
             )
 
         self.assertTrue(setup_result)
@@ -85,7 +93,7 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
             _LOGGER
         ) as cm:
             setup_result = await async_setup_entry(
-                self.hass_mock, self.config_entry_mock
+                self.hass_mock, self.config_entry_mock, _LOGGER
             )
 
         self.assertTrue(setup_result)
@@ -105,7 +113,9 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
             ),
             self.assertLogs(_LOGGER) as cm,
         ):
-            setup_result = await async_setup_entry(self.hass_mock, config_entry_mock)
+            setup_result = await async_setup_entry(
+                self.hass_mock, config_entry_mock, _LOGGER
+            )
 
         self.assertFalse(setup_result)
         self.client_mock.start_listen.assert_not_called()
@@ -124,7 +134,9 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
             ),
             self.assertLogs(_LOGGER) as cm,
         ):
-            setup_result = await async_setup_entry(self.hass_mock, config_entry_mock)
+            setup_result = await async_setup_entry(
+                self.hass_mock, config_entry_mock, _LOGGER
+            )
 
         self.assertFalse(setup_result)
         self.client_mock.start_listen.assert_not_called()

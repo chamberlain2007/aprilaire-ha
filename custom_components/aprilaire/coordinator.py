@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 
 from collections.abc import Awaitable, Callable
+from logging import Logger
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -23,17 +23,17 @@ from .const import DOMAIN, LOG_NAME
 RECONNECT_INTERVAL = 60 * 60
 RETRY_CONNECTION_INTERVAL = 10
 
-_LOGGER = logging.getLogger(LOG_NAME)
-
 
 class AprilaireCoordinator(DataUpdateCoordinator):
     """Coordinator for interacting with the thermostat"""
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, port: int, logger: Logger
+    ) -> None:
         """Initialize the coordinator"""
         super().__init__(
             hass,
-            _LOGGER,
+            logger,
             name=DOMAIN,
         )
 
@@ -43,7 +43,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             host,
             port,
             self.async_set_updated_data,
-            _LOGGER,
+            self.logger,
             RECONNECT_INTERVAL,
             RETRY_CONNECTION_INTERVAL,
         )
@@ -82,16 +82,14 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         """Stop listening for data"""
         self.client.stop_listen()
 
-    async def _wait_for_ready_run(
-        self, ready_callback: Callable[[bool], Awaitable[None]]
-    ):
+    async def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
         if not self.data or "mac_address" not in self.data:
             data = await self.client.wait_for_response(
                 FunctionalDomain.IDENTIFICATION, 2, 30
             )
 
             if not data or "mac_address" not in data:
-                _LOGGER.error("Missing MAC address, cannot create unique ID")
+                self.logger.error("Missing MAC address, cannot create unique ID")
                 await ready_callback(False)
 
                 return
@@ -109,11 +107,6 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             await self.client.wait_for_response(FunctionalDomain.SENSORS, 2, 30)
 
         await ready_callback(True)
-
-    async def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
-        """Makes requests needed for startup and waits for necessary data to be retrieved"""
-
-        asyncio.ensure_future(self._wait_for_ready_run(ready_callback))
 
     @property
     def device_name(self) -> str:

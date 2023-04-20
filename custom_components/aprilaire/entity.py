@@ -11,8 +11,6 @@ from homeassistant.util import slugify
 from .const import LOG_NAME
 from .coordinator import AprilaireCoordinator
 
-_LOGGER = logging.getLogger(LOG_NAME)
-
 
 class BaseAprilaireEntity(CoordinatorEntity, Entity):
     """Base for Aprilaire entities"""
@@ -28,7 +26,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        _LOGGER.debug("Current data: %s", self._coordinator.data)
+        self._coordinator.logger.debug("Current data: %s", self._coordinator.data)
 
         self._update_available()
 
@@ -46,7 +44,9 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         elif not connected:
             self._available = False
         else:
-            self._available = self._coordinator.data.get("mac_address", None) is not None
+            self._available = (
+                self._coordinator.data.get("mac_address", None) is not None
+            )
 
     @property
     def device_info(self):

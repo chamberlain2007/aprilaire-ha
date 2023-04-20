@@ -1,16 +1,22 @@
+from custom_components.aprilaire.const import LOG_NAME
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
 from custom_components.aprilaire.entity import BaseAprilaireEntity
 
 from homeassistant.helpers.entity import DeviceInfo
 
+import logging
+
 import unittest
 from unittest.mock import patch, AsyncMock, Mock
+
+_LOGGER = logging.getLogger(LOG_NAME)
 
 
 class Test_Entity(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.coordinator_mock = AsyncMock(AprilaireCoordinator)
         self.coordinator_mock.data = {}
+        self.coordinator_mock.logger = _LOGGER
 
     async def test_available_on_init(self):
         update_available_mock = Mock()

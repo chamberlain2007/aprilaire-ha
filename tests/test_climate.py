@@ -1,5 +1,7 @@
+import logging
+
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
-from custom_components.aprilaire.const import DOMAIN
+from custom_components.aprilaire.const import DOMAIN, LOG_NAME
 from custom_components.aprilaire.climate import (
     async_setup_entry,
     AprilaireClimate,
@@ -36,6 +38,8 @@ from homeassistant.const import (
 import unittest
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
+_LOGGER = logging.getLogger(LOG_NAME)
+
 
 class Test_Climate(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
@@ -44,6 +48,7 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.coordinator_mock = AsyncMock(AprilaireCoordinator)
         self.coordinator_mock.data = {}
         self.coordinator_mock.client = self.client_mock
+        self.coordinator_mock.logger = _LOGGER
 
         self.entry_id = uuid_util.random_uuid_hex()
 
@@ -221,13 +226,27 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.climate.target_temperature, 20)
 
     def test_hvac_mode(self):
-        self.assertIsNone(self.climate.hvac_mode)
+        with self.assertLogs(_LOGGER, level="WARN") as cm:
+            self.assertIsNone(self.climate.hvac_mode)
+
+        self.assertEqual(
+            cm.output,
+            ["WARNING:custom_components.aprilaire:No mode found in coordinator data"],
+        )
 
         self.coordinator_mock.data = {
             "mode": 0,
         }
 
-        self.assertIsNone(self.climate.hvac_mode)
+        with self.assertLogs(_LOGGER, level="WARN") as cm:
+            self.assertIsNone(self.climate.hvac_mode)
+
+        self.assertEqual(
+            cm.output,
+            [
+                "WARNING:custom_components.aprilaire:Invalid mode 0 found in coordinator data"
+            ],
+        )
 
         self.coordinator_mock.data = {
             "mode": 1,
@@ -465,19 +484,34 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.read_control.assert_called_once()
         self.client_mock.reset_mock()
 
-        await self.climate.async_set_hvac_mode(HVACMode.HEAT_COOL)
+        with self.assertLogs(_LOGGER, level="ERROR") as cm:
+            await self.climate.async_set_hvac_mode(HVACMode.HEAT_COOL)
+
+        self.assertEqual(
+            cm.output, ["ERROR:custom_components.aprilaire:Invalid HVAC mode heat_cool"]
+        )
 
         self.client_mock.update_mode.assert_not_called()
         self.client_mock.read_control.assert_not_called()
         self.client_mock.reset_mock()
 
-        await self.climate.async_set_hvac_mode(HVACMode.DRY)
+        with self.assertLogs(_LOGGER, level="ERROR") as cm:
+            await self.climate.async_set_hvac_mode(HVACMode.DRY)
+
+        self.assertEqual(
+            cm.output, ["ERROR:custom_components.aprilaire:Invalid HVAC mode dry"]
+        )
 
         self.client_mock.update_mode.assert_not_called()
         self.client_mock.read_control.assert_not_called()
         self.client_mock.reset_mock()
 
-        await self.climate.async_set_hvac_mode(HVACMode.FAN_ONLY)
+        with self.assertLogs(_LOGGER, level="ERROR") as cm:
+            await self.climate.async_set_hvac_mode(HVACMode.FAN_ONLY)
+
+        self.assertEqual(
+            cm.output, ["ERROR:custom_components.aprilaire:Invalid HVAC mode fan_only"]
+        )
 
         self.client_mock.update_mode.assert_not_called()
         self.client_mock.read_control.assert_not_called()
@@ -549,7 +583,12 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.read_control.assert_called_once()
         self.client_mock.reset_mock()
 
-        await self.climate.async_set_fan_mode("")
+        with self.assertLogs(_LOGGER, level="ERROR") as cm:
+            await self.climate.async_set_fan_mode("")
+
+        self.assertEqual(
+            cm.output, ["ERROR:custom_components.aprilaire:Invalid fan mode "]
+        )
 
         self.client_mock.update_fan_mode.assert_not_called()
         self.client_mock.read_control.assert_not_called()

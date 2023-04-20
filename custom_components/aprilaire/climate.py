@@ -22,8 +22,13 @@ from homeassistant.const import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.climate import ClimateEntity
+
+from enum import IntFlag
+
+import voluptuous as vol
 
 from .const import DOMAIN, LOG_NAME
 from .coordinator import AprilaireCoordinator
@@ -34,6 +39,8 @@ FAN_CIRCULATE = "Circulate"
 PRESET_TEMPORARY_HOLD = "Temporary"
 PRESET_PERMANENT_HOLD = "Permanent"
 PRESET_VACATION = "Vacation"
+
+SERVICE_SET_DEHUMIDITY = "set_dehumidity"
 
 HVAC_MODE_MAP = {
     1: HVACMode.OFF,
@@ -50,6 +57,12 @@ FAN_MODE_MAP = {
 }
 
 
+class ExtendedClimateEntityFeature(IntFlag):
+    """Supported features of the Aprilaire climate entity."""
+
+    TARGET_DEHUMIDITY = 2048
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -60,6 +73,15 @@ async def async_setup_entry(
     coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities([AprilaireClimate(coordinator)])
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_DEHUMIDITY,
+        {vol.Required("dehumidity"): vol.Coerce(int)},
+        "async_set_dehumidity",
+        [ExtendedClimateEntityFeature.TARGET_DEHUMIDITY],
+    )
 
 
 class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
@@ -96,6 +118,12 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             else:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE
 
+        if self._coordinator.data.get("humidification_available") == 2:
+            features = features | ClimateEntityFeature.TARGET_HUMIDITY
+
+        if self._coordinator.data.get("dehumidification_available") == 1:
+            features = features | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
+
         features = features | ClimateEntityFeature.PRESET_MODE
 
         features = features | ClimateEntityFeature.FAN_MODE
@@ -106,6 +134,11 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def current_temperature(self):
         """Get current temperature"""
         return self._coordinator.data.get("indoor_temperature_controlling_sensor_value")
+
+    @property
+    def current_humidity(self):
+        """Get current humidity"""
+        return self._coordinator.data.get("indoor_humidity_controlling_sensor_value")
 
     @property
     def target_temperature_low(self):
@@ -131,9 +164,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         return None
 
     @property
-    def current_humidity(self):
-        """Get current humidity"""
-        return self._coordinator.data.get("indoor_humidity_controlling_sensor_value")
+    def target_humidity(self) -> int:
+        """Get current target humidity"""
+        return self._coordinator.data.get("humidification_setpoint")
 
     @property
     def hvac_mode(self) -> HVAC_MODES:
@@ -263,6 +296,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             "fan": self.fan,
         }
 
+    @property
+    def min_humidity(self) -> int:
+        10
+
+    @property
+    def max_humidity(self) -> int:
+        50
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode"""
         try:
@@ -328,3 +369,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             return
 
         await self._coordinator.client.read_scheduling()
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        await self._coordinator.client.set_humidification_setpoint(humidity)
+
+    async def async_set_dehumidity(self, dehumidity: int) -> None:
+        await self._coordinator.client.set_dehumidification_setpoint(dehumidity)

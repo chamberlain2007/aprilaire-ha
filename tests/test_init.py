@@ -72,7 +72,7 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
             new=wait_for_ready,
         ):
             setup_result = await async_setup_entry(
-                self.hass_mock, self.config_entry_mock, _LOGGER
+                self.hass_mock, self.config_entry_mock, logger=_LOGGER
             )
 
         self.assertTrue(setup_result)
@@ -93,7 +93,7 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
             _LOGGER
         ) as cm:
             setup_result = await async_setup_entry(
-                self.hass_mock, self.config_entry_mock, _LOGGER
+                self.hass_mock, self.config_entry_mock, logger=_LOGGER
             )
 
         self.assertTrue(setup_result)
@@ -114,7 +114,7 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
             self.assertLogs(_LOGGER) as cm,
         ):
             setup_result = await async_setup_entry(
-                self.hass_mock, config_entry_mock, _LOGGER
+                self.hass_mock, config_entry_mock, logger=_LOGGER
             )
 
         self.assertFalse(setup_result)
@@ -135,7 +135,7 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
             self.assertLogs(_LOGGER) as cm,
         ):
             setup_result = await async_setup_entry(
-                self.hass_mock, config_entry_mock, _LOGGER
+                self.hass_mock, config_entry_mock, logger=_LOGGER
             )
 
         self.assertFalse(setup_result)

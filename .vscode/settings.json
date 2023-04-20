@@ -4,6 +4,16 @@
     "python.linting.lintOnSave": true,
     "python.linting.pylintArgs": [
         "--init-hook",
+        "--ignore-patterns=test_.*?py",
         "import sys; sys.path.append('/Users/matt/Projects/pyaprilaire')"
-    ]
+    ],
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }

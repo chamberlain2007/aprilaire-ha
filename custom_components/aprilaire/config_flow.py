@@ -13,7 +13,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from pyaprilaire.client import AprilaireClient
+import pyaprilaire.client
 from pyaprilaire.const import FunctionalDomain
 
 from .const import DOMAIN, LOG_NAME
@@ -53,9 +53,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = err.reason
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = err
+            errors["base"] = str(err)
         else:
-            client = AprilaireClient(
+            client = pyaprilaire.client.AprilaireClient(
                 user_input[CONF_HOST], user_input[CONF_PORT], lambda data: None, _LOGGER
             )
 

@@ -8,6 +8,7 @@ from decimal import Decimal
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -38,16 +39,16 @@ async def async_setup_entry(
 
     entities = []
 
-    if coordinator.data.get("indoor_humidity_controlling_sensor_status") != 3:
+    if coordinator.data.get("indoor_humidity_controlling_sensor_status", 3) != 3:
         entities.append(AprilaireIndoorHumidityControllingSensor(coordinator))
 
-    if coordinator.data.get("outdoor_humidity_controlling_sensor_status") != 3:
+    if coordinator.data.get("outdoor_humidity_controlling_sensor_status", 3) != 3:
         entities.append(AprilaireOutdoorHumidityControllingSensor(coordinator))
 
-    if coordinator.data.get("indoor_temperature_controlling_sensor_status") != 3:
+    if coordinator.data.get("indoor_temperature_controlling_sensor_status", 3) != 3:
         entities.append(AprilaireIndoorTemperatureControllingSensor(coordinator))
 
-    if coordinator.data.get("outdoor_temperature_controlling_sensor_status") != 3:
+    if coordinator.data.get("outdoor_temperature_controlling_sensor_status", 3) != 3:
         entities.append(AprilaireOutdoorTemperatureControllingSensor(coordinator))
 
     if coordinator.data.get("dehumidification_available") == 1:
@@ -165,7 +166,7 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
 
         # Highest priority, for registered entities: unit set by user, with fallback
         # by integration or secondary fallback to unit conversion rules
-        if self._sensor_option_unit_of_measurement:
+        if self._sensor_option_unit_of_measurement != UNDEFINED:
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration

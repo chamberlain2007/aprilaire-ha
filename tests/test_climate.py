@@ -63,10 +63,15 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.config_entry_mock.entry_id = self.entry_id
 
         async_add_entities_mock = Mock()
+        async_get_current_platform_mock = Mock()
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
+        with patch(
+            "homeassistant.helpers.entity_platform.async_get_current_platform",
+            new=async_get_current_platform_mock,
+        ):
+            await async_setup_entry(
+                self.hass_mock, self.config_entry_mock, async_add_entities_mock
+            )
 
         sensors_list = async_add_entities_mock.call_args_list[0][0]
 

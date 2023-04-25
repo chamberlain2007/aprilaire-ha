@@ -298,11 +298,11 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     def min_humidity(self) -> int:
-        10
+        return 10
 
     @property
     def max_humidity(self) -> int:
-        50
+        return 50
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode"""

@@ -1,0 +1,18 @@
+set_humidity:
+  name: Set target dehumidity
+  description: Set target dehumidity of climate device.
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_DEHUMIDITY
+  fields:
+    humidity:
+      name: Humidity
+      description: New target dehumidity for climate device.
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 50
+          unit_of_measurement: "%"

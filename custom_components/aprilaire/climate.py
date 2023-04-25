@@ -334,6 +334,24 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Return device specific state attributes."""
         return {
             "fan": self.fan,
+            "humidification_setpoint": self._coordinator.data.get(
+                "humidification_setpoint"
+            ),
+            "dehumidification_setpoint": self._coordinator.data.get(
+                "dehumidification_setpoint"
+            ),
+            "air_cleaning_mode": {1: "constant", 2: "automatic"}.get(
+                self._coordinator.data.get("air_cleaning_mode"), "off"
+            ),
+            "air_cleaning_event": {3: "3hour", 4: "24hour"}.get(
+                self._coordinator.data.get("air_cleaning_event"), "off"
+            ),
+            "fresh_air_mode": {1: "automatic"}.get(
+                self._coordinator.data.get("fresh_air_mode"), "off"
+            ),
+            "fresh_air_event": {2: "3hour", 3: "24hour"}.get(
+                self._coordinator.data.get("fresh_air_event"), "off"
+            ),
         }
 
     @property
@@ -440,6 +458,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
                 "air_cleaning_mode", 0
             )
 
+            if current_air_cleaning_mode == 0:
+                current_air_cleaning_mode = 2
+
             if event == "3hour":
                 await self._coordinator.client.set_air_cleaning(
                     current_air_cleaning_mode, 3
@@ -472,6 +493,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
             current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
+
+            if current_fresh_air_mode == 0:
+                current_fresh_air_mode = 1
 
             if event == "3hour":
                 await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 2)

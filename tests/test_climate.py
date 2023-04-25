@@ -5,6 +5,7 @@ from custom_components.aprilaire.const import DOMAIN, LOG_NAME
 from custom_components.aprilaire.climate import (
     async_setup_entry,
     AprilaireClimate,
+    ExtendedClimateEntityFeature,
     FAN_CIRCULATE,
     PRESET_TEMPORARY_HOLD,
     PRESET_PERMANENT_HOLD,
@@ -161,6 +162,32 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             self.climate.supported_features,
             ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.FAN_MODE,
+        )
+
+    def test_supported_features_humidification_available(self):
+        self.coordinator_mock.data = {
+            "humidification_available": 2,
+        }
+
+        self.assertEqual(
+            self.climate.supported_features,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_HUMIDITY
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.FAN_MODE,
+        )
+
+    def test_supported_features_dehumidification_available(self):
+        self.coordinator_mock.data = {
+            "dehumidification_available": 1,
+        }
+
+        self.assertEqual(
+            self.climate.supported_features,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
             | ClimateEntityFeature.PRESET_MODE
             | ClimateEntityFeature.FAN_MODE,
         )
@@ -451,6 +478,21 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(self.climate.preset_mode, PRESET_VACATION)
 
+    def test_climate_target_humidity(self):
+        self.assertIsNone(self.climate.target_humidity)
+
+        self.coordinator_mock.data = {
+            "humidification_setpoint": 10,
+        }
+
+        self.assertEqual(self.climate.target_humidity, 10)
+
+    def test_climate_min_humidity(self):
+        self.assertEqual(self.climate.min_humidity, 10)
+
+    def test_climate_max_humidity(self):
+        self.assertEqual(self.climate.max_humidity, 50)
+
     def test_climate_extra_state_attributes(self):
         self.coordinator_mock.data = {
             "fan_status": 0,
@@ -635,3 +677,13 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.set_hold.assert_not_called()
         self.client_mock.read_scheduling.assert_not_called()
         self.client_mock.reset_mock()
+
+    async def test_set_humidity(self):
+        await self.climate.async_set_humidity(30)
+
+        self.client_mock.set_humidification_setpoint.assert_called_with(30)
+
+    async def test_set_dehumidity(self):
+        await self.climate.async_set_dehumidity(30)
+
+        self.client_mock.set_dehumidification_setpoint.assert_called_with(30)

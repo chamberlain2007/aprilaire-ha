@@ -50,7 +50,7 @@ trigger_fresh_air_event:
   fields:
     event:
       name: Event
-      description: New freshair event for climate device.
+      description: New fresh air event for climate device.
       required: true
       selector:
         select:

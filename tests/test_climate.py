@@ -192,6 +192,32 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
             | ClimateEntityFeature.FAN_MODE,
         )
 
+    def test_supported_features_air_cleaning_available(self):
+        self.coordinator_mock.data = {
+            "air_cleaning_available": 1,
+        }
+
+        self.assertEqual(
+            self.climate.supported_features,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ExtendedClimateEntityFeature.AIR_CLEANING
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.FAN_MODE,
+        )
+
+    def test_supported_features_ventilation_available(self):
+        self.coordinator_mock.data = {
+            "ventilation_available": 1,
+        }
+
+        self.assertEqual(
+            self.climate.supported_features,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ExtendedClimateEntityFeature.FRESH_AIR
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.FAN_MODE,
+        )
+
     def test_current_temperature(self):
         self.assertIsNone(self.climate.current_temperature)
 
@@ -687,3 +713,25 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         await self.climate.async_set_dehumidity(30)
 
         self.client_mock.set_dehumidification_setpoint.assert_called_with(30)
+
+    async def test_trigger_air_cleaning_event(self):
+        await self.climate.async_trigger_air_cleaning_event("3hour")
+
+        self.client_mock.set_air_cleaning.assert_called_with(1, 3)
+        self.client_mock.reset_mock()
+
+        await self.climate.async_trigger_air_cleaning_event("24hour")
+
+        self.client_mock.set_air_cleaning.assert_called_with(1, 4)
+        self.client_mock.reset_mock()
+
+        with self.assertRaises(ValueError):
+            await self.climate.async_trigger_air_cleaning_event("bad")
+
+        self.client_mock.set_air_cleaning.assert_not_called()
+        self.client_mock.reset_mock()
+
+    async def test_cancel_air_cleaning_event(self):
+        await self.climate.async_cancel_air_cleaning_event()
+
+        self.client_mock.set_air_cleaning.assert_called_with(0, 0)

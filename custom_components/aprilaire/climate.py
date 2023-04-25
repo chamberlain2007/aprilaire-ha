@@ -41,6 +41,8 @@ PRESET_PERMANENT_HOLD = "Permanent"
 PRESET_VACATION = "Vacation"
 
 SERVICE_SET_DEHUMIDITY = "set_dehumidity"
+SERVICE_TRIGGER_AIR_CLEANING_EVENT = "trigger_air_cleaning_event"
+SERVICE_CANCEL_AIR_CLEANING_EVENT = "cancel_air_cleaning_event"
 
 HVAC_MODE_MAP = {
     1: HVACMode.OFF,
@@ -60,7 +62,9 @@ FAN_MODE_MAP = {
 class ExtendedClimateEntityFeature(IntFlag):
     """Supported features of the Aprilaire climate entity."""
 
-    TARGET_DEHUMIDITY = 2048
+    TARGET_DEHUMIDITY = 2 << 10
+    FRESH_AIR = 2 << 11
+    AIR_CLEANING = 2 << 12
 
 
 async def async_setup_entry(
@@ -81,6 +85,20 @@ async def async_setup_entry(
         {vol.Required("dehumidity"): vol.Coerce(int)},
         "async_set_dehumidity",
         [ExtendedClimateEntityFeature.TARGET_DEHUMIDITY],
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TRIGGER_AIR_CLEANING_EVENT,
+        {vol.Required("event"): vol.Coerce(str)},
+        "async_trigger_air_cleaning_event",
+        [ExtendedClimateEntityFeature.AIR_CLEANING],
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_CANCEL_AIR_CLEANING_EVENT,
+        {},
+        "async_cancel_air_cleaning_event",
+        [ExtendedClimateEntityFeature.AIR_CLEANING],
     )
 
 
@@ -123,6 +141,12 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if self._coordinator.data.get("dehumidification_available") == 1:
             features = features | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
+
+        if self._coordinator.data.get("air_cleaning_available") == 1:
+            features = features | ExtendedClimateEntityFeature.AIR_CLEANING
+
+        if self._coordinator.data.get("ventilation_available") == 1:
+            features = features | ExtendedClimateEntityFeature.FRESH_AIR
 
         features = features | ClimateEntityFeature.PRESET_MODE
 
@@ -379,3 +403,16 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     async def async_set_dehumidity(self, dehumidity: int) -> None:
         """Set the target dehumidification setpoint"""
         await self._coordinator.client.set_dehumidification_setpoint(dehumidity)
+
+    async def async_trigger_air_cleaning_event(self, event: str) -> None:
+        """Triggers an air cleaning event of 3 or 24 hours"""
+        if event == "3hour":
+            await self._coordinator.client.set_air_cleaning(1, 3)
+        elif event == "24hour":
+            await self._coordinator.client.set_air_cleaning(1, 4)
+        else:
+            raise ValueError("Invalid event")
+
+    async def async_cancel_air_cleaning_event(self) -> None:
+        """Cancels an existing air cleaning event"""
+        await self._coordinator.client.set_air_cleaning(0, 0)

@@ -1,13 +1,13 @@
-set_humidity:
+set_dehumidity:
   name: Set target dehumidity
   description: Set target dehumidity of climate device.
   target:
     entity:
       domain: climate
-      supported_features:
-        - climate.ClimateEntityFeature.TARGET_DEHUMIDITY
+      # supported_features:
+      #   - custom_components.aprilaire.climate.ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
   fields:
-    humidity:
+    dehumidity:
       name: Humidity
       description: New target dehumidity for climate device.
       required: true
@@ -16,3 +16,33 @@ set_humidity:
           min: 10
           max: 50
           unit_of_measurement: "%"
+
+trigger_air_cleaning_event:
+  name: Trigger air cleaning event
+  description: Trigger air cleaning event of climate device.
+  target:
+    entity:
+      domain: climate
+      # supported_features:
+      #   - custom_components.aprilaire.climate.ExtendedClimateEntityFeature.AIR_CLEANING
+  fields:
+    event:
+      name: Event
+      description: New air cleaning event for climate device.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "3 Hours"
+              value: "3hour"
+            - label: "24 Hours"
+              value: "24hour"
+
+cancel_air_cleaning_event:
+  name: Cancel air cleaning event
+  description: Cancel air cleaning event of climate device.
+  target:
+    entity:
+      domain: climate
+      # supported_features:
+      #   - custom_components.aprilaire.climate.ExtendedClimateEntityFeature.AIR_CLEANING

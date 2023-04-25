@@ -705,16 +705,31 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.reset_mock()
 
     async def test_set_humidity(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_set_humidity(30)
+
+        self.coordinator_mock.data["humidification_available"] = 2
+
         await self.climate.async_set_humidity(30)
 
         self.client_mock.set_humidification_setpoint.assert_called_with(30)
 
     async def test_set_dehumidity(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_set_dehumidity(30)
+
+        self.coordinator_mock.data["dehumidification_available"] = 1
+
         await self.climate.async_set_dehumidity(30)
 
         self.client_mock.set_dehumidification_setpoint.assert_called_with(30)
 
     async def test_trigger_air_cleaning_event(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_trigger_air_cleaning_event("3hour")
+
+        self.coordinator_mock.data["air_cleaning_available"] = 1
+
         await self.climate.async_trigger_air_cleaning_event("3hour")
 
         self.client_mock.set_air_cleaning.assert_called_with(0, 3)
@@ -732,11 +747,21 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.reset_mock()
 
     async def test_cancel_air_cleaning_event(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_cancel_air_cleaning_event()
+
+        self.coordinator_mock.data["air_cleaning_available"] = 1
+
         await self.climate.async_cancel_air_cleaning_event()
 
         self.client_mock.set_air_cleaning.assert_called_with(0, 0)
 
     async def test_trigger_fresh_air_event(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_trigger_fresh_air_event("3hour")
+
+        self.coordinator_mock.data["ventilation_available"] = 1
+
         await self.climate.async_trigger_fresh_air_event("3hour")
 
         self.client_mock.set_fresh_air.assert_called_with(0, 2)
@@ -754,6 +779,11 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.reset_mock()
 
     async def test_cancel_fresh_air_event(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_cancel_fresh_air_event()
+
+        self.coordinator_mock.data["ventilation_available"] = 1
+
         await self.climate.async_cancel_fresh_air_event()
 
         self.client_mock.set_fresh_air.assert_called_with(0, 0)

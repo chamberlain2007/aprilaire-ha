@@ -414,46 +414,80 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidification setpoint"""
-        await self._coordinator.client.set_humidification_setpoint(humidity)
+
+        if self.supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
+            await self._coordinator.client.set_humidification_setpoint(humidity)
+        else:
+            raise RuntimeError(
+                "Device does not support setting humidification setpoint"
+            )
 
     async def async_set_dehumidity(self, dehumidity: int) -> None:
         """Set the target dehumidification setpoint"""
-        await self._coordinator.client.set_dehumidification_setpoint(dehumidity)
+
+        if self.supported_features & ExtendedClimateEntityFeature.TARGET_DEHUMIDITY:
+            await self._coordinator.client.set_dehumidification_setpoint(dehumidity)
+        else:
+            raise RuntimeError(
+                "Device does not support setting dehumidification setpoint"
+            )
 
     async def async_trigger_air_cleaning_event(self, event: str) -> None:
         """Triggers an air cleaning event of 3 or 24 hours"""
-        current_air_cleaning_mode = self._coordinator.data.get("air_cleaning_mode", 0)
 
-        if event == "3hour":
-            await self._coordinator.client.set_air_cleaning(
-                current_air_cleaning_mode, 3
+        if self.supported_features & ExtendedClimateEntityFeature.AIR_CLEANING:
+            current_air_cleaning_mode = self._coordinator.data.get(
+                "air_cleaning_mode", 0
             )
-        elif event == "24hour":
-            await self._coordinator.client.set_air_cleaning(
-                current_air_cleaning_mode, 4
-            )
+
+            if event == "3hour":
+                await self._coordinator.client.set_air_cleaning(
+                    current_air_cleaning_mode, 3
+                )
+            elif event == "24hour":
+                await self._coordinator.client.set_air_cleaning(
+                    current_air_cleaning_mode, 4
+                )
+            else:
+                raise ValueError("Invalid event")
         else:
-            raise ValueError("Invalid event")
+            raise RuntimeError("Device does not support air cleaning")
 
     async def async_cancel_air_cleaning_event(self) -> None:
         """Cancels an existing air cleaning event"""
-        current_air_cleaning_mode = self._coordinator.data.get("air_cleaning_mode", 0)
 
-        await self._coordinator.client.set_air_cleaning(current_air_cleaning_mode, 0)
+        if self.supported_features & ExtendedClimateEntityFeature.AIR_CLEANING:
+            current_air_cleaning_mode = self._coordinator.data.get(
+                "air_cleaning_mode", 0
+            )
+
+            await self._coordinator.client.set_air_cleaning(
+                current_air_cleaning_mode, 0
+            )
+        else:
+            raise RuntimeError("Device does not support air cleaning")
 
     async def async_trigger_fresh_air_event(self, event: str) -> None:
         """Triggers a fresh air event of 3 or 24 hours"""
-        current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
 
-        if event == "3hour":
-            await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 2)
-        elif event == "24hour":
-            await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 3)
+        if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
+            current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
+
+            if event == "3hour":
+                await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 2)
+            elif event == "24hour":
+                await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 3)
+            else:
+                raise ValueError("Invalid event")
         else:
-            raise ValueError("Invalid event")
+            raise RuntimeError("Device does not support fresh air ventilation")
 
     async def async_cancel_fresh_air_event(self) -> None:
         """Cancels a existing fresh air event"""
-        current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
 
-        await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 0)
+        if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
+            current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
+
+            await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 0)
+        else:
+            raise RuntimeError("Device does not support fresh air ventilation")

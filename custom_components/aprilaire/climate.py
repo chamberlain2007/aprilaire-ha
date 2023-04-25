@@ -298,10 +298,12 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     def min_humidity(self) -> int:
+        """Get the minimum supported humidity (static per Aprilaire)"""
         return 10
 
     @property
     def max_humidity(self) -> int:
+        """Get the maximum supported humidity (static per Aprilaire)"""
         return 50
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -371,7 +373,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         await self._coordinator.client.read_scheduling()
 
     async def async_set_humidity(self, humidity: int) -> None:
+        """Set the target humidification setpoint"""
         await self._coordinator.client.set_humidification_setpoint(humidity)
 
     async def async_set_dehumidity(self, dehumidity: int) -> None:
+        """Set the target dehumidification setpoint"""
         await self._coordinator.client.set_dehumidification_setpoint(dehumidity)

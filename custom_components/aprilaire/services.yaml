@@ -4,8 +4,6 @@ set_dehumidity:
   target:
     entity:
       domain: climate
-      # supported_features:
-      #   - custom_components.aprilaire.climate.ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
   fields:
     dehumidity:
       name: Humidity
@@ -23,8 +21,6 @@ trigger_air_cleaning_event:
   target:
     entity:
       domain: climate
-      # supported_features:
-      #   - custom_components.aprilaire.climate.ExtendedClimateEntityFeature.AIR_CLEANING
   fields:
     event:
       name: Event
@@ -44,5 +40,29 @@ cancel_air_cleaning_event:
   target:
     entity:
       domain: climate
-      # supported_features:
-      #   - custom_components.aprilaire.climate.ExtendedClimateEntityFeature.AIR_CLEANING
+
+trigger_fresh_air_event:
+  name: Trigger fresh air event
+  description: Trigger fresh air event of climate device.
+  target:
+    entity:
+      domain: climate
+  fields:
+    event:
+      name: Event
+      description: New freshair event for climate device.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "3 Hours"
+              value: "3hour"
+            - label: "24 Hours"
+              value: "24hour"
+
+cancel_fresh_air_event:
+  name: Cancel fresh air event
+  description: Cancel fresh air event of climate device.
+  target:
+    entity:
+      domain: climate

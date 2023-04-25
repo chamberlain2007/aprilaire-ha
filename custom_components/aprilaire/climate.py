@@ -43,6 +43,8 @@ PRESET_VACATION = "Vacation"
 SERVICE_SET_DEHUMIDITY = "set_dehumidity"
 SERVICE_TRIGGER_AIR_CLEANING_EVENT = "trigger_air_cleaning_event"
 SERVICE_CANCEL_AIR_CLEANING_EVENT = "cancel_air_cleaning_event"
+SERVICE_TRIGGER_FRESH_AIR_EVENT = "trigger_fresh_air_event"
+SERVICE_CANCEL_FRESH_AIR_EVENT = "cancel_fresh_air_event"
 
 HVAC_MODE_MAP = {
     1: HVACMode.OFF,
@@ -99,6 +101,20 @@ async def async_setup_entry(
         {},
         "async_cancel_air_cleaning_event",
         [ExtendedClimateEntityFeature.AIR_CLEANING],
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TRIGGER_FRESH_AIR_EVENT,
+        {vol.Required("event"): vol.Coerce(str)},
+        "async_trigger_fresh_air_event",
+        [ExtendedClimateEntityFeature.FRESH_AIR],
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_CANCEL_FRESH_AIR_EVENT,
+        {},
+        "async_cancel_fresh_air_event",
+        [ExtendedClimateEntityFeature.FRESH_AIR],
     )
 
 
@@ -406,13 +422,38 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     async def async_trigger_air_cleaning_event(self, event: str) -> None:
         """Triggers an air cleaning event of 3 or 24 hours"""
+        current_air_cleaning_mode = self._coordinator.data.get("air_cleaning_mode", 0)
+
         if event == "3hour":
-            await self._coordinator.client.set_air_cleaning(1, 3)
+            await self._coordinator.client.set_air_cleaning(
+                current_air_cleaning_mode, 3
+            )
         elif event == "24hour":
-            await self._coordinator.client.set_air_cleaning(1, 4)
+            await self._coordinator.client.set_air_cleaning(
+                current_air_cleaning_mode, 4
+            )
         else:
             raise ValueError("Invalid event")
 
     async def async_cancel_air_cleaning_event(self) -> None:
         """Cancels an existing air cleaning event"""
-        await self._coordinator.client.set_air_cleaning(0, 0)
+        current_air_cleaning_mode = self._coordinator.data.get("air_cleaning_mode", 0)
+
+        await self._coordinator.client.set_air_cleaning(current_air_cleaning_mode, 0)
+
+    async def async_trigger_fresh_air_event(self, event: str) -> None:
+        """Triggers a fresh air event of 3 or 24 hours"""
+        current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
+
+        if event == "3hour":
+            await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 2)
+        elif event == "24hour":
+            await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 3)
+        else:
+            raise ValueError("Invalid event")
+
+    async def async_cancel_fresh_air_event(self) -> None:
+        """Cancels a existing fresh air event"""
+        current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
+
+        await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 0)

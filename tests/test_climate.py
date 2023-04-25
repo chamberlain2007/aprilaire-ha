@@ -717,12 +717,12 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
     async def test_trigger_air_cleaning_event(self):
         await self.climate.async_trigger_air_cleaning_event("3hour")
 
-        self.client_mock.set_air_cleaning.assert_called_with(1, 3)
+        self.client_mock.set_air_cleaning.assert_called_with(0, 3)
         self.client_mock.reset_mock()
 
         await self.climate.async_trigger_air_cleaning_event("24hour")
 
-        self.client_mock.set_air_cleaning.assert_called_with(1, 4)
+        self.client_mock.set_air_cleaning.assert_called_with(0, 4)
         self.client_mock.reset_mock()
 
         with self.assertRaises(ValueError):
@@ -735,3 +735,25 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         await self.climate.async_cancel_air_cleaning_event()
 
         self.client_mock.set_air_cleaning.assert_called_with(0, 0)
+
+    async def test_trigger_fresh_air_event(self):
+        await self.climate.async_trigger_fresh_air_event("3hour")
+
+        self.client_mock.set_fresh_air.assert_called_with(0, 2)
+        self.client_mock.reset_mock()
+
+        await self.climate.async_trigger_fresh_air_event("24hour")
+
+        self.client_mock.set_fresh_air.assert_called_with(0, 3)
+        self.client_mock.reset_mock()
+
+        with self.assertRaises(ValueError):
+            await self.climate.async_trigger_fresh_air_event("bad")
+
+        self.client_mock.set_fresh_air.assert_not_called()
+        self.client_mock.reset_mock()
+
+    async def test_cancel_fresh_air_event(self):
+        await self.climate.async_cancel_fresh_air_event()
+
+        self.client_mock.set_fresh_air.assert_called_with(0, 0)

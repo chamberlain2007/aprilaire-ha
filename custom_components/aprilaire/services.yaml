@@ -1,0 +1,68 @@
+set_dehumidity:
+  name: Set target dehumidity
+  description: Set target dehumidity of climate device.
+  target:
+    entity:
+      domain: climate
+  fields:
+    dehumidity:
+      name: Humidity
+      description: New target dehumidity for climate device.
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 50
+          unit_of_measurement: "%"
+
+trigger_air_cleaning_event:
+  name: Trigger air cleaning event
+  description: Trigger air cleaning event of climate device.
+  target:
+    entity:
+      domain: climate
+  fields:
+    event:
+      name: Event
+      description: New air cleaning event for climate device.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "3 Hours"
+              value: "3hour"
+            - label: "24 Hours"
+              value: "24hour"
+
+cancel_air_cleaning_event:
+  name: Cancel air cleaning event
+  description: Cancel air cleaning event of climate device.
+  target:
+    entity:
+      domain: climate
+
+trigger_fresh_air_event:
+  name: Trigger fresh air event
+  description: Trigger fresh air event of climate device.
+  target:
+    entity:
+      domain: climate
+  fields:
+    event:
+      name: Event
+      description: New fresh air event for climate device.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "3 Hours"
+              value: "3hour"
+            - label: "24 Hours"
+              value: "24hour"
+
+cancel_fresh_air_event:
+  name: Cancel fresh air event
+  description: Cancel fresh air event of climate device.
+  target:
+    entity:
+      domain: climate

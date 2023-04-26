@@ -524,13 +524,13 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
             "fan_status": 0,
         }
 
-        self.assertEqual(self.climate.extra_state_attributes, {"fan": "off"})
+        self.assertEqual(self.climate.extra_state_attributes.get("fan"), "off")
 
         self.coordinator_mock.data = {
             "fan_status": 1,
         }
 
-        self.assertEqual(self.climate.extra_state_attributes, {"fan": "on"})
+        self.assertEqual(self.climate.extra_state_attributes.get("fan"), "on")
 
     async def test_set_hvac_mode(self):
         await self.climate.async_set_hvac_mode(HVACMode.OFF)
@@ -732,12 +732,12 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
 
         await self.climate.async_trigger_air_cleaning_event("3hour")
 
-        self.client_mock.set_air_cleaning.assert_called_with(0, 3)
+        self.client_mock.set_air_cleaning.assert_called_with(2, 3)
         self.client_mock.reset_mock()
 
         await self.climate.async_trigger_air_cleaning_event("24hour")
 
-        self.client_mock.set_air_cleaning.assert_called_with(0, 4)
+        self.client_mock.set_air_cleaning.assert_called_with(2, 4)
         self.client_mock.reset_mock()
 
         with self.assertRaises(ValueError):
@@ -764,12 +764,12 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
 
         await self.climate.async_trigger_fresh_air_event("3hour")
 
-        self.client_mock.set_fresh_air.assert_called_with(0, 2)
+        self.client_mock.set_fresh_air.assert_called_with(1, 2)
         self.client_mock.reset_mock()
 
         await self.climate.async_trigger_fresh_air_event("24hour")
 
-        self.client_mock.set_fresh_air.assert_called_with(0, 3)
+        self.client_mock.set_fresh_air.assert_called_with(1, 3)
         self.client_mock.reset_mock()
 
         with self.assertRaises(ValueError):

@@ -113,7 +113,7 @@ pip-tools==6.12.2
     # via aprilaire-ha (pyproject.toml)
 platformdirs==3.0.0
     # via black
-pyaprilaire==0.6.0b0
+pyaprilaire==0.6.0b1
     # via aprilaire-ha (pyproject.toml)
 pycparser==2.21
     # via cffi

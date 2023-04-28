@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
+
+from pyaprilaire.const import Attribute
 
 from .const import LOG_NAME
 from .coordinator import AprilaireCoordinator
@@ -34,10 +34,10 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
     def _update_available(self):
         connected: bool = self._coordinator.data.get(
-            "connected", None
-        ) or self._coordinator.data.get("reconnecting", None)
+            Attribute.CONNECTED, None
+        ) or self._coordinator.data.get(Attribute.RECONNECTING, None)
 
-        stopped: bool = self._coordinator.data.get("stopped", None)
+        stopped: bool = self._coordinator.data.get(Attribute.STOPPED, None)
 
         if stopped:
             self._available = False
@@ -45,7 +45,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
             self._available = False
         else:
             self._available = (
-                self._coordinator.data.get("mac_address", None) is not None
+                self._coordinator.data.get(Attribute.MAC_ADDRESS, None) is not None
             )
 
     @property
@@ -65,7 +65,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
     @property
     def unique_id(self):
         return slugify(
-            self._coordinator.data["mac_address"].replace(":", "_")
+            self._coordinator.data[Attribute.MAC_ADDRESS].replace(":", "_")
             + "_"
             + self.entity_name
         )
@@ -84,5 +84,5 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         """Return device specific state attributes."""
         return {
             "device_name": self._coordinator.device_name,
-            "device_location": self._coordinator.data.get("location"),
+            "device_location": self._coordinator.data.get(Attribute.LOCATION),
         }

@@ -6,6 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
+from pyaprilaire.const import Attribute
+
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
@@ -32,7 +34,7 @@ class AprilaireFanStatusSensor(BaseAprilaireEntity, BinarySensorEntity):
 
     @property
     def available(self):
-        return super().available and "fan_status" in self._coordinator.data
+        return super().available and Attribute.FAN_STATUS in self._coordinator.data
 
     @property
     def entity_name(self) -> str | None:
@@ -40,4 +42,4 @@ class AprilaireFanStatusSensor(BaseAprilaireEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        return self._coordinator.data.get("fan_status", 0) == 1
+        return self._coordinator.data.get(Attribute.FAN_STATUS) == 1

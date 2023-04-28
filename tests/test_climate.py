@@ -31,8 +31,6 @@ from homeassistant.components.climate import (
 
 from homeassistant.const import (
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    PERCENTAGE,
     PRECISION_WHOLE,
 )
 

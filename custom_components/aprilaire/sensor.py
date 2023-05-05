@@ -54,7 +54,10 @@ async def async_setup_entry(
     if coordinator.data.get("dehumidification_available") == 1:
         entities.append(AprilaireDehumidificationStatusSensor(coordinator))
 
-    if coordinator.data.get("humidification_available") == 1:
+    if (
+        coordinator.data.get("humidification_available") == 1
+        or coordinator.data.get("humidification_available") == 2
+    ):
         entities.append(AprilaireHumidificationStatusSensor(coordinator))
 
     if coordinator.data.get("ventilation_available") == 1:

@@ -5,6 +5,7 @@ from custom_components.aprilaire.const import DOMAIN, LOG_NAME
 from custom_components.aprilaire.climate import (
     async_setup_entry,
     AprilaireClimate,
+    ExtendedClimateEntityFeature,
     FAN_CIRCULATE,
     PRESET_TEMPORARY_HOLD,
     PRESET_PERMANENT_HOLD,
@@ -63,10 +64,15 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.config_entry_mock.entry_id = self.entry_id
 
         async_add_entities_mock = Mock()
+        async_get_current_platform_mock = Mock()
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
+        with patch(
+            "homeassistant.helpers.entity_platform.async_get_current_platform",
+            new=async_get_current_platform_mock,
+        ):
+            await async_setup_entry(
+                self.hass_mock, self.config_entry_mock, async_add_entities_mock
+            )
 
         sensors_list = async_add_entities_mock.call_args_list[0][0]
 
@@ -156,6 +162,58 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             self.climate.supported_features,
             ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.FAN_MODE,
+        )
+
+    def test_supported_features_humidification_available(self):
+        self.coordinator_mock.data = {
+            "humidification_available": 2,
+        }
+
+        self.assertEqual(
+            self.climate.supported_features,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_HUMIDITY
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.FAN_MODE,
+        )
+
+    def test_supported_features_dehumidification_available(self):
+        self.coordinator_mock.data = {
+            "dehumidification_available": 1,
+        }
+
+        self.assertEqual(
+            self.climate.supported_features,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.FAN_MODE,
+        )
+
+    def test_supported_features_air_cleaning_available(self):
+        self.coordinator_mock.data = {
+            "air_cleaning_available": 1,
+        }
+
+        self.assertEqual(
+            self.climate.supported_features,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ExtendedClimateEntityFeature.AIR_CLEANING
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.FAN_MODE,
+        )
+
+    def test_supported_features_ventilation_available(self):
+        self.coordinator_mock.data = {
+            "ventilation_available": 1,
+        }
+
+        self.assertEqual(
+            self.climate.supported_features,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ExtendedClimateEntityFeature.FRESH_AIR
             | ClimateEntityFeature.PRESET_MODE
             | ClimateEntityFeature.FAN_MODE,
         )
@@ -446,18 +504,33 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(self.climate.preset_mode, PRESET_VACATION)
 
+    def test_climate_target_humidity(self):
+        self.assertIsNone(self.climate.target_humidity)
+
+        self.coordinator_mock.data = {
+            "humidification_setpoint": 10,
+        }
+
+        self.assertEqual(self.climate.target_humidity, 10)
+
+    def test_climate_min_humidity(self):
+        self.assertEqual(self.climate.min_humidity, 10)
+
+    def test_climate_max_humidity(self):
+        self.assertEqual(self.climate.max_humidity, 50)
+
     def test_climate_extra_state_attributes(self):
         self.coordinator_mock.data = {
             "fan_status": 0,
         }
 
-        self.assertEqual(self.climate.extra_state_attributes, {"fan": "off"})
+        self.assertEqual(self.climate.extra_state_attributes.get("fan"), "off")
 
         self.coordinator_mock.data = {
             "fan_status": 1,
         }
 
-        self.assertEqual(self.climate.extra_state_attributes, {"fan": "on"})
+        self.assertEqual(self.climate.extra_state_attributes.get("fan"), "on")
 
     async def test_set_hvac_mode(self):
         await self.climate.async_set_hvac_mode(HVACMode.OFF)
@@ -630,3 +703,87 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.set_hold.assert_not_called()
         self.client_mock.read_scheduling.assert_not_called()
         self.client_mock.reset_mock()
+
+    async def test_set_humidity(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_set_humidity(30)
+
+        self.coordinator_mock.data["humidification_available"] = 2
+
+        await self.climate.async_set_humidity(30)
+
+        self.client_mock.set_humidification_setpoint.assert_called_with(30)
+
+    async def test_set_dehumidity(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_set_dehumidity(30)
+
+        self.coordinator_mock.data["dehumidification_available"] = 1
+
+        await self.climate.async_set_dehumidity(30)
+
+        self.client_mock.set_dehumidification_setpoint.assert_called_with(30)
+
+    async def test_trigger_air_cleaning_event(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_trigger_air_cleaning_event("3hour")
+
+        self.coordinator_mock.data["air_cleaning_available"] = 1
+
+        await self.climate.async_trigger_air_cleaning_event("3hour")
+
+        self.client_mock.set_air_cleaning.assert_called_with(2, 3)
+        self.client_mock.reset_mock()
+
+        await self.climate.async_trigger_air_cleaning_event("24hour")
+
+        self.client_mock.set_air_cleaning.assert_called_with(2, 4)
+        self.client_mock.reset_mock()
+
+        with self.assertRaises(ValueError):
+            await self.climate.async_trigger_air_cleaning_event("bad")
+
+        self.client_mock.set_air_cleaning.assert_not_called()
+        self.client_mock.reset_mock()
+
+    async def test_cancel_air_cleaning_event(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_cancel_air_cleaning_event()
+
+        self.coordinator_mock.data["air_cleaning_available"] = 1
+
+        await self.climate.async_cancel_air_cleaning_event()
+
+        self.client_mock.set_air_cleaning.assert_called_with(0, 0)
+
+    async def test_trigger_fresh_air_event(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_trigger_fresh_air_event("3hour")
+
+        self.coordinator_mock.data["ventilation_available"] = 1
+
+        await self.climate.async_trigger_fresh_air_event("3hour")
+
+        self.client_mock.set_fresh_air.assert_called_with(1, 2)
+        self.client_mock.reset_mock()
+
+        await self.climate.async_trigger_fresh_air_event("24hour")
+
+        self.client_mock.set_fresh_air.assert_called_with(1, 3)
+        self.client_mock.reset_mock()
+
+        with self.assertRaises(ValueError):
+            await self.climate.async_trigger_fresh_air_event("bad")
+
+        self.client_mock.set_fresh_air.assert_not_called()
+        self.client_mock.reset_mock()
+
+    async def test_cancel_fresh_air_event(self):
+        with self.assertRaises(RuntimeError):
+            await self.climate.async_cancel_fresh_air_event()
+
+        self.coordinator_mock.data["ventilation_available"] = 1
+
+        await self.climate.async_cancel_fresh_air_event()
+
+        self.client_mock.set_fresh_air.assert_called_with(0, 0)

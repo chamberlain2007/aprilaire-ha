@@ -59,3 +59,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, **kwargs) -
     await coordinator.wait_for_ready(ready_callback)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok:
+        coordinator: AprilaireCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator.stop_listen()
+
+    return unload_ok

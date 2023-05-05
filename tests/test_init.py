@@ -1,6 +1,6 @@
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
 from custom_components.aprilaire.const import DOMAIN, LOG_NAME
-from custom_components.aprilaire import async_setup_entry
+from custom_components.aprilaire import async_setup_entry, async_unload_entry
 
 import pyaprilaire.client
 
@@ -143,3 +143,66 @@ class Test_Init(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             cm.output, ["ERROR:custom_components.aprilaire:Invalid port None"]
         )
+
+    async def test_unload_entry_ok(self):
+        async def wait_for_ready(
+            self, ready_callback: Callable[[bool], Awaitable[None]]
+        ):
+            await ready_callback(True)
+
+        stop_listen_mock = Mock()
+
+        self.hass_mock.config_entries.async_unload_platforms = AsyncMock(
+            return_value=True
+        )
+
+        with patch(
+            "pyaprilaire.client.AprilaireClient",
+            return_value=self.client_mock,
+        ), patch(
+            "custom_components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
+            new=wait_for_ready,
+        ), patch(
+            "custom_components.aprilaire.coordinator.AprilaireCoordinator.stop_listen",
+            new=stop_listen_mock,
+        ):
+            await async_setup_entry(
+                self.hass_mock, self.config_entry_mock, logger=_LOGGER
+            )
+
+            unload_result = await async_unload_entry(
+                self.hass_mock, self.config_entry_mock
+            )
+
+        self.hass_mock.config_entries.async_unload_platforms.assert_called_once()
+
+        self.assertTrue(unload_result)
+
+        stop_listen_mock.assert_called_once()
+
+    async def test_unload_entry_not_ok(self):
+        async def wait_for_ready(
+            self, ready_callback: Callable[[bool], Awaitable[None]]
+        ):
+            await ready_callback(True)
+
+        with patch(
+            "pyaprilaire.client.AprilaireClient",
+            return_value=self.client_mock,
+        ), patch(
+            "custom_components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
+            new=wait_for_ready,
+        ):
+            await async_setup_entry(
+                self.hass_mock, self.config_entry_mock, logger=_LOGGER
+            )
+
+        self.hass_mock.config_entries.async_unload_platforms = AsyncMock(
+            return_value=False
+        )
+
+        unload_result = await async_unload_entry(self.hass_mock, self.config_entry_mock)
+
+        self.hass_mock.config_entries.async_unload_platforms.assert_called_once()
+
+        self.assertFalse(unload_result)

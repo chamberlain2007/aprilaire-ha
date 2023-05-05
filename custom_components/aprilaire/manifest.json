@@ -5,7 +5,7 @@
   "documentation": "https://github.com/chamberlain2007/aprilaire-ha",
   "issue_tracker": "https://github.com/chamberlain2007/aprilaire-ha/issues",
   "requirements": [
-    "pyaprilaire==0.6.0b0"
+    "pyaprilaire==0.6.0"
   ],
   "ssdp": [],
   "zeroconf": [],
@@ -15,6 +15,6 @@
     "@chamberlain2007"
   ],
   "iot_class": "local_push",
-  "version": "0.5.4",
+  "version": "0.6.0",
   "homeassistant": "2022.7.0"
 }

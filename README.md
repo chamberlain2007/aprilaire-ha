@@ -29,6 +29,8 @@ Currently, the integration supports the following interactions with the thermost
 - View the current system status (heating, cooling, idle)
 - View and change the HVAC mode (heat, cool, auto, off)
 - View and change the heat/cool setpoint
+- View and change the humidification/dehumidification setpoint (only humidity is shown visually in the Home Assistant climate card)
+- Trigger and cancel air cleaning and fresh air events
 - View and change the hold type (away, vacation, temporary/permanent hold when activated by changing the setpoint)
 - View and change the fan mode (on, auto, circulate)
 - View the statuses of the air cleaning, humidifier, dehumidifier, fan and ventilation systems

@@ -1,14 +1,14 @@
 [project]
 name = "aprilaire-ha"
-version = "0.5.4"
+version = "0.6.0"
 readme = "README.md"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["black", "bumpver", "isort", "pip-tools", "coverage", "homeassistant==2023.3.6", "pyaprilaire==0.6.0b0"]
+dev = ["black", "bumpver", "isort", "pip-tools", "coverage", "homeassistant==2023.3.6", "pyaprilaire==0.6.0"]
 
 [tool.bumpver]
-current_version = "0.5.4"
+current_version = "0.6.0"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message  = "Bump version {old_version} -> {new_version}"
 commit          = true

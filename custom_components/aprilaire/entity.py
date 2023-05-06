@@ -2,24 +2,22 @@
 
 from __future__ import annotations
 
-import logging
-
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import LOG_NAME
 from .coordinator import AprilaireCoordinator
 
 
-class BaseAprilaireEntity(CoordinatorEntity, Entity):
+class BaseAprilaireEntity(CoordinatorEntity):
     """Base for Aprilaire entities"""
+
+    _attr_available = False
 
     def __init__(self, coordinator: AprilaireCoordinator) -> None:
         """Initialize the entity"""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._available = False
 
         self._update_available()
 
@@ -33,6 +31,8 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         self.async_write_ha_state()
 
     def _update_available(self):
+        """Update the entity availability"""
+
         connected: bool = self._coordinator.data.get(
             "connected", None
         ) or self._coordinator.data.get("reconnecting", None)
@@ -40,30 +40,27 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         stopped: bool = self._coordinator.data.get("stopped", None)
 
         if stopped:
-            self._available = False
+            self._attr_available = False
         elif not connected:
-            self._available = False
+            self._attr_available = False
         else:
-            self._available = (
+            self._attr_available = (
                 self._coordinator.data.get("mac_address", None) is not None
             )
 
     @property
-    def device_info(self):
-        return self._coordinator.device_info
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_available
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Do not need to poll"""
         return False
 
     @property
-    def available(self):
-        """Get entity availability"""
-        return self._available
-
-    @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
         return slugify(
             self._coordinator.data["mac_address"].replace(":", "_")
             + "_"
@@ -72,12 +69,19 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
     @property
     def name(self) -> str | None:
+        """Return the name of the entity."""
         return f"{self._coordinator.device_name} {self.entity_name}"
 
     @property
     def entity_name(self) -> str | None:
-        """Name of the entity"""
+        """Return the name of the derived entity."""
         return None
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return device specific attributes."""
+
+        return self._coordinator.device_info
 
     @property
     def extra_state_attributes(self):

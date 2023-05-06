@@ -49,7 +49,7 @@ class Test_Binary_Sensor(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsInstance(sensor, AprilaireFanStatusSensor)
 
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Fan")

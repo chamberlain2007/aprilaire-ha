@@ -50,7 +50,7 @@ class Test_Entity(unittest.IsolatedAsyncioTestCase):
         self.coordinator_mock.data["stopped"] = True
         entity._update_available()
 
-        self.assertFalse(entity._available)
+        self.assertFalse(entity._attr_available)
         self.assertFalse(entity.available)
 
     async def test_update_available_no_mac(self):
@@ -61,7 +61,7 @@ class Test_Entity(unittest.IsolatedAsyncioTestCase):
         self.coordinator_mock.data["mac_address"] = None
         entity._update_available()
 
-        self.assertFalse(entity._available)
+        self.assertFalse(entity._attr_available)
         self.assertFalse(entity.available)
 
     async def test_update_available_connected_not_stopped(self):
@@ -72,7 +72,7 @@ class Test_Entity(unittest.IsolatedAsyncioTestCase):
         self.coordinator_mock.data["mac_address"] = "1:2:3:4:5:6"
         entity._update_available()
 
-        self.assertTrue(entity._available)
+        self.assertTrue(entity._attr_available)
         self.assertTrue(entity.available)
 
     async def test_update_available_reconnecting_not_stopped(self):
@@ -84,7 +84,7 @@ class Test_Entity(unittest.IsolatedAsyncioTestCase):
         self.coordinator_mock.data["mac_address"] = "1:2:3:4:5:6"
         entity._update_available()
 
-        self.assertTrue(entity._available)
+        self.assertTrue(entity._attr_available)
         self.assertTrue(entity.available)
 
     def test_should_poll(self):

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-
 from collections.abc import Awaitable, Callable
 from logging import Logger
 from typing import Any
@@ -11,14 +9,12 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.device_registry
 
 import pyaprilaire.client
-from pyaprilaire.client import AprilaireClient
 from pyaprilaire.const import FunctionalDomain, MODELS
 
-from .const import DOMAIN, LOG_NAME
+from .const import DOMAIN
 
 RECONNECT_INTERVAL = 60 * 60
 RETRY_CONNECTION_INTERVAL = 10
@@ -49,6 +45,8 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         )
 
     def async_set_updated_data(self, data: Any) -> None:
+        """Manually update data, notify listeners and reset refresh interval."""
+
         old_device_info = self.create_device_info(self.data)
 
         if self.data is not None:
@@ -83,6 +81,8 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         self.client.stop_listen()
 
     async def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
+        """Wait for the client to be ready"""
+
         if not self.data or "mac_address" not in self.data:
             data = await self.client.wait_for_response(
                 FunctionalDomain.IDENTIFICATION, 2, 30
@@ -111,10 +111,12 @@ class AprilaireCoordinator(DataUpdateCoordinator):
     @property
     def device_name(self) -> str:
         """Get the name of the thermostat"""
+
         return self.create_device_name(self.data)
 
     def create_device_name(self, data: dict[str, Any]) -> str:
         """Create the name of the thermostat"""
+
         name = data.get("name")
 
         if name is None or len(name) == 0:
@@ -123,8 +125,9 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         return name
 
     def get_hw_version(self, data: dict[str, Any]) -> str:
-        hardware_revision = data.get("hardware_revision")
-        if hardware_revision is not None:
+        """Get the hardware version"""
+
+        if hardware_revision := data.get("hardware_revision"):
             if hardware_revision > ord("A"):
                 return f"Rev. {chr(hardware_revision)}"
             else:

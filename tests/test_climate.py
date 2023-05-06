@@ -22,18 +22,17 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
+    DEFAULT_MIN_TEMP,
+    DEFAULT_MAX_TEMP,
     FAN_AUTO,
     FAN_ON,
-    HVAC_MODES,
     PRESET_AWAY,
     PRESET_NONE,
 )
 
 from homeassistant.const import (
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    PERCENTAGE,
-    PRECISION_WHOLE,
+    PRECISION_HALVES,
 )
 
 import unittest
@@ -77,32 +76,19 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         sensors_list = async_add_entities_mock.call_args_list[0][0]
 
         self.climate: AprilaireClimate = sensors_list[0][0]
-        self.climate._available = True
+        self.climate._attr_available = True
 
     async def test_climate(self):
         self.assertTrue(self.climate.available)
         self.assertEqual(self.climate.entity_name, "Thermostat")
         self.assertEqual(self.climate.temperature_unit, TEMP_CELSIUS)
-        self.assertEqual(self.climate.precision, PRECISION_WHOLE)
+        self.assertEqual(self.climate.precision, PRECISION_HALVES)
 
     def test_climate_min_temp(self):
-        self.assertEqual(self.climate.min_temp, 10)
+        self.assertEqual(self.climate.min_temp, DEFAULT_MIN_TEMP)
 
     def test_climate_max_temp(self):
-        self.assertEqual(self.climate.max_temp, 32)
-
-    def test_climate_fan_status(self):
-        self.coordinator_mock.data = {
-            "fan_status": 0,
-        }
-
-        self.assertEqual(self.climate.fan, "off")
-
-        self.coordinator_mock.data = {
-            "fan_status": 1,
-        }
-
-        self.assertEqual(self.climate.fan, "on")
+        self.assertEqual(self.climate.max_temp, DEFAULT_MAX_TEMP)
 
     def test_climate_fan_modes(self):
         self.assertEqual(self.climate.fan_modes, [FAN_AUTO, FAN_ON, FAN_CIRCULATE])
@@ -284,27 +270,13 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.climate.target_temperature, 20)
 
     def test_hvac_mode(self):
-        with self.assertLogs(_LOGGER, level="WARN") as cm:
-            self.assertIsNone(self.climate.hvac_mode)
-
-        self.assertEqual(
-            cm.output,
-            ["WARNING:custom_components.aprilaire:No mode found in coordinator data"],
-        )
+        self.assertIsNone(self.climate.hvac_mode)
 
         self.coordinator_mock.data = {
             "mode": 0,
         }
 
-        with self.assertLogs(_LOGGER, level="WARN") as cm:
-            self.assertIsNone(self.climate.hvac_mode)
-
-        self.assertEqual(
-            cm.output,
-            [
-                "WARNING:custom_components.aprilaire:Invalid mode 0 found in coordinator data"
-            ],
-        )
+        self.assertIsNone(self.climate.hvac_mode)
 
         self.coordinator_mock.data = {
             "mode": 1,
@@ -524,13 +496,13 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
             "fan_status": 0,
         }
 
-        self.assertEqual(self.climate.extra_state_attributes.get("fan"), "off")
+        self.assertEqual(self.climate.extra_state_attributes.get("fan_status"), "off")
 
         self.coordinator_mock.data = {
             "fan_status": 1,
         }
 
-        self.assertEqual(self.climate.extra_state_attributes.get("fan"), "on")
+        self.assertEqual(self.climate.extra_state_attributes.get("fan_status"), "on")
 
     async def test_set_hvac_mode(self):
         await self.climate.async_set_hvac_mode(HVACMode.OFF)
@@ -557,34 +529,22 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.read_control.assert_called_once()
         self.client_mock.reset_mock()
 
-        with self.assertLogs(_LOGGER, level="ERROR") as cm:
+        with self.assertRaises(ValueError):
             await self.climate.async_set_hvac_mode(HVACMode.HEAT_COOL)
 
-        self.assertEqual(
-            cm.output, ["ERROR:custom_components.aprilaire:Invalid HVAC mode heat_cool"]
-        )
-
         self.client_mock.update_mode.assert_not_called()
         self.client_mock.read_control.assert_not_called()
         self.client_mock.reset_mock()
 
-        with self.assertLogs(_LOGGER, level="ERROR") as cm:
+        with self.assertRaises(ValueError):
             await self.climate.async_set_hvac_mode(HVACMode.DRY)
 
-        self.assertEqual(
-            cm.output, ["ERROR:custom_components.aprilaire:Invalid HVAC mode dry"]
-        )
-
         self.client_mock.update_mode.assert_not_called()
         self.client_mock.read_control.assert_not_called()
         self.client_mock.reset_mock()
 
-        with self.assertLogs(_LOGGER, level="ERROR") as cm:
+        with self.assertRaises(ValueError):
             await self.climate.async_set_hvac_mode(HVACMode.FAN_ONLY)
-
-        self.assertEqual(
-            cm.output, ["ERROR:custom_components.aprilaire:Invalid HVAC mode fan_only"]
-        )
 
         self.client_mock.update_mode.assert_not_called()
         self.client_mock.read_control.assert_not_called()
@@ -656,12 +616,8 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.read_control.assert_called_once()
         self.client_mock.reset_mock()
 
-        with self.assertLogs(_LOGGER, level="ERROR") as cm:
+        with self.assertRaises(ValueError):
             await self.climate.async_set_fan_mode("")
-
-        self.assertEqual(
-            cm.output, ["ERROR:custom_components.aprilaire:Invalid fan mode "]
-        )
 
         self.client_mock.update_fan_mode.assert_not_called()
         self.client_mock.read_control.assert_not_called()
@@ -686,28 +642,28 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.read_scheduling.assert_called_once()
         self.client_mock.reset_mock()
 
-        await self.climate.async_set_preset_mode(PRESET_TEMPORARY_HOLD)
+        with self.assertRaises(ValueError):
+            await self.climate.async_set_preset_mode(PRESET_TEMPORARY_HOLD)
 
         self.client_mock.set_hold.assert_not_called()
         self.client_mock.read_scheduling.assert_not_called()
         self.client_mock.reset_mock()
 
-        await self.climate.async_set_preset_mode(PRESET_PERMANENT_HOLD)
+        with self.assertRaises(ValueError):
+            await self.climate.async_set_preset_mode(PRESET_PERMANENT_HOLD)
 
         self.client_mock.set_hold.assert_not_called()
         self.client_mock.read_scheduling.assert_not_called()
         self.client_mock.reset_mock()
 
-        await self.climate.async_set_preset_mode("")
+        with self.assertRaises(ValueError):
+            await self.climate.async_set_preset_mode("")
 
         self.client_mock.set_hold.assert_not_called()
         self.client_mock.read_scheduling.assert_not_called()
         self.client_mock.reset_mock()
 
     async def test_set_humidity(self):
-        with self.assertRaises(RuntimeError):
-            await self.climate.async_set_humidity(30)
-
         self.coordinator_mock.data["humidification_available"] = 2
 
         await self.climate.async_set_humidity(30)
@@ -715,9 +671,6 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.set_humidification_setpoint.assert_called_with(30)
 
     async def test_set_dehumidity(self):
-        with self.assertRaises(RuntimeError):
-            await self.climate.async_set_dehumidity(30)
-
         self.coordinator_mock.data["dehumidification_available"] = 1
 
         await self.climate.async_set_dehumidity(30)
@@ -725,9 +678,6 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.set_dehumidification_setpoint.assert_called_with(30)
 
     async def test_trigger_air_cleaning_event(self):
-        with self.assertRaises(RuntimeError):
-            await self.climate.async_trigger_air_cleaning_event("3hour")
-
         self.coordinator_mock.data["air_cleaning_available"] = 1
 
         await self.climate.async_trigger_air_cleaning_event("3hour")
@@ -747,9 +697,6 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.reset_mock()
 
     async def test_cancel_air_cleaning_event(self):
-        with self.assertRaises(RuntimeError):
-            await self.climate.async_cancel_air_cleaning_event()
-
         self.coordinator_mock.data["air_cleaning_available"] = 1
 
         await self.climate.async_cancel_air_cleaning_event()
@@ -757,9 +704,6 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.set_air_cleaning.assert_called_with(0, 0)
 
     async def test_trigger_fresh_air_event(self):
-        with self.assertRaises(RuntimeError):
-            await self.climate.async_trigger_fresh_air_event("3hour")
-
         self.coordinator_mock.data["ventilation_available"] = 1
 
         await self.climate.async_trigger_fresh_air_event("3hour")
@@ -779,9 +723,6 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.reset_mock()
 
     async def test_cancel_fresh_air_event(self):
-        with self.assertRaises(RuntimeError):
-            await self.climate.async_cancel_fresh_air_event()
-
         self.coordinator_mock.data["ventilation_available"] = 1
 
         await self.climate.async_cancel_fresh_air_event()

@@ -16,7 +16,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add climates for passed config_entry in HA."""
+    """Add binary sensors for passed config_entry in HA."""
 
     coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -32,12 +32,15 @@ class AprilaireFanStatusSensor(BaseAprilaireEntity, BinarySensorEntity):
 
     @property
     def available(self):
+        """Get entity availability"""
         return super().available and "fan_status" in self._coordinator.data
 
     @property
     def entity_name(self) -> str | None:
+        """Return the entity name"""
         return "Fan"
 
     @property
     def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
         return self._coordinator.data.get("fan_status", 0) == 1

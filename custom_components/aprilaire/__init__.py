@@ -26,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, **kwargs) -
     config = entry.data
 
     host = config.get("host")
-
     if host is None or len(host) == 0:
         logger.error("Invalid host %s", host)
         return False

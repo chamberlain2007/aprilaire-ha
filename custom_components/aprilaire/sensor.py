@@ -102,10 +102,7 @@ async def async_setup_entry(
     if coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) == 1:
         entities.append(AprilaireDehumidificationStatusSensor(coordinator))
 
-    if (
-        coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) == 1
-        or coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) == 2
-    ):
+    if coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) in [1, 2]:
         entities.append(AprilaireHumidificationStatusSensor(coordinator))
 
     if coordinator.data.get(Attribute.VENTILATION_AVAILABLE) == 1:
@@ -120,17 +117,9 @@ async def async_setup_entry(
 class BaseAprilaireHumiditySensor(SensorEntity):
     """Base for Aprilaire humidity sensors"""
 
-    @property
-    def device_class(self) -> str | None:
-        return SensorDeviceClass.HUMIDITY
-
-    @property
-    def state_class(self) -> SensorStateClass | str | None:
-        return SensorStateClass.MEASUREMENT
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        return PERCENTAGE
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
 
 
 class AprilaireIndoorHumidityControllingSensor(
@@ -220,13 +209,9 @@ class AprilaireOutdoorHumidityControllingSensor(
 class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
     """Base for Aprilaire temperature sensors"""
 
-    @property
-    def device_class(self) -> str | None:
-        return SensorDeviceClass.TEMPERATURE
-
-    @property
-    def state_class(self) -> SensorStateClass | str | None:
-        return SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
     def safe_unit_of_measurement(self) -> str | None:  # pragma: no cover

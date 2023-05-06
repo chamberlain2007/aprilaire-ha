@@ -17,6 +17,7 @@ from pyaprilaire.client import AprilaireClient
 from homeassistant.config_entries import ConfigEntry, ConfigEntries
 from homeassistant.core import Config, HomeAssistant, EventBus
 from homeassistant.util import uuid as uuid_util
+from homeassistant.util.unit_system import UnitSystem
 
 from homeassistant.components.climate import (
     ClimateEntityFeature,
@@ -30,10 +31,7 @@ from homeassistant.components.climate import (
     PRESET_NONE,
 )
 
-from homeassistant.const import (
-    TEMP_CELSIUS,
-    PRECISION_HALVES,
-)
+from homeassistant.const import UnitOfTemperature
 
 import unittest
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
@@ -57,6 +55,7 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.hass_mock.config_entries = AsyncMock(ConfigEntries)
         self.hass_mock.bus = AsyncMock(EventBus)
         self.hass_mock.config = Mock(Config)
+        self.hass_mock.config.units = Mock(UnitSystem)
 
         self.config_entry_mock = AsyncMock(ConfigEntry)
         self.config_entry_mock.data = {"host": "test123", "port": 123}
@@ -77,6 +76,10 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
 
         self.climate: AprilaireClimate = sensors_list[0][0]
         self.climate._attr_available = True
+        self.climate.hass = self.hass_mock
+
+    def test_climate_entity_name(self):
+        self.assertEqual(self.climate.entity_name, "Thermostat")
 
     def test_climate_min_temp(self):
         self.assertEqual(self.climate.min_temp, DEFAULT_MIN_TEMP)
@@ -262,6 +265,13 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
             hvac_mode_mock.return_value = HVACMode.HEAT
 
             self.assertEqual(self.climate.target_temperature, 20)
+
+    def test_target_temperature_step(self):
+        self.climate.hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+        self.assertEqual(self.climate.target_temperature_step, 0.5)
+
+        self.climate.hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+        self.assertEqual(self.climate.target_temperature_step, 1)
 
     def test_hvac_mode(self):
         self.assertIsNone(self.climate.hvac_mode)
@@ -665,6 +675,9 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.set_humidification_setpoint.assert_called_with(30)
 
     async def test_set_dehumidity(self):
+        with self.assertRaises(ValueError):
+            await self.climate.async_set_dehumidity(30)
+
         self.coordinator_mock.data["dehumidification_available"] = 1
 
         await self.climate.async_set_dehumidity(30)
@@ -672,6 +685,9 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.set_dehumidification_setpoint.assert_called_with(30)
 
     async def test_trigger_air_cleaning_event(self):
+        with self.assertRaises(ValueError):
+            await self.climate.async_trigger_air_cleaning_event("3hour")
+
         self.coordinator_mock.data["air_cleaning_available"] = 1
 
         await self.climate.async_trigger_air_cleaning_event("3hour")
@@ -691,6 +707,9 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.reset_mock()
 
     async def test_cancel_air_cleaning_event(self):
+        with self.assertRaises(ValueError):
+            await self.climate.async_cancel_air_cleaning_event()
+
         self.coordinator_mock.data["air_cleaning_available"] = 1
 
         await self.climate.async_cancel_air_cleaning_event()
@@ -698,6 +717,9 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.set_air_cleaning.assert_called_with(0, 0)
 
     async def test_trigger_fresh_air_event(self):
+        with self.assertRaises(ValueError):
+            await self.climate.async_trigger_fresh_air_event("3hour")
+
         self.coordinator_mock.data["ventilation_available"] = 1
 
         await self.climate.async_trigger_fresh_air_event("3hour")
@@ -717,6 +739,9 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.client_mock.reset_mock()
 
     async def test_cancel_fresh_air_event(self):
+        with self.assertRaises(ValueError):
+            await self.climate.async_cancel_fresh_air_event()
+
         self.coordinator_mock.data["ventilation_available"] = 1
 
         await self.climate.async_cancel_fresh_air_event()

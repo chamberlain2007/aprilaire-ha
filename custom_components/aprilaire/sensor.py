@@ -119,6 +119,11 @@ class BaseAprilaireHumiditySensor(SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
+    @property
+    def entity_name(self) -> str:
+        """Return the entity name"""
+        return "Base"
+
 
 class AprilaireIndoorHumidityControllingSensor(
     BaseAprilaireEntity, BaseAprilaireHumiditySensor, SensorEntity
@@ -212,7 +217,13 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    def entity_name(self) -> str:
+        """Return the entity name"""
+        return "Base"
+
+    @property
     def suggested_display_precision(self) -> int | None:
+        """Return the suggested number of decimal digits for display."""
         if self.unit_of_measurement == UnitOfTemperature.CELSIUS:
             return 1
         else:

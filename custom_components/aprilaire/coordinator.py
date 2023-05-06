@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.helpers.device_registry
 
 import pyaprilaire.client
-from pyaprilaire.const import FunctionalDomain, MODELS
+from pyaprilaire.const import Attribute, FunctionalDomain, MODELS
 
 from .const import DOMAIN
 
@@ -83,26 +83,26 @@ class AprilaireCoordinator(DataUpdateCoordinator):
     async def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
         """Wait for the client to be ready"""
 
-        if not self.data or "mac_address" not in self.data:
+        if not self.data or Attribute.MAC_ADDRESS not in self.data:
             data = await self.client.wait_for_response(
                 FunctionalDomain.IDENTIFICATION, 2, 30
             )
 
-            if not data or "mac_address" not in data:
+            if not data or Attribute.MAC_ADDRESS not in data:
                 self.logger.error("Missing MAC address, cannot create unique ID")
                 await ready_callback(False)
 
                 return
 
-        if not self.data or "name" not in self.data:
+        if not self.data or Attribute.NAME not in self.data:
             await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 4, 30)
 
-        if not self.data or "thermostat_modes" not in self.data:
+        if not self.data or Attribute.THERMOSTAT_MODES not in self.data:
             await self.client.wait_for_response(FunctionalDomain.CONTROL, 7, 30)
 
         if (
             not self.data
-            or "indoor_temperature_controlling_sensor_status" not in self.data
+            or Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS not in self.data
         ):
             await self.client.wait_for_response(FunctionalDomain.SENSORS, 2, 30)
 
@@ -117,7 +117,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
     def create_device_name(self, data: dict[str, Any]) -> str:
         """Create the name of the thermostat"""
 
-        name = data.get("name")
+        name = data.get(Attribute.NAME)
 
         if name is None or len(name) == 0:
             return "Aprilaire"
@@ -127,7 +127,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
     def get_hw_version(self, data: dict[str, Any]) -> str:
         """Get the hardware version"""
 
-        if hardware_revision := data.get("hardware_revision"):
+        if hardware_revision := data.get(Attribute.HARDWARE_REVISION):
             if hardware_revision > ord("A"):
                 return f"Rev. {chr(hardware_revision)}"
             else:
@@ -141,16 +141,16 @@ class AprilaireCoordinator(DataUpdateCoordinator):
     def create_device_info(self, data: dict[str, Any]) -> DeviceInfo:
         """Create the device info for the thermostat"""
 
-        if "mac_address" not in data:
+        if Attribute.MAC_ADDRESS not in data:
             return None
 
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, data["mac_address"])},
+            identifiers={(DOMAIN, data[Attribute.MAC_ADDRESS])},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
         )
 
-        model_number = data.get("model_number")
+        model_number = data.get(Attribute.MODEL_NUMBER)
         if model_number is not None:
             device_info["model"] = (
                 MODELS[model_number]
@@ -160,8 +160,8 @@ class AprilaireCoordinator(DataUpdateCoordinator):
 
         device_info["hw_version"] = self.get_hw_version(data)
 
-        firmware_major_revision = data.get("firmware_major_revision")
-        firmware_minor_revision = data.get("firmware_minor_revision")
+        firmware_major_revision = data.get(Attribute.FIRMWARE_MAJOR_REVISION)
+        firmware_minor_revision = data.get(Attribute.FIRMWARE_MINOR_REVISION)
         if firmware_major_revision is not None:
             device_info["sw_version"] = (
                 str(firmware_major_revision)

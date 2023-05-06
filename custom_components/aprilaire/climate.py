@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from enum import IntFlag
-
-import voluptuous as vol
-
 from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACAction,
@@ -20,9 +16,11 @@ from homeassistant.const import UnitOfTemperature
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.climate import ClimateEntity
+
+from pyaprilaire.const import Attribute
 
 from enum import IntFlag
 
@@ -146,26 +144,26 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get supported features"""
         features = 0
 
-        if "mode" not in self._coordinator.data:
+        if Attribute.MODE not in self._coordinator.data:
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE
         else:
-            mode = self._coordinator.data["mode"]
+            mode = self._coordinator.data[Attribute.MODE]
 
             if mode == 5:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             else:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE
 
-        if self._coordinator.data.get("humidification_available") == 2:
+        if self._coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) == 2:
             features = features | ClimateEntityFeature.TARGET_HUMIDITY
 
-        if self._coordinator.data.get("dehumidification_available") == 1:
+        if self._coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) == 1:
             features = features | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
 
-        if self._coordinator.data.get("air_cleaning_available") == 1:
+        if self._coordinator.data.get(Attribute.AIR_CLEANING_AVAILABLE) == 1:
             features = features | ExtendedClimateEntityFeature.AIR_CLEANING
 
-        if self._coordinator.data.get("ventilation_available") == 1:
+        if self._coordinator.data.get(Attribute.VENTILATION_AVAILABLE) == 1:
             features = features | ExtendedClimateEntityFeature.FRESH_AIR
 
         features = features | ClimateEntityFeature.PRESET_MODE
@@ -177,18 +175,20 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Get current humidity"""
-        return self._coordinator.data.get("indoor_humidity_controlling_sensor_value")
+        return self._coordinator.data.get(
+            Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE
+        )
 
     @property
     def target_humidity(self) -> int | None:
         """Get current target humidity"""
-        return self._coordinator.data.get("humidification_setpoint")
+        return self._coordinator.data.get(Attribute.HUMIDIFICATION_SETPOINT)
 
     @property
     def hvac_mode(self) -> HVACMode | str | None:
         """Get HVAC mode"""
 
-        if mode := self._coordinator.data.get("mode"):
+        if mode := self._coordinator.data.get(Attribute.MODE):
             if hvac_mode := HVAC_MODE_MAP.get(mode):
                 return hvac_mode
 
@@ -198,7 +198,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode] | list[str]:
         """Get supported HVAC modes"""
 
-        if modes := self._coordinator.data.get("thermostat_modes"):
+        if modes := self._coordinator.data.get(Attribute.THERMOSTAT_MODES):
             if thermostat_modes := HVAC_MODES_MAP.get(modes):
                 return thermostat_modes
 
@@ -219,14 +219,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get the current HVAC action"""
 
         heating_equipment_status = self._coordinator.data.get(
-            "heating_equipment_status", 0
+            Attribute.HEATING_EQUIPMENT_STATUS, 0
         )
 
         if heating_equipment_status > 0:
             return HVACAction.HEATING
 
         cooling_equipment_status = self._coordinator.data.get(
-            "cooling_equipment_status", 0
+            Attribute.COOLING_EQUIPMENT_STATUS, 0
         )
 
         if cooling_equipment_status > 0:
@@ -281,10 +281,10 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def preset_modes(self) -> list[str] | None:
         presets = [PRESET_NONE, PRESET_VACATION]
 
-        if self._coordinator.data.get("away_available") == 1:
+        if self._coordinator.data.get(Attribute.AWAY_AVAILABLE) == 1:
             presets.append(PRESET_AWAY)
 
-        hold: int = self._coordinator.data.get("hold")
+        hold: int = self._coordinator.data.get(Attribute.HOLD)
 
         if hold == 1:
             presets.append(PRESET_TEMPORARY_HOLD)
@@ -311,22 +311,22 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             if self._coordinator.data.get("fan_status", 0) == 1
             else "off",
             "humidification_setpoint": self._coordinator.data.get(
-                "humidification_setpoint"
+                Attribute.HUMIDIFICATION_SETPOINT
             ),
             "dehumidification_setpoint": self._coordinator.data.get(
-                "dehumidification_setpoint"
+                Attribute.DEHUMIDIFICATION_SETPOINT
             ),
             "air_cleaning_mode": {1: "constant", 2: "automatic"}.get(
-                self._coordinator.data.get("air_cleaning_mode"), "off"
+                self._coordinator.data.get(Attribute.AIR_CLEANING_MODE), "off"
             ),
             "air_cleaning_event": {3: "3hour", 4: "24hour"}.get(
-                self._coordinator.data.get("air_cleaning_event"), "off"
+                self._coordinator.data.get(Attribute.AIR_CLEANING_EVENT), "off"
             ),
             "fresh_air_mode": {1: "automatic"}.get(
-                self._coordinator.data.get("fresh_air_mode"), "off"
+                self._coordinator.data.get(Attribute.FRESH_AIR_MODE), "off"
             ),
             "fresh_air_event": {2: "3hour", 3: "24hour"}.get(
-                self._coordinator.data.get("fresh_air_event"), "off"
+                self._coordinator.data.get(Attribute.FRESH_AIR_EVENT), "off"
             ),
         }
 
@@ -337,7 +337,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         heat_setpoint = 0
 
         if temperature := kwargs.get("temperature"):
-            if self._coordinator.data.get("mode") == 3:
+            if self._coordinator.data.get(Attribute.MODE) == 3:
                 cool_setpoint = temperature
             else:
                 heat_setpoint = temperature
@@ -416,7 +416,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if self.supported_features & ExtendedClimateEntityFeature.AIR_CLEANING:
             current_air_cleaning_mode = self._coordinator.data.get(
-                "air_cleaning_mode", 0
+                Attribute.AIR_CLEANING_MODE, 0
             )
 
             if current_air_cleaning_mode == 0:
@@ -440,7 +440,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if self.supported_features & ExtendedClimateEntityFeature.AIR_CLEANING:
             current_air_cleaning_mode = self._coordinator.data.get(
-                "air_cleaning_mode", 0
+                Attribute.AIR_CLEANING_MODE, 0
             )
 
             await self._coordinator.client.set_air_cleaning(
@@ -453,7 +453,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Triggers a fresh air event of 3 or 24 hours"""
 
         if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
-            current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
+            current_fresh_air_mode = self._coordinator.data.get(
+                Attribute.FRESH_AIR_MODE, 0
+            )
 
             if current_fresh_air_mode == 0:
                 current_fresh_air_mode = 1
@@ -471,7 +473,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Cancels a existing fresh air event"""
 
         if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
-            current_fresh_air_mode = self._coordinator.data.get("fresh_air_mode", 0)
+            current_fresh_air_mode = self._coordinator.data.get(
+                Attribute.FRESH_AIR_MODE, 0
+            )
 
             await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 0)
         else:

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
+
+from pyaprilaire.const import Attribute
 
 from .coordinator import AprilaireCoordinator
 
@@ -34,10 +36,10 @@ class BaseAprilaireEntity(CoordinatorEntity):
         """Update the entity availability"""
 
         connected: bool = self._coordinator.data.get(
-            "connected", None
-        ) or self._coordinator.data.get("reconnecting", None)
+            Attribute.CONNECTED, None
+        ) or self._coordinator.data.get(Attribute.RECONNECTING, None)
 
-        stopped: bool = self._coordinator.data.get("stopped", None)
+        stopped: bool = self._coordinator.data.get(Attribute.STOPPED, None)
 
         if stopped:
             self._attr_available = False
@@ -45,7 +47,7 @@ class BaseAprilaireEntity(CoordinatorEntity):
             self._attr_available = False
         else:
             self._attr_available = (
-                self._coordinator.data.get("mac_address", None) is not None
+                self._coordinator.data.get(Attribute.MAC_ADDRESS, None) is not None
             )
 
     @property
@@ -62,7 +64,7 @@ class BaseAprilaireEntity(CoordinatorEntity):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return slugify(
-            self._coordinator.data["mac_address"].replace(":", "_")
+            self._coordinator.data[Attribute.MAC_ADDRESS].replace(":", "_")
             + "_"
             + self.entity_name
         )
@@ -88,5 +90,5 @@ class BaseAprilaireEntity(CoordinatorEntity):
         """Return device specific state attributes."""
         return {
             "device_name": self._coordinator.device_name,
-            "device_location": self._coordinator.data.get("location"),
+            "device_location": self._coordinator.data.get(Attribute.LOCATION),
         }

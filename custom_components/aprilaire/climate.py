@@ -144,6 +144,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     def entity_name(self) -> str:
+        """Get name of entity"""
         return "Thermostat"
 
     @property

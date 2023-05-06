@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -11,7 +11,7 @@ from pyaprilaire.const import Attribute
 from .coordinator import AprilaireCoordinator
 
 
-class BaseAprilaireEntity(CoordinatorEntity):
+class BaseAprilaireEntity(CoordinatorEntity, Entity):
     """Base for Aprilaire entities"""
 
     _attr_available = False

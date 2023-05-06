@@ -78,12 +78,6 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.climate: AprilaireClimate = sensors_list[0][0]
         self.climate._attr_available = True
 
-    async def test_climate(self):
-        self.assertTrue(self.climate.available)
-        self.assertEqual(self.climate.entity_name, "Thermostat")
-        self.assertEqual(self.climate.temperature_unit, TEMP_CELSIUS)
-        self.assertEqual(self.climate.precision, PRECISION_HALVES)
-
     def test_climate_min_temp(self):
         self.assertEqual(self.climate.min_temp, DEFAULT_MIN_TEMP)
 

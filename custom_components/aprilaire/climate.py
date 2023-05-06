@@ -133,6 +133,11 @@ async def async_setup_entry(
 class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     """Climate entity for Aprilaire"""
 
+    _attr_fan_modes = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
+    _attr_min_humidity = 10
+    _attr_max_humidity = 50
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
     @property
     def entity_name(self):
         """Get name of entity"""
@@ -205,16 +210,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         return []
 
     @property
-    def min_temp(self) -> float:
-        """Get the minimum temperature"""
-        return 10
-
-    @property
-    def max_temp(self) -> float:
-        """Get the maximum temperature"""
-        return 32
-
-    @property
     def hvac_action(self) -> HVACAction | str | None:
         """Get the current HVAC action"""
 
@@ -237,7 +232,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Get current temperature"""
-        return self._coordinator.data.get("indoor_temperature_controlling_sensor_value")
+        return self._coordinator.data.get(
+            Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+        )
 
     @property
     def target_temperature(self) -> float | None:
@@ -262,16 +259,16 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Get cool setpoint"""
-        return self._coordinator.data.get("cool_setpoint")
+        return self._coordinator.data.get(Attribute.COOL_SETPOINT)
 
     @property
     def target_temperature_low(self) -> float | None:
         """Get heat setpoint"""
-        return self._coordinator.data.get("heat_setpoint")
+        return self._coordinator.data.get(Attribute.HEAT_SETPOINT)
 
     @property
     def preset_mode(self) -> str | None:
-        if hold := self._coordinator.data.get("hold"):
+        if hold := self._coordinator.data.get(Attribute.HOLD):
             if preset_mode := PRESET_MODE_MAP.get(hold):
                 return preset_mode
 

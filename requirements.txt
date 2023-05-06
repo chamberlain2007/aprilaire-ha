@@ -69,7 +69,7 @@ h11==0.14.0
     # via httpcore
 home-assistant-bluetooth==1.9.3
     # via homeassistant
-homeassistant==2023.4.0
+homeassistant==2023.4.5
     # via aprilaire-ha (pyproject.toml)
 httpcore==0.16.3
     # via httpx
@@ -151,7 +151,7 @@ tomli==2.0.1
     #   pyproject-hooks
 typing-extensions==4.5.0
     # via homeassistant
-ulid-transform==0.5.1
+ulid-transform==0.6.3
     # via homeassistant
 urllib3==1.26.15
     # via requests

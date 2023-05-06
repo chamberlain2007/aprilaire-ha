@@ -36,7 +36,7 @@ from unittest.mock import AsyncMock, Mock
 class Test_Sensor(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.coordinator_mock = AsyncMock(AprilaireCoordinator)
-        self.coordinator_mock.data = {}
+        self.coordinator_mock.data = {"mac_address": "1:2:3:4:5:6"}
 
         self.entry_id = uuid_util.random_uuid_hex()
 
@@ -64,30 +64,10 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         base_sensor.hass = self.hass_mock
 
         base_sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
-        self.assertEqual(base_sensor.safe_unit_of_measurement, TEMP_CELSIUS)
+        self.assertEqual(base_sensor.unit_of_measurement, TEMP_CELSIUS)
 
         base_sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
-        self.assertEqual(base_sensor.safe_unit_of_measurement, TEMP_FAHRENHEIT)
-
-    def test_temperature_sensor_unit_of_measurement_suggested_unit_of_measurement(self):
-        base_sensor = BaseAprilaireTemperatureSensor(self.coordinator_mock)
-        base_sensor.hass = self.hass_mock
-
-        base_sensor._attr_suggested_unit_of_measurement = TEMP_CELSIUS
-        self.assertEqual(base_sensor.safe_unit_of_measurement, TEMP_CELSIUS)
-
-        base_sensor._attr_suggested_unit_of_measurement = TEMP_FAHRENHEIT
-        self.assertEqual(base_sensor.safe_unit_of_measurement, TEMP_FAHRENHEIT)
-
-    def test_temperature_sensor_unit_of_measurement_config(self):
-        base_sensor = BaseAprilaireTemperatureSensor(self.coordinator_mock)
-        base_sensor.hass = self.hass_mock
-
-        self.hass_mock.config.units = METRIC_SYSTEM
-        self.assertEqual(base_sensor.safe_unit_of_measurement, TEMP_CELSIUS)
-
-        self.hass_mock.config.units = US_CUSTOMARY_SYSTEM
-        self.assertEqual(base_sensor.safe_unit_of_measurement, TEMP_FAHRENHEIT)
+        self.assertEqual(base_sensor.unit_of_measurement, TEMP_FAHRENHEIT)
 
     def test_base_temperature_sensor_value(self):
         base_sensor = BaseAprilaireTemperatureSensor(self.coordinator_mock)
@@ -95,7 +75,6 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         self.hass_mock.config.units = METRIC_SYSTEM
 
         self.assertIsNone(base_sensor.native_value)
-        self.assertIsNone(base_sensor.get_native_value())
 
     async def test_indoor_humidity_controlling_sensor(self):
         test_value = 50
@@ -119,7 +98,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsInstance(sensor, AprilaireIndoorHumidityControllingSensor)
 
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.HUMIDITY)
         self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
@@ -152,7 +131,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsInstance(sensor, AprilaireOutdoorHumidityControllingSensor)
 
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.HUMIDITY)
         self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
@@ -185,7 +164,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsInstance(sensor, AprilaireIndoorTemperatureControllingSensor)
 
-        sensor._available = True
+        sensor._attr_available = True
         sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
@@ -219,7 +198,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsInstance(sensor, AprilaireOutdoorTemperatureControllingSensor)
 
-        sensor._available = True
+        sensor._attr_available = True
         sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
@@ -240,14 +219,14 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireIndoorTemperatureControllingSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
         sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
         self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
-        self.assertEqual(sensor.native_unit_of_measurement, TEMP_FAHRENHEIT)
+        self.assertEqual(sensor.unit_of_measurement, TEMP_FAHRENHEIT)
         self.assertTrue(sensor.available)
-        self.assertEqual(sensor.native_value, 77)
+        self.assertEqual(sensor.native_value, 25)
         self.assertEqual(sensor.entity_name, "Indoor Temperature Controlling Sensor")
         self.assertEqual(sensor.extra_state_attributes["status"], 0)
         self.assertEqual(sensor.extra_state_attributes["raw_sensor_value"], test_value)
@@ -261,14 +240,14 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireOutdoorTemperatureControllingSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
         sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
         self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
-        self.assertEqual(sensor.native_unit_of_measurement, TEMP_FAHRENHEIT)
+        self.assertEqual(sensor.unit_of_measurement, TEMP_FAHRENHEIT)
         self.assertTrue(sensor.available)
-        self.assertEqual(sensor.native_value, 77)
+        self.assertEqual(sensor.native_value, 25)
         self.assertEqual(sensor.entity_name, "Outdoor Temperature Controlling Sensor")
         self.assertEqual(sensor.extra_state_attributes["status"], 0)
         self.assertEqual(sensor.extra_state_attributes["raw_sensor_value"], test_value)
@@ -298,7 +277,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Dehumidification Status")
@@ -310,7 +289,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Dehumidification Status")
@@ -322,7 +301,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Dehumidification Status")
@@ -334,7 +313,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Dehumidification Status")
@@ -346,7 +325,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Dehumidification Status")
@@ -358,7 +337,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Dehumidification Status")
@@ -389,7 +368,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Humidification Status")
@@ -401,7 +380,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Humidification Status")
@@ -413,7 +392,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Humidification Status")
@@ -425,7 +404,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Humidification Status")
@@ -437,7 +416,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Humidification Status")
@@ -468,7 +447,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -480,7 +459,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -492,7 +471,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -504,7 +483,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -516,7 +495,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -528,7 +507,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -540,7 +519,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -552,7 +531,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -564,7 +543,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Ventilation Status")
@@ -595,7 +574,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Air Cleaning Status")
@@ -607,7 +586,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Air Cleaning Status")
@@ -619,7 +598,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Air Cleaning Status")
@@ -631,7 +610,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Air Cleaning Status")
@@ -643,7 +622,7 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         }
 
         sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._available = True
+        sensor._attr_available = True
 
         self.assertTrue(sensor.available)
         self.assertEqual(sensor.entity_name, "Air Cleaning Status")

@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 import pyaprilaire.client
-from pyaprilaire.const import FunctionalDomain
+from pyaprilaire.const import Attribute, FunctionalDomain
 
 from .const import DOMAIN, LOG_NAME
 
@@ -67,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             client.stop_listen()
 
-            if data and "mac_address" in data:
+            if data and Attribute.MAC_ADDRESS in data:
                 # Sleeping to not overload the socket
                 await asyncio.sleep(5)
 

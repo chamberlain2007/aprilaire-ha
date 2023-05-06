@@ -175,7 +175,6 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(sensor, AprilaireIndoorTemperatureControllingSensor)
 
         sensor._attr_available = True
-        sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
         self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
@@ -209,7 +208,6 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(sensor, AprilaireOutdoorTemperatureControllingSensor)
 
         sensor._attr_available = True
-        sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
         self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)

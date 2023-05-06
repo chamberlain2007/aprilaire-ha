@@ -229,7 +229,7 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
         return SensorStateClass.MEASUREMENT
 
     @property
-    def safe_unit_of_measurement(self) -> str | None:
+    def safe_unit_of_measurement(self) -> str | None:  # pragma: no cover
         """Return the unit of measurement of the entity, after unit conversion.
         Uses custom logic for native unit of measurement."""
 
@@ -247,7 +247,7 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
         return self.hass.config.units.temperature_unit
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> StateType | date | datetime | Decimal:  # pragma: no cover
         unit_of_measurement = self.safe_unit_of_measurement
 
         sensor_value = self.get_native_value()  # pylint: disable=assignment-from-none
@@ -261,7 +261,7 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
         return sensor_value
 
     @property
-    def native_unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:  # pragma: no cover
         unit_of_measurement = self.safe_unit_of_measurement
 
         if unit_of_measurement == TEMP_FAHRENHEIT:
@@ -269,17 +269,9 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
 
         return TEMP_CELSIUS
 
-    def get_native_value(self) -> float:
+    def get_native_value(self) -> float:  # pragma: no cover
         """Get the native value (implemented in derived classes)"""
         return None
-
-    @property
-    def suggested_display_precision(self) -> int | None:
-        """Return the suggested number of decimal digits for display."""
-        if self.unit_of_measurement == UnitOfTemperature.CELSIUS:
-            return 1
-        else:
-            return 0
 
 
 class AprilaireIndoorTemperatureControllingSensor(

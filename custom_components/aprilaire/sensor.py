@@ -9,7 +9,6 @@ from typing import Any, Mapping
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -19,8 +18,7 @@ from homeassistant.components.sensor import (
 )
 
 from homeassistant.const import (
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     PERCENTAGE,
     UnitOfTemperature,
 )
@@ -214,49 +212,12 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
-    def safe_unit_of_measurement(self) -> str | None:  # pragma: no cover
-        """Return the unit of measurement of the entity, after unit conversion.
-        Uses custom logic for native unit of measurement."""
-
-        # Highest priority, for registered entities: unit set by user, with fallback
-        # by integration or secondary fallback to unit conversion rules
-        if self._sensor_option_unit_of_measurement != UNDEFINED:
-            return self._sensor_option_unit_of_measurement
-
-        # Second priority, for non registered entities: unit suggested by integration
-        if not self.registry_entry and self.suggested_unit_of_measurement:
-            return self.suggested_unit_of_measurement
-
-        # Third priority: Legacy temperature conversion, which applies
-        # to both registered and non registered entities
-        return self.hass.config.units.temperature_unit
-
-    @property
-    def native_value(self) -> StateType | date | datetime | Decimal:  # pragma: no cover
-        unit_of_measurement = self.safe_unit_of_measurement
-
-        sensor_value = self.get_native_value()  # pylint: disable=assignment-from-none
-
-        if sensor_value is None:
-            return None
-
-        if unit_of_measurement == TEMP_FAHRENHEIT:
-            return round(sensor_value * 9 / 5 + 32)
-
-        return sensor_value
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:  # pragma: no cover
-        unit_of_measurement = self.safe_unit_of_measurement
-
-        if unit_of_measurement == TEMP_FAHRENHEIT:
-            return TEMP_FAHRENHEIT
-
-        return TEMP_CELSIUS
-
-    def get_native_value(self) -> float:  # pragma: no cover
-        """Get the native value (implemented in derived classes)"""
-        return None
+    def suggested_display_precision(self) -> int | None:
+        """Return the suggested number of decimal digits for display."""
+        if self.unit_of_measurement == UnitOfTemperature.CELSIUS:
+            return 1
+        else:
+            return 0
 
 
 class AprilaireIndoorTemperatureControllingSensor(

@@ -76,6 +76,16 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsNone(base_sensor.native_value)
 
+    def test_base_temperature_sensor_display_precision(self):
+        base_sensor = BaseAprilaireTemperatureSensor(self.coordinator_mock)
+        base_sensor.hass = self.hass_mock
+
+        self.hass_mock.config.units = METRIC_SYSTEM
+        self.assertEqual(base_sensor.suggested_display_precision, 1)
+
+        self.hass_mock.config.units = US_CUSTOMARY_SYSTEM
+        self.assertEqual(base_sensor.suggested_display_precision, 0)
+
     async def test_indoor_humidity_controlling_sensor(self):
         test_value = 50
 
@@ -165,7 +175,6 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(sensor, AprilaireIndoorTemperatureControllingSensor)
 
         sensor._attr_available = True
-        sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
         self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
@@ -199,7 +208,6 @@ class Test_Sensor(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(sensor, AprilaireOutdoorTemperatureControllingSensor)
 
         sensor._attr_available = True
-        sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
 
         self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
         self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)

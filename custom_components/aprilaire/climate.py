@@ -12,7 +12,10 @@ from homeassistant.components.climate import (
     PRESET_NONE,
 )
 
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import (
+    UnitOfTemperature,
+    PRECISION_HALVES,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -137,11 +140,11 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     _attr_min_humidity = 10
     _attr_max_humidity = 50
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_precision = PRECISION_HALVES
 
     @property
-    def entity_name(self):
+    def entity_name(self) -> str:
         """Get name of entity"""
-
         return "Thermostat"
 
     @property
@@ -152,9 +155,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         if Attribute.MODE not in self._coordinator.data:
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE
         else:
-            mode = self._coordinator.data[Attribute.MODE]
-
-            if mode == 5:
+            if self._coordinator.data.get(Attribute.MODE) == 5:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             else:
                 features = features | ClimateEntityFeature.TARGET_TEMPERATURE

@@ -114,7 +114,7 @@ class Test_Entity(unittest.IsolatedAsyncioTestCase):
 
     def test_base_entity_name(self):
         entity = BaseAprilaireEntity(self.coordinator_mock)
-        self.assertIsNone(entity.entity_name)
+        self.assertEqual("", entity.entity_name)
 
     def test_extra_state_attributes(self):
         entity = BaseAprilaireEntity(self.coordinator_mock)

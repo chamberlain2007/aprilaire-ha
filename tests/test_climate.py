@@ -14,10 +14,9 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
-from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Config, EventBus, HomeAssistant
 from homeassistant.util import uuid as uuid_util
-from homeassistant.util.unit_system import UnitSystem
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from pyaprilaire.client import AprilaireClient
 
 from custom_components.aprilaire.climate import (
@@ -51,7 +50,6 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
         self.hass_mock.config_entries = AsyncMock(ConfigEntries)
         self.hass_mock.bus = AsyncMock(EventBus)
         self.hass_mock.config = Mock(Config)
-        self.hass_mock.config.units = Mock(UnitSystem)
 
         self.config_entry_mock = AsyncMock(ConfigEntry)
         self.config_entry_mock.data = {"host": "test123", "port": 123}
@@ -263,10 +261,10 @@ class Test_Climate(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.climate.target_temperature, 20)
 
     def test_target_temperature_step(self):
-        self.climate.hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+        self.climate.hass.config.units = METRIC_SYSTEM
         self.assertEqual(self.climate.target_temperature_step, 0.5)
 
-        self.climate.hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+        self.climate.hass.config.units = US_CUSTOMARY_SYSTEM
         self.assertEqual(self.climate.target_temperature_step, 1)
 
     def test_hvac_mode(self):

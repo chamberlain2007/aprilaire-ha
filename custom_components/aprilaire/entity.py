@@ -76,7 +76,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
     @property
     def entity_name(self) -> str | None:
         """Return the name of the derived entity."""
-        return None
+        return ""
 
     @property
     def device_info(self) -> DeviceInfo | None:

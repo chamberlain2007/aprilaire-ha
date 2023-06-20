@@ -1,16 +1,14 @@
-from custom_components.aprilaire.coordinator import AprilaireCoordinator
-from custom_components.aprilaire.const import DOMAIN, LOG_NAME
+import logging
+import unittest
+from unittest.mock import AsyncMock, Mock, patch
 
 import pyaprilaire.client
-from pyaprilaire.const import FunctionalDomain
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
+from pyaprilaire.const import FunctionalDomain
 
-import logging
-
-import unittest
-from unittest.mock import patch, AsyncMock, Mock
+from custom_components.aprilaire.const import DOMAIN, LOG_NAME
+from custom_components.aprilaire.coordinator import AprilaireCoordinator
 
 _LOGGER = logging.getLogger(LOG_NAME)
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
-
 from pyaprilaire.const import Attribute
 
 from .coordinator import AprilaireCoordinator

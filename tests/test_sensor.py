@@ -1,36 +1,27 @@
-from custom_components.aprilaire.coordinator import AprilaireCoordinator
-from custom_components.aprilaire.const import DOMAIN
-from custom_components.aprilaire.sensor import (
-    async_setup_entry,
-    BaseAprilaireTemperatureSensor,
-    AprilaireIndoorHumidityControllingSensor,
-    AprilaireOutdoorHumidityControllingSensor,
-    AprilaireIndoorTemperatureControllingSensor,
-    AprilaireOutdoorTemperatureControllingSensor,
-    AprilaireDehumidificationStatusSensor,
-    AprilaireHumidificationStatusSensor,
-    AprilaireVentilationStatusSensor,
-    AprilaireAirCleaningStatusSensor,
-)
+import unittest
+from unittest.mock import AsyncMock, Mock
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntries
-from homeassistant.core import Config, HomeAssistant, EventBus
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import Config, EventBus, HomeAssistant
 from homeassistant.util import uuid as uuid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorStateClass,
+from custom_components.aprilaire.const import DOMAIN
+from custom_components.aprilaire.coordinator import AprilaireCoordinator
+from custom_components.aprilaire.sensor import (
+    AprilaireAirCleaningStatusSensor,
+    AprilaireDehumidificationStatusSensor,
+    AprilaireHumidificationStatusSensor,
+    AprilaireIndoorHumidityControllingSensor,
+    AprilaireIndoorTemperatureControllingSensor,
+    AprilaireOutdoorHumidityControllingSensor,
+    AprilaireOutdoorTemperatureControllingSensor,
+    AprilaireVentilationStatusSensor,
+    BaseAprilaireTemperatureSensor,
+    async_setup_entry,
 )
-
-from homeassistant.const import (
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    PERCENTAGE,
-)
-
-import unittest
-from unittest.mock import AsyncMock, Mock
 
 
 class Test_Sensor(unittest.IsolatedAsyncioTestCase):

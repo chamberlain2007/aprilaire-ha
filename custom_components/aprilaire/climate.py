@@ -2,32 +2,25 @@
 
 from __future__ import annotations
 
+from enum import IntFlag
+
+import voluptuous as vol
 from homeassistant.components.climate import (
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
     FAN_AUTO,
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
-
-from homeassistant.const import (
-    UnitOfTemperature,
-    PRECISION_HALVES,
-)
-
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components.climate import ClimateEntity
-
 from pyaprilaire.const import Attribute
-
-from enum import IntFlag
-
-import voluptuous as vol
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
@@ -362,8 +355,8 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         try:
             fan_mode_value_index = list(FAN_MODE_MAP.values()).index(fan_mode)
-        except ValueError:
-            raise ValueError(f"Unsupported fan mode {fan_mode}")
+        except ValueError as exc:
+            raise ValueError(f"Unsupported fan mode {fan_mode}") from exc
 
         fan_mode_value = list(FAN_MODE_MAP.keys())[fan_mode_value_index]
 
@@ -376,8 +369,8 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         try:
             mode_value_index = list(HVAC_MODE_MAP.values()).index(hvac_mode)
-        except ValueError:
-            raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
+        except ValueError as exc:
+            raise ValueError(f"Unsupported HVAC mode {hvac_mode}") from exc
 
         mode_value = list(HVAC_MODE_MAP.keys())[mode_value_index]
 

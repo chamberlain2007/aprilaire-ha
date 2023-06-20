@@ -6,23 +6,17 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Mapping
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
+    SensorEntity,
     SensorStateClass,
     StateType,
 )
-
-from homeassistant.const import (
-    UnitOfTemperature,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
-
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 from pyaprilaire.const import Attribute
 
 from .const import DOMAIN

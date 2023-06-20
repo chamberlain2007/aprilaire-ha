@@ -1,16 +1,16 @@
-from custom_components.aprilaire.coordinator import AprilaireCoordinator
-from custom_components.aprilaire.const import DOMAIN
-from custom_components.aprilaire.binary_sensor import (
-    async_setup_entry,
-    AprilaireFanStatusSensor,
-)
-
-from homeassistant.config_entries import ConfigEntry, ConfigEntries
-from homeassistant.core import Config, HomeAssistant, EventBus
-from homeassistant.util import uuid as uuid_util
-
 import unittest
 from unittest.mock import AsyncMock, Mock
+
+from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.core import Config, EventBus, HomeAssistant
+from homeassistant.util import uuid as uuid_util
+
+from custom_components.aprilaire.binary_sensor import (
+    AprilaireFanStatusSensor,
+    async_setup_entry,
+)
+from custom_components.aprilaire.const import DOMAIN
+from custom_components.aprilaire.coordinator import AprilaireCoordinator
 
 
 class Test_Binary_Sensor(unittest.IsolatedAsyncioTestCase):

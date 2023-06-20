@@ -1,19 +1,17 @@
-from custom_components.aprilaire.config_flow import ConfigFlow, STEP_USER_DATA_SCHEMA
-from custom_components.aprilaire.const import LOG_NAME
+import logging
+import unittest
+from unittest.mock import AsyncMock, Mock, patch
 
 import pyaprilaire.client
+from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.core import EventBus, HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.util import uuid as uuid_util
 from pyaprilaire.client import AprilaireClient
 from pyaprilaire.const import FunctionalDomain
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntries
-from homeassistant.core import HomeAssistant, EventBus
-from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.util import uuid as uuid_util
-
-import logging
-
-import unittest
-from unittest.mock import patch, AsyncMock, Mock
+from custom_components.aprilaire.config_flow import STEP_USER_DATA_SCHEMA, ConfigFlow
+from custom_components.aprilaire.const import LOG_NAME
 
 _LOGGER = logging.getLogger(LOG_NAME)
 

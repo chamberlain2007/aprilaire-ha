@@ -1,40 +1,36 @@
 import logging
-
-from custom_components.aprilaire.coordinator import AprilaireCoordinator
-from custom_components.aprilaire.const import DOMAIN, LOG_NAME
-from custom_components.aprilaire.climate import (
-    async_setup_entry,
-    AprilaireClimate,
-    ExtendedClimateEntityFeature,
-    FAN_CIRCULATE,
-    PRESET_TEMPORARY_HOLD,
-    PRESET_PERMANENT_HOLD,
-    PRESET_VACATION,
-)
-
-from pyaprilaire.client import AprilaireClient
-
-from homeassistant.config_entries import ConfigEntry, ConfigEntries
-from homeassistant.core import Config, HomeAssistant, EventBus
-from homeassistant.util import uuid as uuid_util
-from homeassistant.util.unit_system import UnitSystem
+import unittest
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from homeassistant.components.climate import (
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-    DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     FAN_AUTO,
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
-
+from homeassistant.config_entries import ConfigEntries, ConfigEntry
 from homeassistant.const import UnitOfTemperature
+from homeassistant.core import Config, EventBus, HomeAssistant
+from homeassistant.util import uuid as uuid_util
+from homeassistant.util.unit_system import UnitSystem
+from pyaprilaire.client import AprilaireClient
 
-import unittest
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from custom_components.aprilaire.climate import (
+    FAN_CIRCULATE,
+    PRESET_PERMANENT_HOLD,
+    PRESET_TEMPORARY_HOLD,
+    PRESET_VACATION,
+    AprilaireClimate,
+    ExtendedClimateEntityFeature,
+    async_setup_entry,
+)
+from custom_components.aprilaire.const import DOMAIN, LOG_NAME
+from custom_components.aprilaire.coordinator import AprilaireCoordinator
 
 _LOGGER = logging.getLogger(LOG_NAME)
 

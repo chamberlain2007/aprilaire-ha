@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-
 import logging
 from typing import Any
 
+import pyaprilaire.client
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-
-import pyaprilaire.client
 from pyaprilaire.const import Attribute, FunctionalDomain
 
 from .const import DOMAIN, LOG_NAME

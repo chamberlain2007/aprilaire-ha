@@ -1,19 +1,16 @@
-from custom_components.aprilaire.coordinator import AprilaireCoordinator
-from custom_components.aprilaire.const import DOMAIN, LOG_NAME
-from custom_components.aprilaire import async_setup_entry, async_unload_entry
+import logging
+import unittest
+from collections.abc import Awaitable, Callable
+from unittest.mock import AsyncMock, Mock, patch
 
 import pyaprilaire.client
-
-from homeassistant.config_entries import ConfigEntry, ConfigEntries
-from homeassistant.core import HomeAssistant, EventBus
+from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.core import EventBus, HomeAssistant
 from homeassistant.util import uuid as uuid_util
 
-from collections.abc import Awaitable, Callable
-
-import logging
-
-import unittest
-from unittest.mock import patch, AsyncMock, Mock
+from custom_components.aprilaire import async_setup_entry, async_unload_entry
+from custom_components.aprilaire.const import DOMAIN, LOG_NAME
+from custom_components.aprilaire.coordinator import AprilaireCoordinator
 
 _LOGGER = logging.getLogger(LOG_NAME)
 

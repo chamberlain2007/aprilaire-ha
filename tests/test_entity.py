@@ -1,13 +1,12 @@
-from custom_components.aprilaire.const import LOG_NAME
-from custom_components.aprilaire.coordinator import AprilaireCoordinator
-from custom_components.aprilaire.entity import BaseAprilaireEntity
+import logging
+import unittest
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.helpers.entity import DeviceInfo
 
-import logging
-
-import unittest
-from unittest.mock import patch, AsyncMock, Mock
+from custom_components.aprilaire.const import LOG_NAME
+from custom_components.aprilaire.coordinator import AprilaireCoordinator
+from custom_components.aprilaire.entity import BaseAprilaireEntity
 
 _LOGGER = logging.getLogger(LOG_NAME)
 

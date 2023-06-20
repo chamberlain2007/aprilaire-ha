@@ -6,8 +6,8 @@ import logging
 from logging import Logger
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, Event
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 
 from .const import DOMAIN, LOG_NAME
 from .coordinator import AprilaireCoordinator

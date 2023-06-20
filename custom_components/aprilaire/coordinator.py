@@ -6,13 +6,12 @@ from collections.abc import Awaitable, Callable
 from logging import Logger
 from typing import Any
 
+import homeassistant.helpers.device_registry
+import pyaprilaire.client
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.helpers.device_registry
-
-import pyaprilaire.client
-from pyaprilaire.const import Attribute, FunctionalDomain, MODELS
+from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
 
 from .const import DOMAIN
 

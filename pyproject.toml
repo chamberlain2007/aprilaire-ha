@@ -25,7 +25,6 @@ push            = false
 ]
 
 [tool.pytest.ini_options]
-addopts = "--no-cov"
 testpaths = [
     "tests",
 ]

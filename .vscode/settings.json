@@ -3,8 +3,7 @@
   "python.testing.pytestEnabled": true,
   "python.testing.pytestArgs": [
     "-v",
-    "--cov=pyaprilaire/",
-    "--cov-report=xml",
+    "--no-cov",
     "--pdb",
     "tests/"
   ],

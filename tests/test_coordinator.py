@@ -1,178 +1,205 @@
+# pylint: skip-file
+
 import logging
-import unittest
 from unittest.mock import AsyncMock, Mock, patch
 
-import pyaprilaire.client
+import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
+from pyaprilaire.client import AprilaireClient
 from pyaprilaire.const import FunctionalDomain
 
 from custom_components.aprilaire.const import DOMAIN, LOG_NAME
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
 
-_LOGGER = logging.getLogger(LOG_NAME)
+
+@pytest.fixture
+def logger():
+    logger = logging.getLogger()
+    logger.propagate = False
+
+    return logger
 
 
-class Test_Coordinator(unittest.IsolatedAsyncioTestCase):
-    def setUp(self):
-        self.data_registry_mock = Mock(DeviceRegistry)
+@pytest.fixture
+def device_registry() -> DeviceRegistry:
+    return Mock(DeviceRegistry)
 
-        self.hass_mock = Mock(HomeAssistant)
-        self.hass_mock.data = {"device_registry": self.data_registry_mock}
 
-        self.client_mock = AsyncMock(pyaprilaire.client.AprilaireClient)
+@pytest.fixture
+def hass(device_registry: DeviceRegistry) -> HomeAssistant:
+    hass_mock = Mock(HomeAssistant)
+    hass_mock.data = {"device_registry": device_registry}
 
-        with patch(
-            "pyaprilaire.client.AprilaireClient",
-            return_value=self.client_mock,
-        ):
-            self.coordinator = AprilaireCoordinator(self.hass_mock, "", 0, _LOGGER)
+    return hass_mock
 
-    async def test_start_listen(self):
-        await self.coordinator.start_listen()
 
-        self.assertEqual(self.coordinator.client.start_listen.call_count, 1)
+@pytest.fixture
+def client():
+    return AsyncMock(AprilaireClient)
 
-    def test_stop_listen(self):
-        self.coordinator.stop_listen()
 
-        self.assertEqual(self.coordinator.client.stop_listen.call_count, 1)
+@pytest.fixture
+def coordinator(
+    client: AprilaireClient, hass: HomeAssistant, logger: logging.Logger
+) -> AprilaireCoordinator:
+    with patch(
+        "pyaprilaire.client.AprilaireClient",
+        return_value=client,
+    ):
+        return AprilaireCoordinator(hass, "", 0, logger)
 
-    def test_set_updated_data(self):
-        test_data = {"testKey": "testValue"}
 
-        self.coordinator.async_set_updated_data(test_data)
+async def test_start_listen(coordinator: AprilaireCoordinator):
+    await coordinator.start_listen()
 
-        self.assertDictEqual(self.coordinator.data, test_data)
+    assert coordinator.client.start_listen.call_count == 1
 
-    def test_device_name_default(self):
-        self.assertEqual(self.coordinator.device_name, "Aprilaire")
 
-    def test_device_name(self):
-        test_device_name = "Test Device Name"
+def test_stop_listen(coordinator: AprilaireCoordinator):
+    coordinator.stop_listen()
 
-        self.coordinator.async_set_updated_data({"name": test_device_name})
+    assert coordinator.client.stop_listen.call_count == 1
 
-        self.assertEqual(self.coordinator.device_name, test_device_name)
 
-    def test_device_info(self):
-        test_mac_address = "1:2:3:4:5:6"
-        test_device_name = "Test Device Name"
-        test_model_number = 0
-        test_hardware_revision = ord("B")
-        test_firmware_major_revision = 1
-        test_firmware_minor_revision = 5
+def test_set_updated_data(coordinator: AprilaireCoordinator):
+    test_data = {"testKey": "testValue"}
 
-        self.coordinator.async_set_updated_data(
-            {
-                "mac_address": test_mac_address,
-                "name": test_device_name,
-                "model_number": test_model_number,
-                "hardware_revision": test_hardware_revision,
-                "firmware_major_revision": test_firmware_major_revision,
-                "firmware_minor_revision": test_firmware_minor_revision,
-            }
-        )
+    coordinator.async_set_updated_data(test_data)
 
-        device_info = self.coordinator.device_info
+    assert coordinator.data == test_data
 
-        self.assertEqual(device_info["identifiers"], {(DOMAIN, test_mac_address)})
-        self.assertEqual(device_info["name"], test_device_name)
-        self.assertEqual(device_info["model"], "8476W")
-        self.assertEqual(device_info["hw_version"], "Rev. B")
-        self.assertEqual(
-            device_info["sw_version"],
-            f"{test_firmware_major_revision}.{test_firmware_minor_revision:02}",
-        )
 
-    def test_hw_version_A(self):
-        self.assertEqual(self.coordinator.get_hw_version({"hardware_revision": 1}), "1")
+def test_device_name_default(coordinator: AprilaireCoordinator):
+    assert coordinator.device_name == "Aprilaire"
 
-    def test_hw_version_B(self):
-        self.assertEqual(
-            self.coordinator.get_hw_version({"hardware_revision": ord("B")}), "Rev. B"
-        )
 
-    def test_updated_device(self):
-        test_mac_address = "1:2:3:4:5:6"
-        test_device_name = "Test Device Name"
-        test_model_number = 0
-        test_hardware_revision = ord("B")
-        test_firmware_major_revision = 1
-        test_firmware_minor_revision = 5
+def test_device_name(coordinator: AprilaireCoordinator):
+    test_device_name = "Test Device Name"
 
-        test_new_mac_address = "1:2:3:4:5:7"
-        test_new_device_name = "Test Device Name 2"
-        test_new_model_number = 1
-        test_new_hardware_revision = ord("C")
-        test_new_firmware_major_revision = 2
-        test_new_firmware_minor_revision = 6
+    coordinator.async_set_updated_data({"name": test_device_name})
 
-        self.coordinator.async_set_updated_data(
-            {
-                "mac_address": test_mac_address,
-                "name": test_device_name,
-                "model_number": test_model_number,
-                "hardware_revision": test_hardware_revision,
-                "firmware_major_revision": test_firmware_major_revision,
-                "firmware_minor_revision": test_firmware_minor_revision,
-            }
-        )
+    assert coordinator.device_name == test_device_name
 
-        self.coordinator.async_set_updated_data(
-            {
-                "mac_address": test_new_mac_address,
-                "name": test_new_device_name,
-                "model_number": test_new_model_number,
-                "hardware_revision": test_new_hardware_revision,
-                "firmware_major_revision": test_new_firmware_major_revision,
-                "firmware_minor_revision": test_new_firmware_minor_revision,
-            }
-        )
 
-        self.assertEqual(self.data_registry_mock.async_update_device.call_count, 1)
+def test_device_info(coordinator: AprilaireCoordinator):
+    test_mac_address = "1:2:3:4:5:6"
+    test_device_name = "Test Device Name"
+    test_model_number = 0
+    test_hardware_revision = ord("B")
+    test_firmware_major_revision = 1
+    test_firmware_minor_revision = 5
 
-        new_device_info = self.data_registry_mock.async_update_device.call_args[1]
+    coordinator.async_set_updated_data(
+        {
+            "mac_address": test_mac_address,
+            "name": test_device_name,
+            "model_number": test_model_number,
+            "hardware_revision": test_hardware_revision,
+            "firmware_major_revision": test_firmware_major_revision,
+            "firmware_minor_revision": test_firmware_minor_revision,
+        }
+    )
 
-        self.assertDictEqual(
-            new_device_info,
-            new_device_info
-            | {
-                "name": test_new_device_name,
-                "manufacturer": "Aprilaire",
-                "model": "8810",
-                "hw_version": "Rev. C",
-                "sw_version": "2.06",
-            },
-        )
+    device_info = coordinator.device_info
 
-    async def test_wait_for_ready_mac_fail(self):
-        ready_callback_mock = AsyncMock()
+    assert device_info["identifiers"] == {(DOMAIN, test_mac_address)}
+    assert device_info["name"] == test_device_name
+    assert device_info["model"] == "8476W"
+    assert device_info["hw_version"] == "Rev. B"
+    assert (
+        device_info["sw_version"]
+        == f"{test_firmware_major_revision}.{test_firmware_minor_revision:02}"
+    )
 
-        with self.assertLogs(_LOGGER) as cm:
-            await self.coordinator.wait_for_ready(ready_callback_mock)
 
-        self.assertEqual(
-            cm.output,
-            [
-                "ERROR:custom_components.aprilaire:Missing MAC address, cannot create unique ID"
-            ],
-        )
-        self.assertEqual(ready_callback_mock.call_count, 1)
-        self.assertFalse(ready_callback_mock.call_args[0][0])
+def test_hw_version_A(coordinator: AprilaireCoordinator):
+    assert coordinator.get_hw_version({"hardware_revision": 1}) == "1"
 
-    async def test_wait_for_ready(self):
-        ready_callback_mock = AsyncMock()
 
-        wait_for_response_mock = AsyncMock()
-        wait_for_response_mock.return_value = {"mac_address": "1:2:3:4:5:6"}
+def test_hw_version_B(coordinator: AprilaireCoordinator):
+    assert coordinator.get_hw_version({"hardware_revision": ord("B")}) == "Rev. B"
 
-        self.coordinator.client.wait_for_response = wait_for_response_mock
 
-        with self.assertNoLogs(_LOGGER):
-            await self.coordinator.wait_for_ready(ready_callback_mock)
+def test_updated_device(
+    coordinator: AprilaireCoordinator, device_registry: DeviceRegistry
+):
+    test_mac_address = "1:2:3:4:5:6"
+    test_device_name = "Test Device Name"
+    test_model_number = 0
+    test_hardware_revision = ord("B")
+    test_firmware_major_revision = 1
+    test_firmware_minor_revision = 5
 
-        wait_for_response_mock.assert_any_call(FunctionalDomain.IDENTIFICATION, 2, 30)
-        wait_for_response_mock.assert_any_call(FunctionalDomain.IDENTIFICATION, 4, 30)
-        wait_for_response_mock.assert_any_call(FunctionalDomain.CONTROL, 7, 30)
-        wait_for_response_mock.assert_any_call(FunctionalDomain.SENSORS, 2, 30)
+    test_new_mac_address = "1:2:3:4:5:7"
+    test_new_device_name = "Test Device Name 2"
+    test_new_model_number = 1
+    test_new_hardware_revision = ord("C")
+    test_new_firmware_major_revision = 2
+    test_new_firmware_minor_revision = 6
+
+    coordinator.async_set_updated_data(
+        {
+            "mac_address": test_mac_address,
+            "name": test_device_name,
+            "model_number": test_model_number,
+            "hardware_revision": test_hardware_revision,
+            "firmware_major_revision": test_firmware_major_revision,
+            "firmware_minor_revision": test_firmware_minor_revision,
+        }
+    )
+
+    coordinator.async_set_updated_data(
+        {
+            "mac_address": test_new_mac_address,
+            "name": test_new_device_name,
+            "model_number": test_new_model_number,
+            "hardware_revision": test_new_hardware_revision,
+            "firmware_major_revision": test_new_firmware_major_revision,
+            "firmware_minor_revision": test_new_firmware_minor_revision,
+        }
+    )
+
+    assert device_registry.async_update_device.call_count == 1
+
+    new_device_info = device_registry.async_update_device.call_args[1]
+
+    assert new_device_info == new_device_info | {
+        "name": test_new_device_name,
+        "manufacturer": "Aprilaire",
+        "model": "8810",
+        "hw_version": "Rev. C",
+        "sw_version": "2.06",
+    }
+
+
+async def test_wait_for_ready_mac_fail(
+    caplog, coordinator: AprilaireCoordinator, logger: logging.Logger
+):
+    ready_callback_mock = AsyncMock()
+
+    with caplog.at_level(logging.INFO, logger=logger.name):
+        await coordinator.wait_for_ready(ready_callback_mock)
+
+    assert caplog.record_tuples == [
+        ("root", logging.ERROR, "Missing MAC address, cannot create unique ID"),
+    ]
+
+    assert ready_callback_mock.call_count == 1
+    assert ready_callback_mock.call_args[0][0] is False
+
+
+async def test_wait_for_ready(coordinator: AprilaireCoordinator):
+    ready_callback_mock = AsyncMock()
+
+    wait_for_response_mock = AsyncMock()
+    wait_for_response_mock.return_value = {"mac_address": "1:2:3:4:5:6"}
+
+    coordinator.client.wait_for_response = wait_for_response_mock
+
+    await coordinator.wait_for_ready(ready_callback_mock)
+
+    wait_for_response_mock.assert_any_call(FunctionalDomain.IDENTIFICATION, 2, 30)
+    wait_for_response_mock.assert_any_call(FunctionalDomain.IDENTIFICATION, 4, 30)
+    wait_for_response_mock.assert_any_call(FunctionalDomain.CONTROL, 7, 30)
+    wait_for_response_mock.assert_any_call(FunctionalDomain.SENSORS, 2, 30)

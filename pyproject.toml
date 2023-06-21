@@ -5,7 +5,7 @@ readme = "README.md"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["black", "bumpver", "isort", "pip-tools", "coverage", "homeassistant==2023.4.5", "pyaprilaire==0.7.0b1"]
+dev = ["black", "bumpver", "isort", "pip-tools", "coverage", "homeassistant==2023.4.5", "pyaprilaire==0.7.0b1", "pytest-asyncio", "pytest-cov"]
 
 [tool.bumpver]
 current_version = "0.6.0"
@@ -23,3 +23,15 @@ push            = false
 "custom_components/aprilaire/manifest.json" = [
     '"version": "{version}"'
 ]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+norecursedirs = [
+    ".git",
+]
+log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
+log_date_format = "%Y-%m-%d %H:%M:%S"
+asyncio_mode = "auto"
+filterwarnings = []

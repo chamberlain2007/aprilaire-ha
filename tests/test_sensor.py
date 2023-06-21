@@ -1,6 +1,9 @@
-import unittest
+# pylint: skip-file
+
+import logging
 from unittest.mock import AsyncMock, Mock
 
+import pytest
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -24,605 +27,739 @@ from custom_components.aprilaire.sensor import (
 )
 
 
-class Test_Sensor(unittest.IsolatedAsyncioTestCase):
-    def setUp(self):
-        self.coordinator_mock = AsyncMock(AprilaireCoordinator)
-        self.coordinator_mock.data = {"mac_address": "1:2:3:4:5:6"}
+@pytest.fixture
+def logger():
+    logger = logging.getLogger()
+    logger.propagate = False
 
-        self.entry_id = uuid_util.random_uuid_hex()
+    return logger
 
-        self.hass_mock = AsyncMock(HomeAssistant)
-        self.hass_mock.data = {DOMAIN: {self.entry_id: self.coordinator_mock}}
-        self.hass_mock.config_entries = AsyncMock(ConfigEntries)
-        self.hass_mock.bus = AsyncMock(EventBus)
-        self.hass_mock.config = Mock(Config)
 
-        self.config_entry_mock = AsyncMock(ConfigEntry)
-        self.config_entry_mock.data = {"host": "test123", "port": 123}
-        self.config_entry_mock.entry_id = self.entry_id
+@pytest.fixture
+def coordinator(logger: logging.Logger) -> AprilaireCoordinator:
+    coordinator_mock = AsyncMock(AprilaireCoordinator)
+    coordinator_mock.data = {"mac_address": "1:2:3:4:5:6"}
+    coordinator_mock.logger = logger
 
-    async def test_no_sensors_without_data(self):
-        async_add_entities_mock = Mock()
+    return coordinator_mock
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
 
-        async_add_entities_mock.assert_called_once_with([])
+@pytest.fixture
+def entry_id() -> str:
+    return uuid_util.random_uuid_hex()
 
-    def test_temperature_sensor_unit_of_measurement_sensor_option(self):
-        base_sensor = BaseAprilaireTemperatureSensor(self.coordinator_mock)
-        base_sensor.hass = self.hass_mock
 
-        base_sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
-        self.assertEqual(base_sensor.unit_of_measurement, TEMP_CELSIUS)
+@pytest.fixture
+def hass(coordinator: AprilaireCoordinator, entry_id: str) -> HomeAssistant:
+    hass_mock = AsyncMock(HomeAssistant)
+    hass_mock.data = {DOMAIN: {entry_id: coordinator}}
+    hass_mock.config_entries = AsyncMock(ConfigEntries)
+    hass_mock.bus = AsyncMock(EventBus)
+    hass_mock.config = Mock(Config)
 
-        base_sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
-        self.assertEqual(base_sensor.unit_of_measurement, TEMP_FAHRENHEIT)
+    return hass_mock
 
-    def test_base_temperature_sensor_value(self):
-        base_sensor = BaseAprilaireTemperatureSensor(self.coordinator_mock)
-        base_sensor.hass = self.hass_mock
-        self.hass_mock.config.units = METRIC_SYSTEM
 
-        self.assertIsNone(base_sensor.native_value)
+@pytest.fixture
+def config_entry(entry_id: str) -> ConfigEntry:
+    config_entry_mock = AsyncMock(ConfigEntry)
+    config_entry_mock.data = {"host": "test123", "port": 123}
+    config_entry_mock.entry_id = entry_id
 
-    def test_base_temperature_sensor_display_precision(self):
-        base_sensor = BaseAprilaireTemperatureSensor(self.coordinator_mock)
-        base_sensor.hass = self.hass_mock
+    return config_entry_mock
 
-        self.hass_mock.config.units = METRIC_SYSTEM
-        self.assertEqual(base_sensor.suggested_display_precision, 1)
 
-        self.hass_mock.config.units = US_CUSTOMARY_SYSTEM
-        self.assertEqual(base_sensor.suggested_display_precision, 0)
+async def test_no_sensors_without_data(config_entry: ConfigEntry, hass: HomeAssistant):
+    async_add_entities_mock = Mock()
 
-    async def test_indoor_humidity_controlling_sensor(self):
-        test_value = 50
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-        self.coordinator_mock.data = {
-            "indoor_humidity_controlling_sensor_status": 0,
-            "indoor_humidity_controlling_sensor_value": test_value,
-        }
+    async_add_entities_mock.assert_called_once_with([])
 
-        async_add_entities_mock = Mock()
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
+def test_temperature_sensor_unit_of_measurement_sensor_option(
+    coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
+):
+    base_sensor = BaseAprilaireTemperatureSensor(coordinator)
+    base_sensor.hass = hass
 
-        sensors_list = async_add_entities_mock.call_args_list[0][0]
+    base_sensor._sensor_option_unit_of_measurement = TEMP_CELSIUS
+    assert base_sensor.unit_of_measurement == TEMP_CELSIUS
 
-        self.assertEqual(len(sensors_list), 1)
+    base_sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
+    assert base_sensor.unit_of_measurement == TEMP_FAHRENHEIT
 
-        sensor = sensors_list[0][0]
 
-        self.assertIsInstance(sensor, AprilaireIndoorHumidityControllingSensor)
+def test_base_temperature_sensor_value(
+    coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
+):
+    base_sensor = BaseAprilaireTemperatureSensor(coordinator)
+    base_sensor.hass = hass
+    hass.config.units = METRIC_SYSTEM
 
-        sensor._attr_available = True
+    assert base_sensor.native_value is None
 
-        self.assertEqual(sensor.device_class, SensorDeviceClass.HUMIDITY)
-        self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
-        self.assertEqual(sensor.native_unit_of_measurement, PERCENTAGE)
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.native_value, test_value)
-        self.assertEqual(sensor.entity_name, "Indoor Humidity Controlling Sensor")
-        self.assertEqual(sensor.extra_state_attributes["status"], 0)
-        self.assertEqual(sensor.extra_state_attributes["raw_sensor_value"], test_value)
 
-    async def test_outdoor_humidity_controlling_sensor(self):
-        test_value = 50
+def test_base_temperature_sensor_display_precision(
+    coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
+):
+    base_sensor = BaseAprilaireTemperatureSensor(coordinator)
+    base_sensor.hass = hass
 
-        self.coordinator_mock.data = {
-            "outdoor_humidity_controlling_sensor_status": 0,
-            "outdoor_humidity_controlling_sensor_value": test_value,
-        }
+    hass.config.units = METRIC_SYSTEM
+    assert base_sensor.suggested_display_precision == 1
 
-        async_add_entities_mock = Mock()
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    assert base_sensor.suggested_display_precision == 0
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
 
-        sensors_list = async_add_entities_mock.call_args_list[0][0]
+async def test_indoor_humidity_controlling_sensor(
+    config_entry: ConfigEntry,
+    coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
+):
+    test_value = 50
 
-        self.assertEqual(len(sensors_list), 1)
+    coordinator.data = {
+        "indoor_humidity_controlling_sensor_status": 0,
+        "indoor_humidity_controlling_sensor_value": test_value,
+    }
 
-        sensor = sensors_list[0][0]
+    async_add_entities_mock = Mock()
 
-        self.assertIsInstance(sensor, AprilaireOutdoorHumidityControllingSensor)
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-        sensor._attr_available = True
+    sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-        self.assertEqual(sensor.device_class, SensorDeviceClass.HUMIDITY)
-        self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
-        self.assertEqual(sensor.native_unit_of_measurement, PERCENTAGE)
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.native_value, test_value)
-        self.assertEqual(sensor.entity_name, "Outdoor Humidity Controlling Sensor")
-        self.assertEqual(sensor.extra_state_attributes["status"], 0)
-        self.assertEqual(sensor.extra_state_attributes["raw_sensor_value"], test_value)
+    assert len(sensors_list) == 1
 
-    async def test_indoor_temperature_controlling_sensor(self):
-        test_value = 25
+    sensor = sensors_list[0][0]
 
-        self.coordinator_mock.data = {
-            "indoor_temperature_controlling_sensor_status": 0,
-            "indoor_temperature_controlling_sensor_value": test_value,
-        }
+    assert isinstance(sensor, AprilaireIndoorHumidityControllingSensor)
 
-        async_add_entities_mock = Mock()
+    sensor._attr_available = True
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
+    assert sensor.device_class == SensorDeviceClass.HUMIDITY
+    assert sensor.state_class == SensorStateClass.MEASUREMENT
+    assert sensor.native_unit_of_measurement == PERCENTAGE
+    assert sensor.available is True
+    assert sensor.native_value == test_value
+    assert sensor.entity_name == "Indoor Humidity Controlling Sensor"
+    assert sensor.extra_state_attributes["status"] == 0
+    assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
-        sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-        self.assertEqual(len(sensors_list), 1)
+async def test_outdoor_humidity_controlling_sensor(
+    config_entry: ConfigEntry,
+    coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
+):
+    test_value = 50
 
-        sensor = sensors_list[0][0]
+    coordinator.data = {
+        "outdoor_humidity_controlling_sensor_status": 0,
+        "outdoor_humidity_controlling_sensor_value": test_value,
+    }
 
-        self.assertIsInstance(sensor, AprilaireIndoorTemperatureControllingSensor)
+    async_add_entities_mock = Mock()
 
-        sensor._attr_available = True
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-        self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
-        self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
-        self.assertEqual(sensor.native_unit_of_measurement, TEMP_CELSIUS)
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.native_value, test_value)
-        self.assertEqual(sensor.entity_name, "Indoor Temperature Controlling Sensor")
-        self.assertEqual(sensor.extra_state_attributes["status"], 0)
-        self.assertEqual(sensor.extra_state_attributes["raw_sensor_value"], test_value)
+    sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-    async def test_outdoor_temperature_controlling_sensor(self):
-        test_value = 25
+    assert len(sensors_list) == 1
 
-        self.coordinator_mock.data = {
-            "outdoor_temperature_controlling_sensor_status": 0,
-            "outdoor_temperature_controlling_sensor_value": test_value,
-        }
+    sensor = sensors_list[0][0]
 
-        async_add_entities_mock = Mock()
+    assert isinstance(sensor, AprilaireOutdoorHumidityControllingSensor)
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
+    sensor._attr_available = True
 
-        sensors_list = async_add_entities_mock.call_args_list[0][0]
+    assert sensor.device_class == SensorDeviceClass.HUMIDITY
+    assert sensor.state_class == SensorStateClass.MEASUREMENT
+    assert sensor.native_unit_of_measurement == PERCENTAGE
+    assert sensor.available is True
+    assert sensor.native_value == test_value
+    assert sensor.entity_name == "Outdoor Humidity Controlling Sensor"
+    assert sensor.extra_state_attributes["status"] == 0
+    assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
-        self.assertEqual(len(sensors_list), 1)
 
-        sensor = sensors_list[0][0]
+async def test_indoor_temperature_controlling_sensor(
+    config_entry: ConfigEntry,
+    coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
+):
+    test_value = 25
 
-        self.assertIsInstance(sensor, AprilaireOutdoorTemperatureControllingSensor)
+    coordinator.data = {
+        "indoor_temperature_controlling_sensor_status": 0,
+        "indoor_temperature_controlling_sensor_value": test_value,
+    }
 
-        sensor._attr_available = True
+    async_add_entities_mock = Mock()
 
-        self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
-        self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
-        self.assertEqual(sensor.native_unit_of_measurement, TEMP_CELSIUS)
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.native_value, test_value)
-        self.assertEqual(sensor.entity_name, "Outdoor Temperature Controlling Sensor")
-        self.assertEqual(sensor.extra_state_attributes["status"], 0)
-        self.assertEqual(sensor.extra_state_attributes["raw_sensor_value"], test_value)
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-    def test_indoor_temperature_controlling_sensor_fahrenheit(self):
-        test_value = 25
+    sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-        self.coordinator_mock.data = {
-            "indoor_temperature_controlling_sensor_status": 0,
-            "indoor_temperature_controlling_sensor_value": test_value,
-        }
+    assert len(sensors_list) == 1
 
-        sensor = AprilaireIndoorTemperatureControllingSensor(self.coordinator_mock)
-        sensor._attr_available = True
-        sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
+    sensor = sensors_list[0][0]
 
-        self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
-        self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
-        self.assertEqual(sensor.unit_of_measurement, TEMP_FAHRENHEIT)
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.native_value, 25)
-        self.assertEqual(sensor.entity_name, "Indoor Temperature Controlling Sensor")
-        self.assertEqual(sensor.extra_state_attributes["status"], 0)
-        self.assertEqual(sensor.extra_state_attributes["raw_sensor_value"], test_value)
+    assert isinstance(sensor, AprilaireIndoorTemperatureControllingSensor)
 
-    def test_outdoor_temperature_controlling_sensor_fahrenheit(self):
-        test_value = 25
+    sensor._attr_available = True
 
-        self.coordinator_mock.data = {
-            "outdoor_temperature_controlling_sensor_status": 0,
-            "outdoor_temperature_controlling_sensor_value": test_value,
-        }
+    assert sensor.device_class == SensorDeviceClass.TEMPERATURE
+    assert sensor.state_class == SensorStateClass.MEASUREMENT
+    assert sensor.native_unit_of_measurement == TEMP_CELSIUS
+    assert sensor.available is True
+    assert sensor.native_value == test_value
+    assert sensor.entity_name == "Indoor Temperature Controlling Sensor"
+    assert sensor.extra_state_attributes["status"] == 0
+    assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
-        sensor = AprilaireOutdoorTemperatureControllingSensor(self.coordinator_mock)
-        sensor._attr_available = True
-        sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
 
-        self.assertEqual(sensor.device_class, SensorDeviceClass.TEMPERATURE)
-        self.assertEqual(sensor.state_class, SensorStateClass.MEASUREMENT)
-        self.assertEqual(sensor.unit_of_measurement, TEMP_FAHRENHEIT)
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.native_value, 25)
-        self.assertEqual(sensor.entity_name, "Outdoor Temperature Controlling Sensor")
-        self.assertEqual(sensor.extra_state_attributes["status"], 0)
-        self.assertEqual(sensor.extra_state_attributes["raw_sensor_value"], test_value)
+async def test_outdoor_temperature_controlling_sensor(
+    config_entry: ConfigEntry,
+    coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
+):
+    test_value = 25
 
-    async def test_dehumidification_available(self):
-        self.coordinator_mock.data = {
-            "dehumidification_available": 1,
-        }
+    coordinator.data = {
+        "outdoor_temperature_controlling_sensor_status": 0,
+        "outdoor_temperature_controlling_sensor_value": test_value,
+    }
 
-        async_add_entities_mock = Mock()
+    async_add_entities_mock = Mock()
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-        sensors_list = async_add_entities_mock.call_args_list[0][0]
+    sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-        self.assertEqual(len(sensors_list), 1)
+    assert len(sensors_list) == 1
 
-        sensor = sensors_list[0][0]
+    sensor = sensors_list[0][0]
 
-        self.assertIsInstance(sensor, AprilaireDehumidificationStatusSensor)
+    assert isinstance(sensor, AprilaireOutdoorTemperatureControllingSensor)
 
-    def test_dehumidification_status_sensor_0(self):
-        self.coordinator_mock.data = {
-            "dehumidification_status": 0,
-        }
+    sensor._attr_available = True
 
-        sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    assert sensor.device_class == SensorDeviceClass.TEMPERATURE
+    assert sensor.state_class == SensorStateClass.MEASUREMENT
+    assert sensor.native_unit_of_measurement == TEMP_CELSIUS
+    assert sensor.available is True
+    assert sensor.native_value == test_value
+    assert sensor.entity_name == "Outdoor Temperature Controlling Sensor"
+    assert sensor.extra_state_attributes["status"] == 0
+    assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Dehumidification Status")
-        self.assertEqual(sensor.native_value, "Idle")
 
-    def test_dehumidification_status_sensor_1(self):
-        self.coordinator_mock.data = {
-            "dehumidification_status": 1,
-        }
+def test_indoor_temperature_controlling_sensor_fahrenheit(
+    coordinator: AprilaireCoordinator,
+):
+    test_value = 25
 
-        sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    coordinator.data = {
+        "indoor_temperature_controlling_sensor_status": 0,
+        "indoor_temperature_controlling_sensor_value": test_value,
+    }
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Dehumidification Status")
-        self.assertEqual(sensor.native_value, "Idle")
+    sensor = AprilaireIndoorTemperatureControllingSensor(coordinator)
+    sensor._attr_available = True
+    sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
 
-    def test_dehumidification_status_sensor_2(self):
-        self.coordinator_mock.data = {
-            "dehumidification_status": 2,
-        }
+    assert sensor.device_class == SensorDeviceClass.TEMPERATURE
+    assert sensor.state_class == SensorStateClass.MEASUREMENT
+    assert sensor.unit_of_measurement == TEMP_FAHRENHEIT
+    assert sensor.available is True
+    assert sensor.native_value == 25
+    assert sensor.entity_name == "Indoor Temperature Controlling Sensor"
+    assert sensor.extra_state_attributes["status"] == 0
+    assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
-        sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Dehumidification Status")
-        self.assertEqual(sensor.native_value, "On")
+def test_outdoor_temperature_controlling_sensor_fahrenheit(
+    coordinator: AprilaireCoordinator,
+):
+    test_value = 25
 
-    def test_dehumidification_status_sensor_3(self):
-        self.coordinator_mock.data = {
-            "dehumidification_status": 3,
-        }
+    coordinator.data = {
+        "outdoor_temperature_controlling_sensor_status": 0,
+        "outdoor_temperature_controlling_sensor_value": test_value,
+    }
 
-        sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensor = AprilaireOutdoorTemperatureControllingSensor(coordinator)
+    sensor._attr_available = True
+    sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Dehumidification Status")
-        self.assertEqual(sensor.native_value, "On")
+    assert sensor.device_class == SensorDeviceClass.TEMPERATURE
+    assert sensor.state_class == SensorStateClass.MEASUREMENT
+    assert sensor.unit_of_measurement == TEMP_FAHRENHEIT
+    assert sensor.available is True
+    assert sensor.native_value == 25
+    assert sensor.entity_name == "Outdoor Temperature Controlling Sensor"
+    assert sensor.extra_state_attributes["status"] == 0
+    assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
-    def test_dehumidification_status_sensor_4(self):
-        self.coordinator_mock.data = {
-            "dehumidification_status": 4,
-        }
 
-        sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+async def test_dehumidification_available(
+    config_entry: ConfigEntry, coordinator: AprilaireCoordinator, hass: HomeAssistant
+):
+    coordinator.data = {
+        "dehumidification_available": 1,
+    }
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Dehumidification Status")
-        self.assertEqual(sensor.native_value, "Off")
+    async_add_entities_mock = Mock()
 
-    def test_dehumidification_status_sensor_5(self):
-        self.coordinator_mock.data = {
-            "dehumidification_status": 5,
-        }
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-        sensor = AprilaireDehumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Dehumidification Status")
-        self.assertIsNone(sensor.native_value)
+    assert len(sensors_list) == 1
 
-    async def test_humidification_available(self):
-        self.coordinator_mock.data = {
-            "humidification_available": 1,
-        }
+    sensor = sensors_list[0][0]
 
-        async_add_entities_mock = Mock()
+    assert isinstance(sensor, AprilaireDehumidificationStatusSensor)
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
 
-        sensors_list = async_add_entities_mock.call_args_list[0][0]
+def test_dehumidification_status_sensor_0(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "dehumidification_status": 0,
+    }
 
-        self.assertEqual(len(sensors_list), 1)
+    sensor = AprilaireDehumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        sensor = sensors_list[0][0]
+    assert sensor.available is True
+    assert sensor.entity_name == "Dehumidification Status"
+    assert sensor.native_value == "Idle"
 
-        self.assertIsInstance(sensor, AprilaireHumidificationStatusSensor)
 
-    def test_humidification_status_sensor_0(self):
-        self.coordinator_mock.data = {
-            "humidification_status": 0,
-        }
+def test_dehumidification_status_sensor_1(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "dehumidification_status": 1,
+    }
 
-        sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensor = AprilaireDehumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Humidification Status")
-        self.assertEqual(sensor.native_value, "Idle")
+    assert sensor.available is True
+    assert sensor.entity_name == "Dehumidification Status"
+    assert sensor.native_value == "Idle"
 
-    def test_humidification_status_sensor_1(self):
-        self.coordinator_mock.data = {
-            "humidification_status": 1,
-        }
 
-        sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+def test_dehumidification_status_sensor_2(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "dehumidification_status": 2,
+    }
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Humidification Status")
-        self.assertEqual(sensor.native_value, "Idle")
+    sensor = AprilaireDehumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-    def test_humidification_status_sensor_2(self):
-        self.coordinator_mock.data = {
-            "humidification_status": 2,
-        }
+    assert sensor.available is True
+    assert sensor.entity_name == "Dehumidification Status"
+    assert sensor.native_value == "On"
 
-        sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Humidification Status")
-        self.assertEqual(sensor.native_value, "On")
+def test_dehumidification_status_sensor_3(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "dehumidification_status": 3,
+    }
 
-    def test_humidification_status_sensor_3(self):
-        self.coordinator_mock.data = {
-            "humidification_status": 3,
-        }
+    sensor = AprilaireDehumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    assert sensor.available is True
+    assert sensor.entity_name == "Dehumidification Status"
+    assert sensor.native_value == "On"
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Humidification Status")
-        self.assertEqual(sensor.native_value, "Off")
 
-    def test_humidification_status_sensor_4(self):
-        self.coordinator_mock.data = {
-            "humidification_status": 4,
-        }
+def test_dehumidification_status_sensor_4(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "dehumidification_status": 4,
+    }
 
-        sensor = AprilaireHumidificationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensor = AprilaireDehumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Humidification Status")
-        self.assertIsNone(sensor.native_value)
+    assert sensor.available is True
+    assert sensor.entity_name == "Dehumidification Status"
+    assert sensor.native_value == "Off"
 
-    async def test_ventilation_available(self):
-        self.coordinator_mock.data = {
-            "ventilation_available": 1,
-        }
 
-        async_add_entities_mock = Mock()
+def test_dehumidification_status_sensor_5(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "dehumidification_status": 5,
+    }
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
+    sensor = AprilaireDehumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        sensors_list = async_add_entities_mock.call_args_list[0][0]
+    assert sensor.available is True
+    assert sensor.entity_name == "Dehumidification Status"
+    assert sensor.native_value is None
 
-        self.assertEqual(len(sensors_list), 1)
 
-        sensor = sensors_list[0][0]
+async def test_humidification_available(
+    config_entry: ConfigEntry, coordinator: AprilaireCoordinator, hass: HomeAssistant
+):
+    coordinator.data = {
+        "humidification_available": 1,
+    }
 
-        self.assertIsInstance(sensor, AprilaireVentilationStatusSensor)
+    async_add_entities_mock = Mock()
 
-    def test_ventilation_status_sensor_0(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 0,
-        }
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertEqual(sensor.native_value, "Idle")
+    assert len(sensors_list) == 1
 
-    def test_ventilation_status_sensor_1(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 1,
-        }
+    sensor = sensors_list[0][0]
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    assert isinstance(sensor, AprilaireHumidificationStatusSensor)
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertEqual(sensor.native_value, "Idle")
 
-    def test_ventilation_status_sensor_2(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 2,
-        }
+def test_humidification_status_sensor_0(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "humidification_status": 0,
+    }
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensor = AprilaireHumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertEqual(sensor.native_value, "On")
+    assert sensor.available is True
+    assert sensor.entity_name == "Humidification Status"
+    assert sensor.native_value == "Idle"
 
-    def test_ventilation_status_sensor_3(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 3,
-        }
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+def test_humidification_status_sensor_1(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "humidification_status": 1,
+    }
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertEqual(sensor.native_value, "Idle")
+    sensor = AprilaireHumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-    def test_ventilation_status_sensor_4(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 4,
-        }
+    assert sensor.available is True
+    assert sensor.entity_name == "Humidification Status"
+    assert sensor.native_value == "Idle"
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertEqual(sensor.native_value, "Idle")
+def test_humidification_status_sensor_2(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "humidification_status": 2,
+    }
 
-    def test_ventilation_status_sensor_5(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 5,
-        }
+    sensor = AprilaireHumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    assert sensor.available is True
+    assert sensor.entity_name == "Humidification Status"
+    assert sensor.native_value == "On"
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertEqual(sensor.native_value, "Idle")
 
-    def test_ventilation_status_sensor_5(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 5,
-        }
+def test_humidification_status_sensor_3(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "humidification_status": 3,
+    }
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensor = AprilaireHumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertEqual(sensor.native_value, "Idle")
+    assert sensor.available is True
+    assert sensor.entity_name == "Humidification Status"
+    assert sensor.native_value == "Off"
 
-    def test_ventilation_status_sensor_6(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 6,
-        }
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+def test_humidification_status_sensor_4(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "humidification_status": 4,
+    }
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertEqual(sensor.native_value, "Off")
+    sensor = AprilaireHumidificationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-    def test_ventilation_status_sensor_7(self):
-        self.coordinator_mock.data = {
-            "ventilation_status": 7,
-        }
+    assert sensor.available is True
+    assert sensor.entity_name == "Humidification Status"
+    assert sensor.native_value is None
 
-        sensor = AprilaireVentilationStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Ventilation Status")
-        self.assertIsNone(sensor.native_value)
+async def test_ventilation_available(
+    config_entry: ConfigEntry, coordinator: AprilaireCoordinator, hass: HomeAssistant
+):
+    coordinator.data = {
+        "ventilation_available": 1,
+    }
 
-    async def test_air_cleaning_available(self):
-        self.coordinator_mock.data = {
-            "air_cleaning_available": 1,
-        }
+    async_add_entities_mock = Mock()
 
-        async_add_entities_mock = Mock()
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-        await async_setup_entry(
-            self.hass_mock, self.config_entry_mock, async_add_entities_mock
-        )
+    sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-        sensors_list = async_add_entities_mock.call_args_list[0][0]
+    assert len(sensors_list) == 1
 
-        self.assertEqual(len(sensors_list), 1)
+    sensor = sensors_list[0][0]
 
-        sensor = sensors_list[0][0]
+    assert isinstance(sensor, AprilaireVentilationStatusSensor)
 
-        self.assertIsInstance(sensor, AprilaireAirCleaningStatusSensor)
 
-    def test_air_cleaning_status_sensor_0(self):
-        self.coordinator_mock.data = {
-            "air_cleaning_status": 0,
-        }
+def test_ventilation_status_sensor_0(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 0,
+    }
 
-        sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Air Cleaning Status")
-        self.assertEqual(sensor.native_value, "Idle")
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value == "Idle"
 
-    def test_air_cleaning_status_sensor_1(self):
-        self.coordinator_mock.data = {
-            "air_cleaning_status": 1,
-        }
 
-        sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+def test_ventilation_status_sensor_1(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 1,
+    }
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Air Cleaning Status")
-        self.assertEqual(sensor.native_value, "Idle")
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-    def test_air_cleaning_status_sensor_2(self):
-        self.coordinator_mock.data = {
-            "air_cleaning_status": 2,
-        }
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value == "Idle"
 
-        sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Air Cleaning Status")
-        self.assertEqual(sensor.native_value, "On")
+def test_ventilation_status_sensor_2(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 2,
+    }
 
-    def test_air_cleaning_status_sensor_3(self):
-        self.coordinator_mock.data = {
-            "air_cleaning_status": 3,
-        }
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value == "On"
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Air Cleaning Status")
-        self.assertEqual(sensor.native_value, "Off")
 
-    def test_air_cleaning_status_sensor_4(self):
-        self.coordinator_mock.data = {
-            "air_cleaning_status": 4,
-        }
+def test_ventilation_status_sensor_3(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 3,
+    }
 
-        sensor = AprilaireAirCleaningStatusSensor(self.coordinator_mock)
-        sensor._attr_available = True
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
 
-        self.assertTrue(sensor.available)
-        self.assertEqual(sensor.entity_name, "Air Cleaning Status")
-        self.assertIsNone(sensor.native_value)
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value == "Idle"
+
+
+def test_ventilation_status_sensor_4(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 4,
+    }
+
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value == "Idle"
+
+
+def test_ventilation_status_sensor_5(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 5,
+    }
+
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value == "Idle"
+
+
+def test_ventilation_status_sensor_5(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 5,
+    }
+
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value == "Idle"
+
+
+def test_ventilation_status_sensor_6(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 6,
+    }
+
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value == "Off"
+
+
+def test_ventilation_status_sensor_7(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "ventilation_status": 7,
+    }
+
+    sensor = AprilaireVentilationStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Ventilation Status"
+    assert sensor.native_value is None
+
+
+async def test_air_cleaning_available(
+    config_entry: ConfigEntry,
+    coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
+):
+    coordinator.data = {
+        "air_cleaning_available": 1,
+    }
+
+    async_add_entities_mock = Mock()
+
+    await async_setup_entry(hass, config_entry, async_add_entities_mock)
+
+    sensors_list = async_add_entities_mock.call_args_list[0][0]
+
+    assert len(sensors_list) == 1
+
+    sensor = sensors_list[0][0]
+
+    assert isinstance(sensor, AprilaireAirCleaningStatusSensor)
+
+
+def test_air_cleaning_status_sensor_0(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "air_cleaning_status": 0,
+    }
+
+    sensor = AprilaireAirCleaningStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Air Cleaning Status"
+    assert sensor.native_value == "Idle"
+
+
+def test_air_cleaning_status_sensor_1(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "air_cleaning_status": 1,
+    }
+
+    sensor = AprilaireAirCleaningStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Air Cleaning Status"
+    assert sensor.native_value == "Idle"
+
+
+def test_air_cleaning_status_sensor_2(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "air_cleaning_status": 2,
+    }
+
+    sensor = AprilaireAirCleaningStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Air Cleaning Status"
+    assert sensor.native_value == "On"
+
+
+def test_air_cleaning_status_sensor_3(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "air_cleaning_status": 3,
+    }
+
+    sensor = AprilaireAirCleaningStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Air Cleaning Status"
+    assert sensor.native_value == "Off"
+
+
+def test_air_cleaning_status_sensor_4(
+    coordinator: AprilaireCoordinator,
+):
+    coordinator.data = {
+        "air_cleaning_status": 4,
+    }
+
+    sensor = AprilaireAirCleaningStatusSensor(coordinator)
+    sensor._attr_available = True
+
+    assert sensor.available is True
+    assert sensor.entity_name == "Air Cleaning Status"
+    assert sensor.native_value is None

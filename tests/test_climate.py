@@ -335,6 +335,14 @@ def test_target_temperature_step(climate: AprilaireClimate):
     assert climate.target_temperature_step == 1
 
 
+def test_precision(climate: AprilaireClimate):
+    climate.hass.config.units = METRIC_SYSTEM
+    assert climate.precision == 0.5
+
+    climate.hass.config.units = US_CUSTOMARY_SYSTEM
+    assert climate.precision == 1
+
+
 def test_hvac_mode(climate: AprilaireClimate, coordinator: AprilaireCoordinator):
     assert climate.hvac_mode is None
 

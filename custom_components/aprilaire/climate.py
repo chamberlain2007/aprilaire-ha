@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -133,7 +133,13 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     _attr_min_humidity = 10
     _attr_max_humidity = 50
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_precision = PRECISION_HALVES
+
+    @property
+    def precision(self) -> float:
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+            return PRECISION_HALVES
+        else:
+            return PRECISION_WHOLE
 
     @property
     def entity_name(self) -> str:
@@ -246,9 +252,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def target_temperature_step(self) -> float | None:
         if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
-            return 0.5
+            return PRECISION_HALVES
         else:
-            return 1
+            return PRECISION_WHOLE
 
     @property
     def target_temperature_high(self) -> float | None:

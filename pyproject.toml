@@ -5,7 +5,7 @@ readme = "README.md"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["black", "bumpver", "isort", "pip-tools", "coverage", "homeassistant==2023.4.5", "pyaprilaire==0.7.0b1", "pytest-asyncio", "pytest-cov"]
+dev = ["black", "bumpver", "isort", "pip-tools", "coverage", "homeassistant==2023.4.5", "pyaprilaire==0.7.0", "pytest-asyncio", "pytest-cov"]
 
 [tool.bumpver]
 current_version = "0.7.0"

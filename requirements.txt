@@ -53,14 +53,18 @@ click==8.1.3
     #   pip-tools
 colorama==0.4.6
     # via bumpver
-coverage==7.2.2
-    # via aprilaire-ha (pyproject.toml)
+coverage[toml]==7.2.2
+    # via
+    #   aprilaire-ha (pyproject.toml)
+    #   pytest-cov
 crc==4.1.0
     # via pyaprilaire
-cryptography==39.0.1
+cryptography==40.0.1
     # via
     #   homeassistant
     #   pyopenssl
+exceptiongroup==1.1.1
+    # via pytest
 frozenlist==1.3.3
     # via
     #   aiohttp
@@ -69,7 +73,7 @@ h11==0.14.0
     # via httpcore
 home-assistant-bluetooth==1.9.3
     # via homeassistant
-homeassistant==2023.3.6
+homeassistant==2023.4.5
     # via aprilaire-ha (pyproject.toml)
 httpcore==0.16.3
     # via httpx
@@ -83,6 +87,8 @@ idna==3.4
     #   yarl
 ifaddr==0.1.7
     # via homeassistant
+iniconfig==2.0.0
+    # via pytest
 isort==5.12.0
     # via aprilaire-ha (pyproject.toml)
 jinja2==3.1.2
@@ -105,6 +111,7 @@ packaging==23.0
     # via
     #   black
     #   build
+    #   pytest
 pathlib2==2.3.7.post1
     # via bumpver
 pathspec==0.11.0
@@ -113,16 +120,26 @@ pip-tools==6.12.2
     # via aprilaire-ha (pyproject.toml)
 platformdirs==3.0.0
     # via black
-pyaprilaire==0.6.0
+pluggy==1.0.0
+    # via pytest
+pyaprilaire==0.7.0
     # via aprilaire-ha (pyproject.toml)
 pycparser==2.21
     # via cffi
-pyjwt==2.5.0
+pyjwt==2.6.0
     # via homeassistant
-pyopenssl==23.0.0
+pyopenssl==23.1.0
     # via homeassistant
 pyproject-hooks==1.0.0
     # via build
+pytest==7.3.2
+    # via
+    #   pytest-asyncio
+    #   pytest-cov
+pytest-asyncio==0.21.0
+    # via aprilaire-ha (pyproject.toml)
+pytest-cov==4.1.0
+    # via aprilaire-ha (pyproject.toml)
 python-slugify==4.0.1
     # via homeassistant
 pytz==2023.3
@@ -148,8 +165,12 @@ tomli==2.0.1
     # via
     #   black
     #   build
+    #   coverage
     #   pyproject-hooks
+    #   pytest
 typing-extensions==4.5.0
+    # via homeassistant
+ulid-transform==0.6.3
     # via homeassistant
 urllib3==1.26.15
     # via requests

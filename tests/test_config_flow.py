@@ -1,62 +1,106 @@
-from custom_components.aprilaire.config_flow import ConfigFlow, STEP_USER_DATA_SCHEMA
-from custom_components.aprilaire.const import LOG_NAME
+# pylint: skip-file
 
-import pyaprilaire.client
+import logging
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.core import EventBus, HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.util import uuid as uuid_util
 from pyaprilaire.client import AprilaireClient
 from pyaprilaire.const import FunctionalDomain
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntries
-from homeassistant.core import HomeAssistant, EventBus
-from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.util import uuid as uuid_util
-
-import logging
-
-import unittest
-from unittest.mock import patch, AsyncMock, Mock
-
-_LOGGER = logging.getLogger(LOG_NAME)
+from custom_components.aprilaire.config_flow import STEP_USER_DATA_SCHEMA, ConfigFlow
 
 
-class Test_Config_Flow(unittest.IsolatedAsyncioTestCase):
-    def setUp(self):
-        self.hass_mock = AsyncMock(HomeAssistant)
-        self.hass_mock.data = {}
-        self.hass_mock.config_entries = AsyncMock(ConfigEntries)
-        self.hass_mock.bus = AsyncMock(EventBus)
+@pytest.fixture
+def logger():
+    logger = logging.getLogger()
+    logger.propagate = False
 
-        self.entry_id = uuid_util.random_uuid_hex()
+    return logger
 
-        self.config_entry_mock = AsyncMock(ConfigEntry)
-        self.config_entry_mock.data = {"host": "test123", "port": 123}
-        self.config_entry_mock.entry_id = self.entry_id
 
-        self.client_mock = AsyncMock(pyaprilaire.client.AprilaireClient)
+@pytest.fixture
+def client() -> AprilaireClient:
+    return AsyncMock(AprilaireClient)
 
-    async def test_user_input_step(self):
-        show_form_mock = Mock()
 
-        config_flow = ConfigFlow()
-        config_flow.async_show_form = show_form_mock
+@pytest.fixture
+def entry_id() -> str:
+    return uuid_util.random_uuid_hex()
 
-        await config_flow.async_step_user(None)
 
-        show_form_mock.assert_called_once_with(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-        )
+@pytest.fixture
+def hass() -> HomeAssistant:
+    hass_mock = AsyncMock(HomeAssistant)
+    hass_mock.data = {}
+    hass_mock.config_entries = AsyncMock(ConfigEntries)
+    hass_mock.bus = AsyncMock(EventBus)
 
-    async def test_unique_id_abort(self):
-        show_form_mock = Mock()
-        set_unique_id_mock = AsyncMock()
-        abort_if_unique_id_configured_mock = Mock(
-            side_effect=AbortFlow("already_configured")
-        )
+    return hass_mock
 
-        config_flow = ConfigFlow()
-        config_flow.async_show_form = show_form_mock
-        config_flow.async_set_unique_id = set_unique_id_mock
-        config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
 
+@pytest.fixture
+def config_entry(entry_id: str) -> ConfigEntry:
+    config_entry_mock = AsyncMock(ConfigEntry)
+    config_entry_mock.data = {"host": "test123", "port": 123}
+    config_entry_mock.entry_id = entry_id
+
+    return config_entry_mock
+
+
+async def test_user_input_step():
+    show_form_mock = Mock()
+
+    config_flow = ConfigFlow()
+    config_flow.async_show_form = show_form_mock
+
+    await config_flow.async_step_user(None)
+
+    show_form_mock.assert_called_once_with(
+        step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+    )
+
+
+async def test_unique_id_abort():
+    show_form_mock = Mock()
+    set_unique_id_mock = AsyncMock()
+    abort_if_unique_id_configured_mock = Mock(
+        side_effect=AbortFlow("already_configured")
+    )
+
+    config_flow = ConfigFlow()
+    config_flow.async_show_form = show_form_mock
+    config_flow.async_set_unique_id = set_unique_id_mock
+    config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
+
+    await config_flow.async_step_user(
+        {
+            "host": "localhost",
+            "port": 7000,
+        }
+    )
+
+    show_form_mock.assert_called_once_with(
+        step_id="user",
+        data_schema=STEP_USER_DATA_SCHEMA,
+        errors={"base": "already_configured"},
+    )
+
+
+async def test_unique_id_exception(caplog, logger: logging.Logger):
+    show_form_mock = Mock()
+    set_unique_id_mock = AsyncMock()
+    abort_if_unique_id_configured_mock = Mock(side_effect=Exception("test"))
+
+    config_flow = ConfigFlow()
+    config_flow.async_show_form = show_form_mock
+    config_flow.async_set_unique_id = set_unique_id_mock
+    config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
+
+    with caplog.at_level(logging.INFO, logger=logger.name):
         await config_flow.async_step_user(
             {
                 "host": "localhost",
@@ -64,105 +108,82 @@ class Test_Config_Flow(unittest.IsolatedAsyncioTestCase):
             }
         )
 
-        show_form_mock.assert_called_once_with(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors={"base": "already_configured"},
-        )
+    assert caplog.text != ""
 
-    async def test_unique_id_exception(self):
-        show_form_mock = Mock()
-        set_unique_id_mock = AsyncMock()
-        abort_if_unique_id_configured_mock = Mock(side_effect=Exception("test"))
+    show_form_mock.assert_called_once_with(
+        step_id="user",
+        data_schema=STEP_USER_DATA_SCHEMA,
+        errors={"base": "test"},
+    )
 
-        config_flow = ConfigFlow()
-        config_flow.async_show_form = show_form_mock
-        config_flow.async_set_unique_id = set_unique_id_mock
-        config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
 
-        with self.assertLogs(_LOGGER, level="ERROR"):
-            await config_flow.async_step_user(
-                {
-                    "host": "localhost",
-                    "port": 7000,
-                }
-            )
+async def test_config_flow_invalid_data(client: AprilaireClient):
+    show_form_mock = Mock()
+    set_unique_id_mock = AsyncMock()
+    abort_if_unique_id_configured_mock = Mock()
 
-        show_form_mock.assert_called_once_with(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors={"base": "test"},
-        )
+    config_flow = ConfigFlow()
+    config_flow.async_show_form = show_form_mock
+    config_flow.async_set_unique_id = set_unique_id_mock
+    config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
 
-    async def test_config_flow_invalid_data(self):
-        show_form_mock = Mock()
-        set_unique_id_mock = AsyncMock()
-        abort_if_unique_id_configured_mock = Mock()
-
-        config_flow = ConfigFlow()
-        config_flow.async_show_form = show_form_mock
-        config_flow.async_set_unique_id = set_unique_id_mock
-        config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
-
-        client_mock = AsyncMock(AprilaireClient)
-
-        with patch("pyaprilaire.client.AprilaireClient", return_value=client_mock):
-            await config_flow.async_step_user(
-                {
-                    "host": "localhost",
-                    "port": 7000,
-                }
-            )
-
-        client_mock.start_listen.assert_called_once()
-        client_mock.wait_for_response.assert_called_once_with(
-            FunctionalDomain.IDENTIFICATION, 2, 30
-        )
-        client_mock.stop_listen.assert_called_once()
-
-        show_form_mock.assert_called_once_with(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors={"base": "connection_failed"},
-        )
-
-    async def test_config_flow_data(self):
-        show_form_mock = Mock()
-        set_unique_id_mock = AsyncMock()
-        abort_if_unique_id_configured_mock = Mock()
-        create_entry_mock = Mock()
-        sleep_mock = AsyncMock()
-
-        config_flow = ConfigFlow()
-        config_flow.async_show_form = show_form_mock
-        config_flow.async_set_unique_id = set_unique_id_mock
-        config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
-        config_flow.async_create_entry = create_entry_mock
-
-        client_mock = AsyncMock(AprilaireClient)
-        client_mock.wait_for_response = AsyncMock(return_value={"mac_address": "test"})
-
-        with patch(
-            "pyaprilaire.client.AprilaireClient", return_value=client_mock
-        ), patch("asyncio.sleep", new=sleep_mock):
-            await config_flow.async_step_user(
-                {
-                    "host": "localhost",
-                    "port": 7000,
-                }
-            )
-
-        client_mock.start_listen.assert_called_once()
-        client_mock.wait_for_response.assert_called_once_with(
-            FunctionalDomain.IDENTIFICATION, 2, 30
-        )
-        client_mock.stop_listen.assert_called_once()
-        sleep_mock.assert_awaited_once()
-
-        create_entry_mock.assert_called_once_with(
-            title="Aprilaire",
-            data={
+    with patch("pyaprilaire.client.AprilaireClient", return_value=client):
+        await config_flow.async_step_user(
+            {
                 "host": "localhost",
                 "port": 7000,
-            },
+            }
         )
+
+    client.start_listen.assert_called_once()
+    client.wait_for_response.assert_called_once_with(
+        FunctionalDomain.IDENTIFICATION, 2, 30
+    )
+    client.stop_listen.assert_called_once()
+
+    show_form_mock.assert_called_once_with(
+        step_id="user",
+        data_schema=STEP_USER_DATA_SCHEMA,
+        errors={"base": "connection_failed"},
+    )
+
+
+async def test_config_flow_data(client: AprilaireClient):
+    show_form_mock = Mock()
+    set_unique_id_mock = AsyncMock()
+    abort_if_unique_id_configured_mock = Mock()
+    create_entry_mock = Mock()
+    sleep_mock = AsyncMock()
+
+    config_flow = ConfigFlow()
+    config_flow.async_show_form = show_form_mock
+    config_flow.async_set_unique_id = set_unique_id_mock
+    config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
+    config_flow.async_create_entry = create_entry_mock
+
+    client.wait_for_response = AsyncMock(return_value={"mac_address": "test"})
+
+    with patch("pyaprilaire.client.AprilaireClient", return_value=client), patch(
+        "asyncio.sleep", new=sleep_mock
+    ):
+        await config_flow.async_step_user(
+            {
+                "host": "localhost",
+                "port": 7000,
+            }
+        )
+
+    client.start_listen.assert_called_once()
+    client.wait_for_response.assert_called_once_with(
+        FunctionalDomain.IDENTIFICATION, 2, 30
+    )
+    client.stop_listen.assert_called_once()
+    sleep_mock.assert_awaited_once()
+
+    create_entry_mock.assert_called_once_with(
+        title="Aprilaire",
+        data={
+            "host": "localhost",
+            "port": 7000,
+        },
+    )

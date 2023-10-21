@@ -71,6 +71,7 @@ def hass(coordinator: AprilaireCoordinator, entry_id: str) -> HomeAssistant:
     hass_mock.config_entries = AsyncMock(ConfigEntries)
     hass_mock.bus = AsyncMock(EventBus)
     hass_mock.config = Mock(Config)
+    hass_mock.config.units = METRIC_SYSTEM
 
     return hass_mock
 
@@ -261,6 +262,18 @@ def test_current_temperature(
     }
 
     assert climate.current_temperature == 20
+
+
+def test_corrected_current_temperature(
+    climate: AprilaireClimate, coordinator: AprilaireCoordinator
+):
+    climate.hass.config.units = US_CUSTOMARY_SYSTEM
+
+    coordinator.data = {
+        "indoor_temperature_controlling_sensor_value": 22.5,
+    }
+
+    assert climate.current_temperature > 22.5
 
 
 def test_current_humidity(climate: AprilaireClimate, coordinator: AprilaireCoordinator):

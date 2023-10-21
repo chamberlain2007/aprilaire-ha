@@ -56,6 +56,7 @@ def hass(coordinator: AprilaireCoordinator, entry_id: str) -> HomeAssistant:
     hass_mock.config_entries = AsyncMock(ConfigEntries)
     hass_mock.bus = AsyncMock(EventBus)
     hass_mock.config = Mock(Config)
+    hass_mock.config.units = METRIC_SYSTEM
 
     return hass_mock
 
@@ -209,6 +210,7 @@ async def test_indoor_temperature_controlling_sensor(
     assert len(sensors_list) == 1
 
     sensor = sensors_list[0][0]
+    sensor.hass = hass
 
     assert isinstance(sensor, AprilaireIndoorTemperatureControllingSensor)
 
@@ -245,6 +247,7 @@ async def test_outdoor_temperature_controlling_sensor(
     assert len(sensors_list) == 1
 
     sensor = sensors_list[0][0]
+    sensor.hass = hass
 
     assert isinstance(sensor, AprilaireOutdoorTemperatureControllingSensor)
 
@@ -262,6 +265,7 @@ async def test_outdoor_temperature_controlling_sensor(
 
 def test_indoor_temperature_controlling_sensor_fahrenheit(
     coordinator: AprilaireCoordinator,
+    hass: HomeAssistant,
 ):
     test_value = 25
 
@@ -273,6 +277,7 @@ def test_indoor_temperature_controlling_sensor_fahrenheit(
     sensor = AprilaireIndoorTemperatureControllingSensor(coordinator)
     sensor._attr_available = True
     sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
+    sensor.hass = hass
 
     assert sensor.device_class == SensorDeviceClass.TEMPERATURE
     assert sensor.state_class == SensorStateClass.MEASUREMENT
@@ -285,7 +290,7 @@ def test_indoor_temperature_controlling_sensor_fahrenheit(
 
 
 def test_outdoor_temperature_controlling_sensor_fahrenheit(
-    coordinator: AprilaireCoordinator,
+    coordinator: AprilaireCoordinator, hass: HomeAssistant
 ):
     test_value = 25
 
@@ -297,6 +302,7 @@ def test_outdoor_temperature_controlling_sensor_fahrenheit(
     sensor = AprilaireOutdoorTemperatureControllingSensor(coordinator)
     sensor._attr_available = True
     sensor._sensor_option_unit_of_measurement = TEMP_FAHRENHEIT
+    sensor.hass = hass
 
     assert sensor.device_class == SensorDeviceClass.TEMPERATURE
     assert sensor.state_class == SensorStateClass.MEASUREMENT

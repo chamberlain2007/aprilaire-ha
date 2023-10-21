@@ -1,10 +1,20 @@
+from math import ceil, floor
+
 from homeassistant.const import UnitOfTemperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 
-def correct_temperature_value(
+def convert_temperature_if_needed(
     temperature_unit: UnitOfTemperature, temperature: float
 ) -> float:
-    if temperature and temperature_unit == UnitOfTemperature.FAHRENHEIT:
-        temperature = (round(temperature * 9 / 5 + 32 + 0.01) - 32) / 9 * 5
+    if temperature is not None and temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        raw_fahrenheit = TemperatureConverter.convert(
+            temperature, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+        )
+
+        if raw_fahrenheit >= 0:
+            temperature = floor(raw_fahrenheit + 0.5)
+        else:
+            temperature = ceil(raw_fahrenheit - 0.5)
 
     return temperature

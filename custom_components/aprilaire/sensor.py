@@ -22,6 +22,7 @@ from pyaprilaire.const import Attribute
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
+from .util import correct_temperature_value
 
 DEHUMIDIFICATION_STATUS_MAP = {
     0: "Idle",
@@ -238,8 +239,11 @@ class AprilaireIndoorTemperatureControllingSensor(
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
-        return self._coordinator.data.get(
-            Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+        return correct_temperature_value(
+            self.hass.config.units.temperature_unit,
+            self._coordinator.data.get(
+                Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+            ),
         )
 
     @property
@@ -280,8 +284,11 @@ class AprilaireOutdoorTemperatureControllingSensor(
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
-        return self._coordinator.data.get(
-            Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+        return correct_temperature_value(
+            self.hass.config.units.temperature_unit,
+            self._coordinator.data.get(
+                Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+            ),
         )
 
     @property

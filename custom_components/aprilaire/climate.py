@@ -25,6 +25,7 @@ from pyaprilaire.const import Attribute
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
+from .util import correct_temperature_value
 
 FAN_CIRCULATE = "Circulate"
 
@@ -232,8 +233,11 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Get current temperature"""
-        return self._coordinator.data.get(
-            Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+        return correct_temperature_value(
+            self.hass.config.units.temperature_unit,
+            self._coordinator.data.get(
+                Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+            ),
         )
 
     @property
@@ -259,12 +263,18 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Get cool setpoint"""
-        return self._coordinator.data.get(Attribute.COOL_SETPOINT)
+        return correct_temperature_value(
+            self.hass.config.units.temperature_unit,
+            self._coordinator.data.get(Attribute.COOL_SETPOINT),
+        )
 
     @property
     def target_temperature_low(self) -> float | None:
         """Get heat setpoint"""
-        return self._coordinator.data.get(Attribute.HEAT_SETPOINT)
+        return correct_temperature_value(
+            self.hass.config.units.temperature_unit,
+            self._coordinator.data.get(Attribute.HEAT_SETPOINT),
+        )
 
     @property
     def preset_mode(self) -> str | None:

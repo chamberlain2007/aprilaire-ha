@@ -20,11 +20,13 @@ from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTempera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 from pyaprilaire.const import Attribute
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
+from .util import convert_temperature_if_needed
 
 FAN_CIRCULATE = "Circulate"
 
@@ -132,7 +134,10 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
     _attr_min_humidity = 10
     _attr_max_humidity = 50
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    @property
+    def temperature_unit(self) -> str:
+        return self.hass.config.units.temperature_unit
 
     @property
     def precision(self) -> float:
@@ -232,8 +237,11 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Get current temperature"""
-        return self._coordinator.data.get(
-            Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+        return convert_temperature_if_needed(
+            self.hass.config.units.temperature_unit,
+            self._coordinator.data.get(
+                Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
+            ),
         )
 
     @property
@@ -259,12 +267,18 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Get cool setpoint"""
-        return self._coordinator.data.get(Attribute.COOL_SETPOINT)
+        return convert_temperature_if_needed(
+            self.hass.config.units.temperature_unit,
+            self._coordinator.data.get(Attribute.COOL_SETPOINT),
+        )
 
     @property
     def target_temperature_low(self) -> float | None:
         """Get heat setpoint"""
-        return self._coordinator.data.get(Attribute.HEAT_SETPOINT)
+        return convert_temperature_if_needed(
+            self.hass.config.units.temperature_unit,
+            self._coordinator.data.get(Attribute.HEAT_SETPOINT),
+        )
 
     @property
     def preset_mode(self) -> str | None:
@@ -346,6 +360,20 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if cool_setpoint == 0 and heat_setpoint == 0:
             return
+
+        if cool_setpoint != 0:
+            cool_setpoint = TemperatureConverter.convert(
+                cool_setpoint,
+                self.hass.config.units.temperature_unit,
+                UnitOfTemperature.CELSIUS,
+            )
+
+        if heat_setpoint != 0:
+            heat_setpoint = TemperatureConverter.convert(
+                heat_setpoint,
+                self.hass.config.units.temperature_unit,
+                UnitOfTemperature.CELSIUS,
+            )
 
         await self._coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
 

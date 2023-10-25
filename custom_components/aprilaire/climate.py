@@ -20,7 +20,12 @@ from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+<<<<<<< Updated upstream
 from pyaprilaire.const import Attribute
+=======
+from homeassistant.util.unit_conversion import TemperatureConverter
+from pyaprilaire.const import Attribute, FunctionalDomain
+>>>>>>> Stashed changes
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
@@ -416,12 +421,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Triggers an air cleaning event of 3 or 24 hours"""
 
         if self.supported_features & ExtendedClimateEntityFeature.AIR_CLEANING:
+            if Attribute.AIR_CLEANING_MODE not in self._coordinator.data:
+                await self._coordinator.client.wait_for_response(
+                    FunctionalDomain.CONTROL, 6, 30
+                )
+
             current_air_cleaning_mode = self._coordinator.data.get(
                 Attribute.AIR_CLEANING_MODE, 0
             )
-
-            if current_air_cleaning_mode == 0:
-                current_air_cleaning_mode = 2
 
             if event == "3hour":
                 await self._coordinator.client.set_air_cleaning(
@@ -440,6 +447,11 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Cancels an existing air cleaning event"""
 
         if self.supported_features & ExtendedClimateEntityFeature.AIR_CLEANING:
+            if Attribute.AIR_CLEANING_MODE not in self._coordinator.data:
+                await self._coordinator.client.wait_for_response(
+                    FunctionalDomain.CONTROL, 6, 30
+                )
+
             current_air_cleaning_mode = self._coordinator.data.get(
                 Attribute.AIR_CLEANING_MODE, 0
             )
@@ -454,12 +466,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Triggers a fresh air event of 3 or 24 hours"""
 
         if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
+            if Attribute.FRESH_AIR_MODE not in self._coordinator.data:
+                await self._coordinator.client.wait_for_response(
+                    FunctionalDomain.CONTROL, 5, 30
+                )
+
             current_fresh_air_mode = self._coordinator.data.get(
                 Attribute.FRESH_AIR_MODE, 0
             )
-
-            if current_fresh_air_mode == 0:
-                current_fresh_air_mode = 1
 
             if event == "3hour":
                 await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 2)
@@ -474,6 +488,11 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Cancels a existing fresh air event"""
 
         if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
+            if Attribute.FRESH_AIR_MODE not in self._coordinator.data:
+                await self._coordinator.client.wait_for_response(
+                    FunctionalDomain.CONTROL, 5, 30
+                )
+
             current_fresh_air_mode = self._coordinator.data.get(
                 Attribute.FRESH_AIR_MODE, 0
             )

@@ -20,7 +20,8 @@ from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pyaprilaire.const import Attribute
+from homeassistant.util.unit_conversion import TemperatureConverter
+from pyaprilaire.const import Attribute, FunctionalDomain
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
@@ -420,9 +421,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
                 Attribute.AIR_CLEANING_MODE, 0
             )
 
-            if current_air_cleaning_mode == 0:
-                current_air_cleaning_mode = 2
-
             if event == "3hour":
                 await self._coordinator.client.set_air_cleaning(
                     current_air_cleaning_mode, 3
@@ -457,9 +455,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             current_fresh_air_mode = self._coordinator.data.get(
                 Attribute.FRESH_AIR_MODE, 0
             )
-
-            if current_fresh_air_mode == 0:
-                current_fresh_air_mode = 1
 
             if event == "3hour":
                 await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 2)

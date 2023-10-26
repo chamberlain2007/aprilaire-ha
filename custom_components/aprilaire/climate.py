@@ -444,9 +444,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
                 Attribute.AIR_CLEANING_MODE, 0
             )
 
-            if current_air_cleaning_mode == 0:
-                current_air_cleaning_mode = 2
-
             if event == "3hour":
                 await self._coordinator.client.set_air_cleaning(
                     current_air_cleaning_mode, 3
@@ -481,9 +478,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             current_fresh_air_mode = self._coordinator.data.get(
                 Attribute.FRESH_AIR_MODE, 0
             )
-
-            if current_fresh_air_mode == 0:
-                current_fresh_air_mode = 1
 
             if event == "3hour":
                 await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 2)

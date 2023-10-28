@@ -22,7 +22,7 @@ from pyaprilaire.const import Attribute
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
-from .util import correct_temperature_value
+from .util import convert_temperature_if_needed
 
 DEHUMIDIFICATION_STATUS_MAP = {
     0: "Idle",
@@ -204,7 +204,10 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        return self.hass.config.units.temperature_unit
 
     @property
     def suggested_display_precision(self) -> int | None:
@@ -239,7 +242,7 @@ class AprilaireIndoorTemperatureControllingSensor(
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
-        return correct_temperature_value(
+        return convert_temperature_if_needed(
             self.hass.config.units.temperature_unit,
             self._coordinator.data.get(
                 Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
@@ -284,7 +287,7 @@ class AprilaireOutdoorTemperatureControllingSensor(
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
-        return correct_temperature_value(
+        return convert_temperature_if_needed(
             self.hass.config.units.temperature_unit,
             self._coordinator.data.get(
                 Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE

@@ -16,17 +16,17 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
-from pyaprilaire.const import Attribute, FunctionalDomain
+from pyaprilaire.const import Attribute
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
-from .util import correct_temperature_value
+from .util import convert_temperature_if_needed
 
 FAN_CIRCULATE = "Circulate"
 
@@ -134,8 +134,17 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
     _attr_min_humidity = 10
     _attr_max_humidity = 50
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_precision = PRECISION_HALVES
+
+    @property
+    def temperature_unit(self) -> str:
+        return self.hass.config.units.temperature_unit
+
+    @property
+    def precision(self) -> float:
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+            return PRECISION_HALVES
+        else:
+            return PRECISION_WHOLE
 
     @property
     def entity_name(self) -> str:
@@ -228,7 +237,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Get current temperature"""
-        return correct_temperature_value(
+        return convert_temperature_if_needed(
             self.hass.config.units.temperature_unit,
             self._coordinator.data.get(
                 Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
@@ -251,14 +260,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def target_temperature_step(self) -> float | None:
         if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
-            return 0.5
+            return PRECISION_HALVES
         else:
-            return 1
+            return PRECISION_WHOLE
 
     @property
     def target_temperature_high(self) -> float | None:
         """Get cool setpoint"""
-        return correct_temperature_value(
+        return convert_temperature_if_needed(
             self.hass.config.units.temperature_unit,
             self._coordinator.data.get(Attribute.COOL_SETPOINT),
         )
@@ -266,7 +275,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def target_temperature_low(self) -> float | None:
         """Get heat setpoint"""
-        return correct_temperature_value(
+        return convert_temperature_if_needed(
             self.hass.config.units.temperature_unit,
             self._coordinator.data.get(Attribute.HEAT_SETPOINT),
         )
@@ -352,6 +361,20 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         if cool_setpoint == 0 and heat_setpoint == 0:
             return
 
+        if cool_setpoint != 0:
+            cool_setpoint = TemperatureConverter.convert(
+                cool_setpoint,
+                self.hass.config.units.temperature_unit,
+                UnitOfTemperature.CELSIUS,
+            )
+
+        if heat_setpoint != 0:
+            heat_setpoint = TemperatureConverter.convert(
+                heat_setpoint,
+                self.hass.config.units.temperature_unit,
+                UnitOfTemperature.CELSIUS,
+            )
+
         await self._coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
 
         await self._coordinator.client.read_control()
@@ -421,6 +444,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
                 Attribute.AIR_CLEANING_MODE, 0
             )
 
+            if current_air_cleaning_mode == 0:
+                current_air_cleaning_mode = 2
+
             if event == "3hour":
                 await self._coordinator.client.set_air_cleaning(
                     current_air_cleaning_mode, 3
@@ -455,6 +481,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             current_fresh_air_mode = self._coordinator.data.get(
                 Attribute.FRESH_AIR_MODE, 0
             )
+
+            if current_fresh_air_mode == 0:
+                current_fresh_air_mode = 1
 
             if event == "3hour":
                 await self._coordinator.client.set_fresh_air(current_fresh_air_mode, 2)

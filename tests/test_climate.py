@@ -45,7 +45,13 @@ def logger():
 
 @pytest.fixture
 def client() -> AprilaireClient:
-    return AsyncMock(AprilaireClient)
+    client_mock = AsyncMock(AprilaireClient)
+    client_mock.connected = True
+    client_mock.stopped = False
+    client_mock.reconnecting = True
+    client_mock.auto_reconnecting = True
+
+    return client_mock
 
 
 @pytest.fixture

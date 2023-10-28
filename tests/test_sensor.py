@@ -10,6 +10,7 @@ from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import Config, EventBus, HomeAssistant
 from homeassistant.util import uuid as uuid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from pyaprilaire.client import AprilaireClient
 
 from custom_components.aprilaire.const import DOMAIN
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
@@ -36,9 +37,23 @@ def logger():
 
 
 @pytest.fixture
-def coordinator(logger: logging.Logger) -> AprilaireCoordinator:
+def client() -> AprilaireClient:
+    client_mock = AsyncMock(AprilaireClient)
+    client_mock.connected = True
+    client_mock.stopped = False
+    client_mock.reconnecting = True
+    client_mock.auto_reconnecting = True
+
+    return client_mock
+
+
+@pytest.fixture
+def coordinator(
+    client: AprilaireClient, logger: logging.Logger
+) -> AprilaireCoordinator:
     coordinator_mock = AsyncMock(AprilaireCoordinator)
     coordinator_mock.data = {"mac_address": "1:2:3:4:5:6"}
+    coordinator_mock.client = client
     coordinator_mock.logger = logger
 
     return coordinator_mock

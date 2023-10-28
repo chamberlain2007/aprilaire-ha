@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from homeassistant.helpers.entity import DeviceInfo
+from pyaprilaire.client import AprilaireClient
 
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
 from custom_components.aprilaire.entity import BaseAprilaireEntity
@@ -19,9 +20,23 @@ def logger():
 
 
 @pytest.fixture
-def coordinator(logger: logging.Logger) -> AprilaireCoordinator:
+def client() -> AprilaireClient:
+    client_mock = AsyncMock(AprilaireClient)
+    client_mock.connected = True
+    client_mock.stopped = False
+    client_mock.reconnecting = True
+    client_mock.auto_reconnecting = True
+
+    return client_mock
+
+
+@pytest.fixture
+def coordinator(
+    client: AprilaireClient, logger: logging.Logger
+) -> AprilaireCoordinator:
     coordinator_mock = AsyncMock(AprilaireCoordinator)
     coordinator_mock.data = {}
+    coordinator_mock.client = client
     coordinator_mock.logger = logger
 
     return coordinator_mock
@@ -144,6 +159,9 @@ def test_extra_state_attributes(coordinator: AprilaireCoordinator):
     assert entity.extra_state_attributes == {
         "device_name": "Aprilaire",
         "device_location": "Test Location",
+        "connected": True,
+        "reconnecting": True,
+        "auto_reconnecting": True,
     }
 
 

@@ -330,7 +330,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             "fresh_air_event": {2: "3hour", 3: "24hour"}.get(
                 self._coordinator.data.get(Attribute.FRESH_AIR_EVENT), "off"
             ),
-        }
+        } | super().extra_state_attributes
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""

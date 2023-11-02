@@ -90,4 +90,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
         return {
             "device_name": self._coordinator.device_name,
             "device_location": self._coordinator.data.get(Attribute.LOCATION),
+            "connected": self._coordinator.client.connected,
+            "reconnecting": self._coordinator.client.reconnecting,
+            "auto_reconnecting": self._coordinator.client.auto_reconnecting,
         }

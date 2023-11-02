@@ -1,6 +1,6 @@
 [project]
 name = "aprilaire-ha"
-version = "0.7.2b2"
+version = "0.7.2"
 readme = "README.md"
 dependencies = []
 
@@ -18,7 +18,7 @@ dev = [
 ]
 
 [tool.bumpver]
-current_version = "0.7.2b2"
+current_version = "0.7.2"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "Bump version {old_version} -> {new_version}"
 commit = true

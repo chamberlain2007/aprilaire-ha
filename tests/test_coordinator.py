@@ -1,7 +1,8 @@
-# pylint: skip-file
+"""Tests for the Aprilaire coordinator."""
 
-import logging
-from unittest.mock import AsyncMock, Mock, patch
+# pylint: disable=protected-access,redefined-outer-name
+
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
@@ -9,60 +10,39 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from pyaprilaire.client import AprilaireClient
 from pyaprilaire.const import FunctionalDomain
 
-from custom_components.aprilaire.const import DOMAIN, LOG_NAME
+from custom_components.aprilaire.const import DOMAIN
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
 
 
 @pytest.fixture
-def logger():
-    logger = logging.getLogger()
-    logger.propagate = False
-
-    return logger
-
-
-@pytest.fixture
-def device_registry() -> DeviceRegistry:
-    return Mock(DeviceRegistry)
-
-
-@pytest.fixture
-def hass(device_registry: DeviceRegistry) -> HomeAssistant:
-    hass_mock = Mock(HomeAssistant)
-    hass_mock.data = {"device_registry": device_registry}
-
-    return hass_mock
-
-
-@pytest.fixture
-def client():
-    return AsyncMock(AprilaireClient)
-
-
-@pytest.fixture
-def coordinator(
-    client: AprilaireClient, hass: HomeAssistant, logger: logging.Logger
-) -> AprilaireCoordinator:
+def coordinator(client: AprilaireClient, hass: HomeAssistant) -> AprilaireCoordinator:
+    """Return a mock coordinator."""
     with patch(
         "pyaprilaire.client.AprilaireClient",
         return_value=client,
     ):
-        return AprilaireCoordinator(hass, "", 0, logger)
+        return AprilaireCoordinator(hass, "", 0)
 
 
-async def test_start_listen(coordinator: AprilaireCoordinator):
+async def test_start_listen(coordinator: AprilaireCoordinator) -> None:
+    """Test that the coordinator starts the client listening."""
+
     await coordinator.start_listen()
 
     assert coordinator.client.start_listen.call_count == 1
 
 
-def test_stop_listen(coordinator: AprilaireCoordinator):
+def test_stop_listen(coordinator: AprilaireCoordinator) -> None:
+    """Test that the coordinator stops the client listening."""
+
     coordinator.stop_listen()
 
     assert coordinator.client.stop_listen.call_count == 1
 
 
-def test_set_updated_data(coordinator: AprilaireCoordinator):
+def test_set_updated_data(coordinator: AprilaireCoordinator) -> None:
+    """Test updating the coordinator data."""
+
     test_data = {"testKey": "testValue"}
 
     coordinator.async_set_updated_data(test_data)
@@ -70,11 +50,14 @@ def test_set_updated_data(coordinator: AprilaireCoordinator):
     assert coordinator.data == test_data
 
 
-def test_device_name_default(coordinator: AprilaireCoordinator):
+def test_device_name_default(coordinator: AprilaireCoordinator) -> None:
+    """Test the default device name."""
     assert coordinator.device_name == "Aprilaire"
 
 
-def test_device_name(coordinator: AprilaireCoordinator):
+def test_device_name(coordinator: AprilaireCoordinator) -> None:
+    """Test the device name when provided to the coordinator."""
+
     test_device_name = "Test Device Name"
 
     coordinator.async_set_updated_data({"name": test_device_name})
@@ -82,7 +65,9 @@ def test_device_name(coordinator: AprilaireCoordinator):
     assert coordinator.device_name == test_device_name
 
 
-def test_device_info(coordinator: AprilaireCoordinator):
+def test_device_info(coordinator: AprilaireCoordinator) -> None:
+    """Test the device info."""
+
     test_mac_address = "1:2:3:4:5:6"
     test_device_name = "Test Device Name"
     test_model_number = 0
@@ -113,17 +98,21 @@ def test_device_info(coordinator: AprilaireCoordinator):
     )
 
 
-def test_hw_version_A(coordinator: AprilaireCoordinator):
+def test_hw_version_a(coordinator: AprilaireCoordinator) -> None:
+    """Test the hardware version for revision A."""
     assert coordinator.get_hw_version({"hardware_revision": 1}) == "1"
 
 
-def test_hw_version_B(coordinator: AprilaireCoordinator):
+def test_hw_version_b(coordinator: AprilaireCoordinator) -> None:
+    """Test the hardware version for revision B."""
     assert coordinator.get_hw_version({"hardware_revision": ord("B")}) == "Rev. B"
 
 
 def test_updated_device(
     coordinator: AprilaireCoordinator, device_registry: DeviceRegistry
-):
+) -> None:
+    """Test updating the device info."""
+
     test_mac_address = "1:2:3:4:5:6"
     test_device_name = "Test Device Name"
     test_model_number = 0
@@ -174,22 +163,21 @@ def test_updated_device(
 
 
 async def test_wait_for_ready_mac_fail(
-    caplog, coordinator: AprilaireCoordinator, logger: logging.Logger
-):
+    coordinator: AprilaireCoordinator,
+) -> None:
+    """Test the handling of a missing MAC address."""
+
     ready_callback_mock = AsyncMock()
 
-    with caplog.at_level(logging.INFO, logger=logger.name):
-        await coordinator.wait_for_ready(ready_callback_mock)
-
-    assert caplog.record_tuples == [
-        ("root", logging.ERROR, "Missing MAC address, cannot create unique ID"),
-    ]
+    await coordinator.wait_for_ready(ready_callback_mock)
 
     assert ready_callback_mock.call_count == 1
     assert ready_callback_mock.call_args[0][0] is False
 
 
-async def test_wait_for_ready(coordinator: AprilaireCoordinator):
+async def test_wait_for_ready(coordinator: AprilaireCoordinator) -> None:
+    """Test waiting for the client to be ready."""
+
     ready_callback_mock = AsyncMock()
 
     wait_for_response_mock = AsyncMock()

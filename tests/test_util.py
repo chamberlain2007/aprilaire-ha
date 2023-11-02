@@ -1,3 +1,5 @@
+"""Tests for Aprilaire utilities."""
+
 from homeassistant.const import UnitOfTemperature
 
 from custom_components.aprilaire.util import convert_temperature_if_needed
@@ -198,11 +200,15 @@ CONVERSION_MAP = [
 
 
 def test_celsius_conversion():
+    """Test that conversions for celsius values are correct."""
+
     assert convert_temperature_if_needed(UnitOfTemperature.CELSIUS, None) is None
     assert convert_temperature_if_needed(UnitOfTemperature.CELSIUS, 0) == 0
 
 
 def test_fahrenheit_conversion():
+    """Test that conversions for fahrenheit values are correct."""
+
     for conversion in CONVERSION_MAP:
         assert (
             convert_temperature_if_needed(UnitOfTemperature.FAHRENHEIT, conversion[0])

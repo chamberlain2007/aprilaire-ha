@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 from pyaprilaire.const import Attribute
 
 from .const import DOMAIN
@@ -64,7 +63,7 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in HA."""
 
-    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
 
     entities = []
 
@@ -125,7 +124,7 @@ class AprilaireIndoorHumidityControllingSensor(
         """Return True if entity is available."""
         return (
             super().available
-            and self._coordinator.data.get(
+            and self.coordinator.data.get(
                 Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_STATUS
             )
             == 0
@@ -139,7 +138,7 @@ class AprilaireIndoorHumidityControllingSensor(
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
-        return self._coordinator.data.get(
+        return self.coordinator.data.get(
             Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE
         )
 
@@ -148,10 +147,10 @@ class AprilaireIndoorHumidityControllingSensor(
         """Return entity specific state attributes."""
 
         return super().extra_state_attributes | {
-            "status": self._coordinator.data.get(
+            "status": self.coordinator.data.get(
                 Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_STATUS
             ),
-            "raw_sensor_value": self._coordinator.data.get(
+            "raw_sensor_value": self.coordinator.data.get(
                 Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE
             ),
         }
@@ -167,7 +166,7 @@ class AprilaireOutdoorHumidityControllingSensor(
         """Return True if entity is available."""
         return (
             super().available
-            and self._coordinator.data.get(
+            and self.coordinator.data.get(
                 Attribute.OUTDOOR_HUMIDITY_CONTROLLING_SENSOR_STATUS
             )
             == 0
@@ -181,7 +180,7 @@ class AprilaireOutdoorHumidityControllingSensor(
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
-        return self._coordinator.data.get(
+        return self.coordinator.data.get(
             Attribute.OUTDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE
         )
 
@@ -190,10 +189,10 @@ class AprilaireOutdoorHumidityControllingSensor(
         """Return entity specific state attributes."""
 
         return super().extra_state_attributes | {
-            "status": self._coordinator.data.get(
+            "status": self.coordinator.data.get(
                 Attribute.OUTDOOR_HUMIDITY_CONTROLLING_SENSOR_STATUS
             ),
-            "raw_sensor_value": self._coordinator.data.get(
+            "raw_sensor_value": self.coordinator.data.get(
                 Attribute.OUTDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE
             ),
         }
@@ -204,6 +203,11 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def entity_name(self) -> str | None:
+        """Return the entity name"""
+        return "Floop"
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -228,7 +232,7 @@ class AprilaireIndoorTemperatureControllingSensor(
         """Return True if entity is available."""
         return (
             super().available
-            and self._coordinator.data.get(
+            and self.coordinator.data.get(
                 Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS
             )
             == 0
@@ -244,7 +248,7 @@ class AprilaireIndoorTemperatureControllingSensor(
         """Return the value reported by the sensor."""
         return convert_temperature_if_needed(
             self.hass.config.units.temperature_unit,
-            self._coordinator.data.get(
+            self.coordinator.data.get(
                 Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
             ),
         )
@@ -254,10 +258,10 @@ class AprilaireIndoorTemperatureControllingSensor(
         """Return entity specific state attributes."""
 
         return super().extra_state_attributes | {
-            "status": self._coordinator.data.get(
+            "status": self.coordinator.data.get(
                 Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS
             ),
-            "raw_sensor_value": self._coordinator.data.get(
+            "raw_sensor_value": self.coordinator.data.get(
                 Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
             ),
         }
@@ -273,7 +277,7 @@ class AprilaireOutdoorTemperatureControllingSensor(
         """Return True if entity is available."""
         return (
             super().available
-            and self._coordinator.data.get(
+            and self.coordinator.data.get(
                 Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS
             )
             == 0
@@ -289,7 +293,7 @@ class AprilaireOutdoorTemperatureControllingSensor(
         """Return the value reported by the sensor."""
         return convert_temperature_if_needed(
             self.hass.config.units.temperature_unit,
-            self._coordinator.data.get(
+            self.coordinator.data.get(
                 Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
             ),
         )
@@ -299,10 +303,10 @@ class AprilaireOutdoorTemperatureControllingSensor(
         """Return entity specific state attributes."""
 
         return super().extra_state_attributes | {
-            "status": self._coordinator.data.get(
+            "status": self.coordinator.data.get(
                 Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS
             ),
-            "raw_sensor_value": self._coordinator.data.get(
+            "raw_sensor_value": self.coordinator.data.get(
                 Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
             ),
         }
@@ -316,7 +320,7 @@ class AprilaireDehumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
         """Return True if entity is available."""
         return (
             super().available
-            and Attribute.DEHUMIDIFICATION_STATUS in self._coordinator.data
+            and Attribute.DEHUMIDIFICATION_STATUS in self.coordinator.data
         )
 
     @property
@@ -328,7 +332,7 @@ class AprilaireDehumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
 
-        dehumidification_status = self._coordinator.data.get(
+        dehumidification_status = self.coordinator.data.get(
             Attribute.DEHUMIDIFICATION_STATUS
         )
 
@@ -348,7 +352,7 @@ class AprilaireHumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
         """Return True if entity is available."""
         return (
             super().available
-            and Attribute.HUMIDIFICATION_STATUS in self._coordinator.data
+            and Attribute.HUMIDIFICATION_STATUS in self.coordinator.data
         )
 
     @property
@@ -360,7 +364,7 @@ class AprilaireHumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
 
-        humidification_status = self._coordinator.data.get(
+        humidification_status = self.coordinator.data.get(
             Attribute.HUMIDIFICATION_STATUS
         )
 
@@ -379,7 +383,7 @@ class AprilaireVentilationStatusSensor(BaseAprilaireEntity, SensorEntity):
     def available(self):
         """Return True if entity is available."""
         return (
-            super().available and Attribute.VENTILATION_STATUS in self._coordinator.data
+            super().available and Attribute.VENTILATION_STATUS in self.coordinator.data
         )
 
     @property
@@ -391,7 +395,7 @@ class AprilaireVentilationStatusSensor(BaseAprilaireEntity, SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
 
-        ventilation_status = self._coordinator.data.get(Attribute.VENTILATION_STATUS)
+        ventilation_status = self.coordinator.data.get(Attribute.VENTILATION_STATUS)
 
         if ventilation_status_value := VENTILATION_STATUS_MAP.get(ventilation_status):
             return ventilation_status_value
@@ -406,8 +410,7 @@ class AprilaireAirCleaningStatusSensor(BaseAprilaireEntity, SensorEntity):
     def available(self):
         """Return True if entity is available."""
         return (
-            super().available
-            and Attribute.AIR_CLEANING_STATUS in self._coordinator.data
+            super().available and Attribute.AIR_CLEANING_STATUS in self.coordinator.data
         )
 
     @property
@@ -419,7 +422,7 @@ class AprilaireAirCleaningStatusSensor(BaseAprilaireEntity, SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
 
-        air_cleaning_status = self._coordinator.data.get(Attribute.AIR_CLEANING_STATUS)
+        air_cleaning_status = self.coordinator.data.get(Attribute.AIR_CLEANING_STATUS)
 
         if air_cleaning_status_value := AIR_CLEANING_STATUS_MAP.get(
             air_cleaning_status

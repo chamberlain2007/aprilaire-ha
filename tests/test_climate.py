@@ -812,22 +812,26 @@ async def test_trigger_air_cleaning_event(
     with pytest.raises(ValueError):
         await climate.async_trigger_air_cleaning_event("3hour")
 
-    coordinator.data["air_cleaning_available"] = 1
+    coordinator.data[Attribute.AIR_CLEANING_AVAILABLE] = 1
+    coordinator.data[Attribute.AIR_CLEANING_MODE] = 1
 
     await climate.async_trigger_air_cleaning_event("3hour")
 
-    client.set_air_cleaning.assert_called_with(2, 3)
+    client.set_air_cleaning.assert_called_with(1, 3)
+    assert coordinator.data[Attribute.AIR_CLEANING_MODE] == 1
     client.reset_mock()
 
     await climate.async_trigger_air_cleaning_event("24hour")
 
-    client.set_air_cleaning.assert_called_with(2, 4)
+    client.set_air_cleaning.assert_called_with(1, 4)
+    assert coordinator.data[Attribute.AIR_CLEANING_MODE] == 1
     client.reset_mock()
 
     with pytest.raises(ValueError):
         await climate.async_trigger_air_cleaning_event("bad")
 
     client.set_air_cleaning.assert_not_called()
+    assert coordinator.data[Attribute.AIR_CLEANING_MODE] == 1
     client.reset_mock()
 
 
@@ -839,11 +843,13 @@ async def test_cancel_air_cleaning_event(
     with pytest.raises(ValueError):
         await climate.async_cancel_air_cleaning_event()
 
-    coordinator.data["air_cleaning_available"] = 1
+    coordinator.data[Attribute.AIR_CLEANING_AVAILABLE] = 1
+    coordinator.data[Attribute.AIR_CLEANING_MODE] = 2
 
     await climate.async_cancel_air_cleaning_event()
 
-    client.set_air_cleaning.assert_called_with(0, 0)
+    client.set_air_cleaning.assert_called_with(2, 0)
+    assert coordinator.data[Attribute.AIR_CLEANING_MODE] == 2
 
 
 async def test_trigger_fresh_air_event(
@@ -854,22 +860,26 @@ async def test_trigger_fresh_air_event(
     with pytest.raises(ValueError):
         await climate.async_trigger_fresh_air_event("3hour")
 
-    coordinator.data["ventilation_available"] = 1
+    coordinator.data[Attribute.VENTILATION_AVAILABLE] = 1
+    coordinator.data[Attribute.FRESH_AIR_MODE] = 2
 
     await climate.async_trigger_fresh_air_event("3hour")
+    client.set_fresh_air.assert_called_with(2, 2)
+    assert coordinator.data[Attribute.FRESH_AIR_MODE] == 2
 
-    client.set_fresh_air.assert_called_with(1, 2)
     client.reset_mock()
 
     await climate.async_trigger_fresh_air_event("24hour")
 
-    client.set_fresh_air.assert_called_with(1, 3)
+    client.set_fresh_air.assert_called_with(2, 3)
+    assert coordinator.data[Attribute.FRESH_AIR_MODE] == 2
     client.reset_mock()
 
     with pytest.raises(ValueError):
         await climate.async_trigger_fresh_air_event("bad")
 
     client.set_fresh_air.assert_not_called()
+    assert coordinator.data[Attribute.FRESH_AIR_MODE] == 2
     client.reset_mock()
 
 
@@ -881,8 +891,10 @@ async def test_cancel_fresh_air_event(
     with pytest.raises(ValueError):
         await climate.async_cancel_fresh_air_event()
 
-    coordinator.data["ventilation_available"] = 1
+    coordinator.data[Attribute.VENTILATION_AVAILABLE] = 1
+    coordinator.data[Attribute.FRESH_AIR_MODE] = 2
 
     await climate.async_cancel_fresh_air_event()
 
-    client.set_fresh_air.assert_called_with(0, 0)
+    client.set_fresh_air.assert_called_with(2, 0)
+    assert coordinator.data[Attribute.FRESH_AIR_MODE] == 2

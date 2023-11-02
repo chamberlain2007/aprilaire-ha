@@ -136,7 +136,7 @@ platformdirs==3.0.0
     # via black
 pluggy==1.0.0
     # via pytest
-pyaprilaire==0.7.1
+pyaprilaire==0.7.2
     # via aprilaire-ha (pyproject.toml)
 pycparser==2.21
     # via cffi

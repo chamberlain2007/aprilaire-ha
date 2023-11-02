@@ -8,7 +8,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from pyaprilaire.client import AprilaireClient
-from pyaprilaire.const import FunctionalDomain
+from pyaprilaire.const import Attribute, FunctionalDomain
 
 from custom_components.aprilaire.const import DOMAIN
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
@@ -60,7 +60,7 @@ def test_device_name(coordinator: AprilaireCoordinator) -> None:
 
     test_device_name = "Test Device Name"
 
-    coordinator.async_set_updated_data({"name": test_device_name})
+    coordinator.async_set_updated_data({Attribute.NAME: test_device_name})
 
     assert coordinator.device_name == test_device_name
 
@@ -77,12 +77,12 @@ def test_device_info(coordinator: AprilaireCoordinator) -> None:
 
     coordinator.async_set_updated_data(
         {
-            "mac_address": test_mac_address,
-            "name": test_device_name,
-            "model_number": test_model_number,
-            "hardware_revision": test_hardware_revision,
-            "firmware_major_revision": test_firmware_major_revision,
-            "firmware_minor_revision": test_firmware_minor_revision,
+            Attribute.MAC_ADDRESS: test_mac_address,
+            Attribute.NAME: test_device_name,
+            Attribute.MODEL_NUMBER: test_model_number,
+            Attribute.HARDWARE_REVISION: test_hardware_revision,
+            Attribute.FIRMWARE_MAJOR_REVISION: test_firmware_major_revision,
+            Attribute.FIRMWARE_MINOR_REVISION: test_firmware_minor_revision,
         }
     )
 
@@ -105,12 +105,14 @@ def test_no_hw_version(coordinator: AprilaireCoordinator) -> None:
 
 def test_hw_version_a(coordinator: AprilaireCoordinator) -> None:
     """Test the hardware version for revision A."""
-    assert coordinator.get_hw_version({"hardware_revision": 1}) == "1"
+    assert coordinator.get_hw_version({Attribute.HARDWARE_REVISION: 1}) == "1"
 
 
 def test_hw_version_b(coordinator: AprilaireCoordinator) -> None:
     """Test the hardware version for revision B."""
-    assert coordinator.get_hw_version({"hardware_revision": ord("B")}) == "Rev. B"
+    assert (
+        coordinator.get_hw_version({Attribute.HARDWARE_REVISION: ord("B")}) == "Rev. B"
+    )
 
 
 def test_updated_device(
@@ -134,23 +136,23 @@ def test_updated_device(
 
     coordinator.async_set_updated_data(
         {
-            "mac_address": test_mac_address,
-            "name": test_device_name,
-            "model_number": test_model_number,
-            "hardware_revision": test_hardware_revision,
-            "firmware_major_revision": test_firmware_major_revision,
-            "firmware_minor_revision": test_firmware_minor_revision,
+            Attribute.MAC_ADDRESS: test_mac_address,
+            Attribute.NAME: test_device_name,
+            Attribute.MODEL_NUMBER: test_model_number,
+            Attribute.HARDWARE_REVISION: test_hardware_revision,
+            Attribute.FIRMWARE_MAJOR_REVISION: test_firmware_major_revision,
+            Attribute.FIRMWARE_MINOR_REVISION: test_firmware_minor_revision,
         }
     )
 
     coordinator.async_set_updated_data(
         {
-            "mac_address": test_new_mac_address,
-            "name": test_new_device_name,
-            "model_number": test_new_model_number,
-            "hardware_revision": test_new_hardware_revision,
-            "firmware_major_revision": test_new_firmware_major_revision,
-            "firmware_minor_revision": test_new_firmware_minor_revision,
+            Attribute.MAC_ADDRESS: test_new_mac_address,
+            Attribute.NAME: test_new_device_name,
+            Attribute.MODEL_NUMBER: test_new_model_number,
+            Attribute.HARDWARE_REVISION: test_new_hardware_revision,
+            Attribute.FIRMWARE_MAJOR_REVISION: test_new_firmware_major_revision,
+            Attribute.FIRMWARE_MINOR_REVISION: test_new_firmware_minor_revision,
         }
     )
 
@@ -186,7 +188,7 @@ async def test_wait_for_ready(coordinator: AprilaireCoordinator) -> None:
     ready_callback_mock = AsyncMock()
 
     wait_for_response_mock = AsyncMock()
-    wait_for_response_mock.return_value = {"mac_address": "1:2:3:4:5:6"}
+    wait_for_response_mock.return_value = {Attribute.MAC_ADDRESS: "1:2:3:4:5:6"}
 
     coordinator.client.wait_for_response = wait_for_response_mock
 

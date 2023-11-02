@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from pyaprilaire.const import Attribute
 
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
 from custom_components.aprilaire.sensor import (
@@ -89,8 +90,8 @@ async def test_indoor_humidity_controlling_sensor(
     test_value = 50
 
     coordinator.data = {
-        "indoor_humidity_controlling_sensor_status": 0,
-        "indoor_humidity_controlling_sensor_value": test_value,
+        Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_STATUS: 0,
+        Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE: test_value,
     }
 
     async_add_entities_mock = Mock()
@@ -127,8 +128,8 @@ async def test_outdoor_humidity_controlling_sensor(
     test_value = 50
 
     coordinator.data = {
-        "outdoor_humidity_controlling_sensor_status": 0,
-        "outdoor_humidity_controlling_sensor_value": test_value,
+        Attribute.OUTDOOR_HUMIDITY_CONTROLLING_SENSOR_STATUS: 0,
+        Attribute.OUTDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE: test_value,
     }
 
     async_add_entities_mock = Mock()
@@ -165,8 +166,8 @@ async def test_indoor_temperature_controlling_sensor(
     test_value = 25
 
     coordinator.data = {
-        "indoor_temperature_controlling_sensor_status": 0,
-        "indoor_temperature_controlling_sensor_value": test_value,
+        Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS: 0,
+        Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE: test_value,
     }
 
     async_add_entities_mock = Mock()
@@ -204,8 +205,8 @@ async def test_outdoor_temperature_controlling_sensor(
     test_value = 25
 
     coordinator.data = {
-        "outdoor_temperature_controlling_sensor_status": 0,
-        "outdoor_temperature_controlling_sensor_value": test_value,
+        Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS: 0,
+        Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE: test_value,
     }
 
     async_add_entities_mock = Mock()
@@ -242,8 +243,8 @@ def test_indoor_temperature_controlling_sensor_fahrenheit(
     test_value = 25
 
     coordinator.data = {
-        "indoor_temperature_controlling_sensor_status": 0,
-        "indoor_temperature_controlling_sensor_value": test_value,
+        Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS: 0,
+        Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE: test_value,
     }
 
     sensor = AprilaireIndoorTemperatureControllingSensor(coordinator)
@@ -269,8 +270,8 @@ def test_outdoor_temperature_controlling_sensor_fahrenheit(
     test_value = 25
 
     coordinator.data = {
-        "outdoor_temperature_controlling_sensor_status": 0,
-        "outdoor_temperature_controlling_sensor_value": test_value,
+        Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS: 0,
+        Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE: test_value,
     }
 
     sensor = AprilaireOutdoorTemperatureControllingSensor(coordinator)
@@ -294,7 +295,7 @@ async def test_dehumidification_available(
     """Test the dehumidification status sensor."""
 
     coordinator.data = {
-        "dehumidification_available": 1,
+        Attribute.DEHUMIDIFICATION_AVAILABLE: 1,
     }
 
     async_add_entities_mock = Mock()
@@ -316,7 +317,7 @@ def test_dehumidification_status_sensor_0(
     """Test the dehumidification status sensor with status 0."""
 
     coordinator.data = {
-        "dehumidification_status": 0,
+        Attribute.DEHUMIDIFICATION_STATUS: 0,
     }
 
     sensor = AprilaireDehumidificationStatusSensor(coordinator)
@@ -333,7 +334,7 @@ def test_dehumidification_status_sensor_1(
     """Test the dehumidification status sensor with status 1."""
 
     coordinator.data = {
-        "dehumidification_status": 1,
+        Attribute.DEHUMIDIFICATION_STATUS: 1,
     }
 
     sensor = AprilaireDehumidificationStatusSensor(coordinator)
@@ -350,7 +351,7 @@ def test_dehumidification_status_sensor_2(
     """Test the dehumidification status sensor with status 2."""
 
     coordinator.data = {
-        "dehumidification_status": 2,
+        Attribute.DEHUMIDIFICATION_STATUS: 2,
     }
 
     sensor = AprilaireDehumidificationStatusSensor(coordinator)
@@ -367,7 +368,7 @@ def test_dehumidification_status_sensor_3(
     """Test the dehumidification status sensor with status 3."""
 
     coordinator.data = {
-        "dehumidification_status": 3,
+        Attribute.DEHUMIDIFICATION_STATUS: 3,
     }
 
     sensor = AprilaireDehumidificationStatusSensor(coordinator)
@@ -384,7 +385,7 @@ def test_dehumidification_status_sensor_4(
     """Test the dehumidification status sensor with status 4."""
 
     coordinator.data = {
-        "dehumidification_status": 4,
+        Attribute.DEHUMIDIFICATION_STATUS: 4,
     }
 
     sensor = AprilaireDehumidificationStatusSensor(coordinator)
@@ -401,7 +402,7 @@ def test_dehumidification_status_sensor_5(
     """Test the dehumidification status sensor with status 5."""
 
     coordinator.data = {
-        "dehumidification_status": 5,
+        Attribute.DEHUMIDIFICATION_STATUS: 5,
     }
 
     sensor = AprilaireDehumidificationStatusSensor(coordinator)
@@ -418,7 +419,7 @@ async def test_humidification_available(
     """Test the humidification status sensor."""
 
     coordinator.data = {
-        "humidification_available": 1,
+        Attribute.HUMIDIFICATION_AVAILABLE: 1,
     }
 
     async_add_entities_mock = Mock()
@@ -440,7 +441,7 @@ def test_humidification_status_sensor_0(
     """Test the humidification status sensor with status 0."""
 
     coordinator.data = {
-        "humidification_status": 0,
+        Attribute.HUMIDIFICATION_STATUS: 0,
     }
 
     sensor = AprilaireHumidificationStatusSensor(coordinator)
@@ -457,7 +458,7 @@ def test_humidification_status_sensor_1(
     """Test the humidification status sensor with status 1."""
 
     coordinator.data = {
-        "humidification_status": 1,
+        Attribute.HUMIDIFICATION_STATUS: 1,
     }
 
     sensor = AprilaireHumidificationStatusSensor(coordinator)
@@ -474,7 +475,7 @@ def test_humidification_status_sensor_2(
     """Test the humidification status sensor with status 2."""
 
     coordinator.data = {
-        "humidification_status": 2,
+        Attribute.HUMIDIFICATION_STATUS: 2,
     }
 
     sensor = AprilaireHumidificationStatusSensor(coordinator)
@@ -491,7 +492,7 @@ def test_humidification_status_sensor_3(
     """Test the humidification status sensor with status 3."""
 
     coordinator.data = {
-        "humidification_status": 3,
+        Attribute.HUMIDIFICATION_STATUS: 3,
     }
 
     sensor = AprilaireHumidificationStatusSensor(coordinator)
@@ -508,7 +509,7 @@ def test_humidification_status_sensor_4(
     """Test the humidification status sensor with status 4."""
 
     coordinator.data = {
-        "humidification_status": 4,
+        Attribute.HUMIDIFICATION_STATUS: 4,
     }
 
     sensor = AprilaireHumidificationStatusSensor(coordinator)
@@ -525,7 +526,7 @@ async def test_ventilation_available(
     """Test the ventilation status sensor."""
 
     coordinator.data = {
-        "ventilation_available": 1,
+        Attribute.VENTILATION_AVAILABLE: 1,
     }
 
     async_add_entities_mock = Mock()
@@ -547,7 +548,7 @@ def test_ventilation_status_sensor_0(
     """Test the ventilation status sensor with status 0."""
 
     coordinator.data = {
-        "ventilation_status": 0,
+        Attribute.VENTILATION_STATUS: 0,
     }
 
     sensor = AprilaireVentilationStatusSensor(coordinator)
@@ -564,7 +565,7 @@ def test_ventilation_status_sensor_1(
     """Test the ventilation status sensor with status 1."""
 
     coordinator.data = {
-        "ventilation_status": 1,
+        Attribute.VENTILATION_STATUS: 1,
     }
 
     sensor = AprilaireVentilationStatusSensor(coordinator)
@@ -581,7 +582,7 @@ def test_ventilation_status_sensor_2(
     """Test the ventilation status sensor with status 2."""
 
     coordinator.data = {
-        "ventilation_status": 2,
+        Attribute.VENTILATION_STATUS: 2,
     }
 
     sensor = AprilaireVentilationStatusSensor(coordinator)
@@ -598,7 +599,7 @@ def test_ventilation_status_sensor_3(
     """Test the ventilation status sensor with status 3."""
 
     coordinator.data = {
-        "ventilation_status": 3,
+        Attribute.VENTILATION_STATUS: 3,
     }
 
     sensor = AprilaireVentilationStatusSensor(coordinator)
@@ -615,7 +616,7 @@ def test_ventilation_status_sensor_4(
     """Test the ventilation status sensor with status 4."""
 
     coordinator.data = {
-        "ventilation_status": 4,
+        Attribute.VENTILATION_STATUS: 4,
     }
 
     sensor = AprilaireVentilationStatusSensor(coordinator)
@@ -632,7 +633,7 @@ def test_ventilation_status_sensor_5(
     """Test the ventilation status sensor with status 5."""
 
     coordinator.data = {
-        "ventilation_status": 5,
+        Attribute.VENTILATION_STATUS: 5,
     }
 
     sensor = AprilaireVentilationStatusSensor(coordinator)
@@ -649,7 +650,7 @@ def test_ventilation_status_sensor_6(
     """Test the ventilation status sensor with status 6."""
 
     coordinator.data = {
-        "ventilation_status": 6,
+        Attribute.VENTILATION_STATUS: 6,
     }
 
     sensor = AprilaireVentilationStatusSensor(coordinator)
@@ -666,7 +667,7 @@ def test_ventilation_status_sensor_7(
     """Test the ventilation status sensor with status 7."""
 
     coordinator.data = {
-        "ventilation_status": 7,
+        Attribute.VENTILATION_STATUS: 7,
     }
 
     sensor = AprilaireVentilationStatusSensor(coordinator)
@@ -685,7 +686,7 @@ async def test_air_cleaning_available(
     """Test the air cleaning status sensor."""
 
     coordinator.data = {
-        "air_cleaning_available": 1,
+        Attribute.AIR_CLEANING_AVAILABLE: 1,
     }
 
     async_add_entities_mock = Mock()
@@ -707,7 +708,7 @@ def test_air_cleaning_status_sensor_0(
     """Test the air cleaning status sensor with status 0."""
 
     coordinator.data = {
-        "air_cleaning_status": 0,
+        Attribute.AIR_CLEANING_STATUS: 0,
     }
 
     sensor = AprilaireAirCleaningStatusSensor(coordinator)
@@ -724,7 +725,7 @@ def test_air_cleaning_status_sensor_1(
     """Test the air cleaning status sensor with status 1."""
 
     coordinator.data = {
-        "air_cleaning_status": 1,
+        Attribute.AIR_CLEANING_STATUS: 1,
     }
 
     sensor = AprilaireAirCleaningStatusSensor(coordinator)
@@ -741,7 +742,7 @@ def test_air_cleaning_status_sensor_2(
     """Test the air cleaning status sensor with status 2."""
 
     coordinator.data = {
-        "air_cleaning_status": 2,
+        Attribute.AIR_CLEANING_STATUS: 2,
     }
 
     sensor = AprilaireAirCleaningStatusSensor(coordinator)
@@ -758,7 +759,7 @@ def test_air_cleaning_status_sensor_3(
     """Test the air cleaning status sensor with status 3."""
 
     coordinator.data = {
-        "air_cleaning_status": 3,
+        Attribute.AIR_CLEANING_STATUS: 3,
     }
 
     sensor = AprilaireAirCleaningStatusSensor(coordinator)
@@ -775,7 +776,7 @@ def test_air_cleaning_status_sensor_4(
     """Test the air cleaning status sensor with status 4."""
 
     coordinator.data = {
-        "air_cleaning_status": 4,
+        Attribute.AIR_CLEANING_STATUS: 4,
     }
 
     sensor = AprilaireAirCleaningStatusSensor(coordinator)

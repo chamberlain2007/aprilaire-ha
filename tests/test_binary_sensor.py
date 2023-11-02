@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from pyaprilaire.const import Attribute
 
 from custom_components.aprilaire.binary_sensor import (
     AprilaireFanStatusSensor,
@@ -22,7 +23,7 @@ async def fan_status_sensor(
     """Get a fan status sensor instance."""
 
     coordinator.data = {
-        "fan_status": 0,
+        Attribute.FAN_STATUS: 0,
     }
 
     async_add_entities_mock = Mock()
@@ -57,7 +58,7 @@ async def test_fan_status_sensor(
     assert fan_status_sensor.is_on is False
 
     coordinator.data = {
-        "fan_status": 1,
+        Attribute.FAN_STATUS: 1,
     }
 
     assert fan_status_sensor.is_on is True

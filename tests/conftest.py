@@ -7,11 +7,13 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import Config, EventBus, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.util import uuid as uuid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from pyaprilaire.client import AprilaireClient
+from pyaprilaire.const import Attribute
 
 from custom_components.aprilaire.const import DOMAIN
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
@@ -44,7 +46,7 @@ def coordinator(
 ) -> AprilaireCoordinator:
     """Get a coordinator instance."""
     coordinator_mock = AsyncMock(AprilaireCoordinator)
-    coordinator_mock.data = {"mac_address": "1:2:3:4:5:6"}
+    coordinator_mock.data = {Attribute.MAC_ADDRESS: "1:2:3:4:5:6"}
     coordinator_mock.client = client
     coordinator_mock.logger = logger
 
@@ -85,7 +87,7 @@ def hass(
 def config_entry(unique_id: str) -> ConfigEntry:
     """Get a config entry instance."""
     config_entry_mock = AsyncMock(ConfigEntry)
-    config_entry_mock.data = {"host": "test123", "port": 123}
+    config_entry_mock.data = {CONF_HOST: "test123", CONF_PORT: 123}
     config_entry_mock.unique_id = unique_id
 
     return config_entry_mock

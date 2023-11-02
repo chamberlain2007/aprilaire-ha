@@ -4,9 +4,10 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from pyaprilaire.client import AprilaireClient
-from pyaprilaire.const import FunctionalDomain
+from pyaprilaire.const import Attribute, FunctionalDomain
 
 from custom_components.aprilaire.config_flow import STEP_USER_DATA_SCHEMA, ConfigFlow
 
@@ -41,8 +42,8 @@ async def test_config_flow_invalid_data(client: AprilaireClient) -> None:
     with patch("pyaprilaire.client.AprilaireClient", return_value=client):
         await config_flow.async_step_user(
             {
-                "host": "localhost",
-                "port": 7000,
+                CONF_HOST: "localhost",
+                CONF_PORT: 7000,
             }
         )
 
@@ -53,7 +54,7 @@ async def test_config_flow_invalid_data(client: AprilaireClient) -> None:
     client.stop_listen.assert_called_once()
 
     async_abort_entries_match_mock.assert_called_once_with(
-        {"host": "localhost", "port": 7000}
+        {CONF_HOST: "localhost", CONF_PORT: 7000}
     )
 
     show_form_mock.assert_called_once_with(
@@ -78,13 +79,13 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
     config_flow._async_abort_entries_match = async_abort_entries_match_mock
     config_flow.async_create_entry = create_entry_mock
 
-    client.wait_for_response = AsyncMock(return_value={"mac_address": "test"})
+    client.wait_for_response = AsyncMock(return_value={Attribute.MAC_ADDRESS: "test"})
 
     with patch("pyaprilaire.client.AprilaireClient", return_value=client):
         await config_flow.async_step_user(
             {
-                "host": "localhost",
-                "port": 7000,
+                CONF_HOST: "localhost",
+                CONF_PORT: 7000,
             }
         )
 
@@ -96,13 +97,13 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
     client.stop_listen.assert_called_once()
 
     async_abort_entries_match_mock.assert_called_once_with(
-        {"host": "localhost", "port": 7000}
+        {CONF_HOST: "localhost", CONF_PORT: 7000}
     )
 
     create_entry_mock.assert_called_once_with(
         title="Aprilaire",
         data={
-            "host": "localhost",
-            "port": 7000,
+            CONF_HOST: "localhost",
+            CONF_PORT: 7000,
         },
     )

@@ -82,25 +82,25 @@ def test_climate_fan_mode(climate: AprilaireClimate, coordinator: AprilaireCoord
     assert climate.fan_mode is None
 
     coordinator.data = {
-        "fan_mode": 0,
+        Attribute.FAN_MODE: 0,
     }
 
     assert climate.fan_mode is None
 
     coordinator.data = {
-        "fan_mode": 1,
+        Attribute.FAN_MODE: 1,
     }
 
     assert climate.fan_mode == FAN_ON
 
     coordinator.data = {
-        "fan_mode": 2,
+        Attribute.FAN_MODE: 2,
     }
 
     assert climate.fan_mode == FAN_AUTO
 
     coordinator.data = {
-        "fan_mode": 3,
+        Attribute.FAN_MODE: 3,
     }
 
     assert climate.fan_mode == FAN_CIRCULATE
@@ -123,7 +123,7 @@ def test_supported_features_mode_4(
     """Test the climate entity supported features when mode is 4."""
 
     coordinator.data = {
-        "mode": 4,
+        Attribute.MODE: 4,
     }
 
     assert (
@@ -140,7 +140,7 @@ def test_supported_features_mode_5(
     """Test the climate entity supported features when mode is 5."""
 
     coordinator.data = {
-        "mode": 5,
+        Attribute.MODE: 5,
     }
 
     assert (
@@ -157,7 +157,7 @@ def test_supported_features_humidification_available(
     """Test the climate entity supported features when humidification is available."""
 
     coordinator.data = {
-        "humidification_available": 2,
+        Attribute.HUMIDIFICATION_AVAILABLE: 2,
     }
 
     assert (
@@ -175,7 +175,7 @@ def test_supported_features_dehumidification_available(
     """Test the climate entity supported features when dehumidification is available."""
 
     coordinator.data = {
-        "dehumidification_available": 1,
+        Attribute.DEHUMIDIFICATION_AVAILABLE: 1,
     }
 
     assert (
@@ -193,7 +193,7 @@ def test_supported_features_air_cleaning_available(
     """Test the climate entity supported features when air cleaning is available."""
 
     coordinator.data = {
-        "air_cleaning_available": 1,
+        Attribute.AIR_CLEANING_AVAILABLE: 1,
     }
 
     assert (
@@ -211,7 +211,7 @@ def test_supported_features_ventilation_available(
     """Test the climate entity supported features when ventilation is available."""
 
     coordinator.data = {
-        "ventilation_available": 1,
+        Attribute.VENTILATION_AVAILABLE: 1,
     }
 
     assert (
@@ -231,7 +231,7 @@ def test_current_temperature(
     assert climate.current_temperature is None
 
     coordinator.data = {
-        "indoor_temperature_controlling_sensor_value": 20,
+        Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE: 20,
     }
 
     assert climate.current_temperature == 20
@@ -245,7 +245,7 @@ def test_corrected_current_temperature(
     climate.hass.config.units = US_CUSTOMARY_SYSTEM
 
     coordinator.data = {
-        "indoor_temperature_controlling_sensor_value": 22.5,
+        Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE: 22.5,
     }
 
     assert climate.current_temperature > 22.5
@@ -257,7 +257,7 @@ def test_current_humidity(climate: AprilaireClimate, coordinator: AprilaireCoord
     assert climate.current_humidity is None
 
     coordinator.data = {
-        "indoor_humidity_controlling_sensor_value": 20,
+        Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE: 20,
     }
 
     assert climate.current_humidity == 20
@@ -271,7 +271,7 @@ def test_target_temperature_low(
     assert climate.target_temperature_low is None
 
     coordinator.data = {
-        "heat_setpoint": 20,
+        Attribute.HEAT_SETPOINT: 20,
     }
 
     assert climate.target_temperature_low == 20
@@ -285,7 +285,7 @@ def test_target_temperature_high(
     assert climate.target_temperature_high is None
 
     coordinator.data = {
-        "cool_setpoint": 20,
+        Attribute.COOL_SETPOINT: 20,
     }
 
     assert climate.target_temperature_high == 20
@@ -349,37 +349,37 @@ def test_hvac_mode(climate: AprilaireClimate, coordinator: AprilaireCoordinator)
     assert climate.hvac_mode is None
 
     coordinator.data = {
-        "mode": 0,
+        Attribute.MODE: 0,
     }
 
     assert climate.hvac_mode is None
 
     coordinator.data = {
-        "mode": 1,
+        Attribute.MODE: 1,
     }
 
     assert climate.hvac_mode == HVACMode.OFF
 
     coordinator.data = {
-        "mode": 2,
+        Attribute.MODE: 2,
     }
 
     assert climate.hvac_mode == HVACMode.HEAT
 
     coordinator.data = {
-        "mode": 3,
+        Attribute.MODE: 3,
     }
 
     assert climate.hvac_mode == HVACMode.COOL
 
     coordinator.data = {
-        "mode": 4,
+        Attribute.MODE: 4,
     }
 
     assert climate.hvac_mode == HVACMode.HEAT
 
     coordinator.data = {
-        "mode": 5,
+        Attribute.MODE: 5,
     }
 
     assert climate.hvac_mode == HVACMode.AUTO
@@ -391,37 +391,37 @@ def test_hvac_modes(climate: AprilaireClimate, coordinator: AprilaireCoordinator
     assert climate.hvac_modes == []
 
     coordinator.data = {
-        "thermostat_modes": 0,
+        Attribute.THERMOSTAT_MODES: 0,
     }
 
     assert climate.hvac_modes == []
 
     coordinator.data = {
-        "thermostat_modes": 1,
+        Attribute.THERMOSTAT_MODES: 1,
     }
 
     assert climate.hvac_modes, [HVACMode.OFF == HVACMode.HEAT]
 
     coordinator.data = {
-        "thermostat_modes": 2,
+        Attribute.THERMOSTAT_MODES: 2,
     }
 
     assert climate.hvac_modes, [HVACMode.OFF == HVACMode.COOL]
 
     coordinator.data = {
-        "thermostat_modes": 3,
+        Attribute.THERMOSTAT_MODES: 3,
     }
 
     assert climate.hvac_modes, [HVACMode.OFF, HVACMode.HEAT == HVACMode.COOL]
 
     coordinator.data = {
-        "thermostat_modes": 4,
+        Attribute.THERMOSTAT_MODES: 4,
     }
 
     assert climate.hvac_modes, [HVACMode.OFF, HVACMode.HEAT == HVACMode.COOL]
 
     coordinator.data = {
-        "thermostat_modes": 5,
+        Attribute.THERMOSTAT_MODES: 5,
     }
 
     assert climate.hvac_modes == [
@@ -432,7 +432,7 @@ def test_hvac_modes(climate: AprilaireClimate, coordinator: AprilaireCoordinator
     ]
 
     coordinator.data = {
-        "thermostat_modes": 6,
+        Attribute.THERMOSTAT_MODES: 6,
     }
 
     assert climate.hvac_modes == [
@@ -449,29 +449,29 @@ def test_hvac_action(climate: AprilaireClimate, coordinator: AprilaireCoordinato
     assert climate.hvac_action == HVACAction.IDLE
 
     coordinator.data = {
-        "heating_equipment_status": 0,
-        "cooling_equipment_status": 0,
+        Attribute.HEATING_EQUIPMENT_STATUS: 0,
+        Attribute.COOLING_EQUIPMENT_STATUS: 0,
     }
 
     assert climate.hvac_action == HVACAction.IDLE
 
     coordinator.data = {
-        "heating_equipment_status": 1,
-        "cooling_equipment_status": 0,
+        Attribute.HEATING_EQUIPMENT_STATUS: 1,
+        Attribute.COOLING_EQUIPMENT_STATUS: 0,
     }
 
     assert climate.hvac_action == HVACAction.HEATING
 
     coordinator.data = {
-        "heating_equipment_status": 1,
-        "cooling_equipment_status": 1,
+        Attribute.HEATING_EQUIPMENT_STATUS: 1,
+        Attribute.COOLING_EQUIPMENT_STATUS: 1,
     }
 
     assert climate.hvac_action == HVACAction.HEATING
 
     coordinator.data = {
-        "heating_equipment_status": 0,
-        "cooling_equipment_status": 1,
+        Attribute.HEATING_EQUIPMENT_STATUS: 0,
+        Attribute.COOLING_EQUIPMENT_STATUS: 1,
     }
 
     assert climate.hvac_action == HVACAction.COOLING
@@ -483,26 +483,26 @@ def test_preset_modes(climate: AprilaireClimate, coordinator: AprilaireCoordinat
     assert climate.preset_modes, [PRESET_NONE == PRESET_VACATION]
 
     coordinator.data = {
-        "away_available": 1,
+        Attribute.AWAY_AVAILABLE: 1,
     }
 
     assert climate.preset_modes, [PRESET_NONE, PRESET_VACATION == PRESET_AWAY]
 
     coordinator.data = {
-        "hold": 1,
+        Attribute.HOLD: 1,
     }
 
     assert climate.preset_modes == [PRESET_NONE, PRESET_VACATION, PRESET_TEMPORARY_HOLD]
 
     coordinator.data = {
-        "hold": 2,
+        Attribute.HOLD: 2,
     }
 
     assert climate.preset_modes == [PRESET_NONE, PRESET_VACATION, PRESET_PERMANENT_HOLD]
 
     coordinator.data = {
-        "hold": 1,
-        "away_available": 1,
+        Attribute.HOLD: 1,
+        Attribute.AWAY_AVAILABLE: 1,
     }
 
     assert climate.preset_modes == [
@@ -513,8 +513,8 @@ def test_preset_modes(climate: AprilaireClimate, coordinator: AprilaireCoordinat
     ]
 
     coordinator.data = {
-        "hold": 2,
-        "away_available": 1,
+        Attribute.HOLD: 2,
+        Attribute.AWAY_AVAILABLE: 1,
     }
 
     assert climate.preset_modes == [
@@ -531,31 +531,31 @@ def test_preset_mode(climate: AprilaireClimate, coordinator: AprilaireCoordinato
     assert climate.preset_mode == PRESET_NONE
 
     coordinator.data = {
-        "hold": 0,
+        Attribute.HOLD: 0,
     }
 
     assert climate.preset_mode == PRESET_NONE
 
     coordinator.data = {
-        "hold": 1,
+        Attribute.HOLD: 1,
     }
 
     assert climate.preset_mode == PRESET_TEMPORARY_HOLD
 
     coordinator.data = {
-        "hold": 2,
+        Attribute.HOLD: 2,
     }
 
     assert climate.preset_mode == PRESET_PERMANENT_HOLD
 
     coordinator.data = {
-        "hold": 3,
+        Attribute.HOLD: 3,
     }
 
     assert climate.preset_mode == PRESET_AWAY
 
     coordinator.data = {
-        "hold": 4,
+        Attribute.HOLD: 4,
     }
 
     assert climate.preset_mode == PRESET_VACATION
@@ -569,7 +569,7 @@ def test_climate_target_humidity(
     assert climate.target_humidity is None
 
     coordinator.data = {
-        "humidification_setpoint": 10,
+        Attribute.HUMIDIFICATION_SETPOINT: 10,
     }
 
     assert climate.target_humidity == 10
@@ -593,16 +593,16 @@ def test_climate_extra_state_attributes(
     """Test the climate entity extra state attributes."""
 
     coordinator.data = {
-        "fan_status": 0,
+        Attribute.FAN_STATUS: 0,
     }
 
-    assert climate.extra_state_attributes.get("fan_status") == "off"
+    assert climate.extra_state_attributes.get(Attribute.FAN_STATUS) == "off"
 
     coordinator.data = {
-        "fan_status": 1,
+        Attribute.FAN_STATUS: 1,
     }
 
-    assert climate.extra_state_attributes.get("fan_status") == "on"
+    assert climate.extra_state_attributes.get(Attribute.FAN_STATUS) == "on"
 
 
 async def test_set_hvac_mode(
@@ -665,7 +665,7 @@ async def test_set_temperature(
     """Test setting the climate entity temperature."""
 
     coordinator.data = {
-        "mode": 1,
+        Attribute.MODE: 1,
     }
 
     await climate.async_set_temperature(temperature=20)
@@ -675,7 +675,7 @@ async def test_set_temperature(
     client.reset_mock()
 
     coordinator.data = {
-        "mode": 3,
+        Attribute.MODE: 3,
     }
 
     await climate.async_set_temperature(temperature=20)
@@ -794,7 +794,7 @@ async def test_set_humidity(
 ):
     """Test setting the climate entity humidity."""
 
-    coordinator.data["humidification_available"] = 2
+    coordinator.data[Attribute.HUMIDIFICATION_AVAILABLE] = 2
 
     await climate.async_set_humidity(30)
 
@@ -811,7 +811,7 @@ async def test_set_dehumidity(
     with pytest.raises(ValueError):
         await climate.async_set_dehumidity(30)
 
-    coordinator.data["dehumidification_available"] = 1
+    coordinator.data[Attribute.DEHUMIDIFICATION_AVAILABLE] = 1
 
     await climate.async_set_dehumidity(30)
 

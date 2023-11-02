@@ -5,6 +5,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.helpers.entity import DeviceInfo
+from pyaprilaire.const import Attribute
 
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
 from custom_components.aprilaire.entity import BaseAprilaireEntity
@@ -47,7 +48,7 @@ async def test_update_available_stopped(coordinator: AprilaireCoordinator) -> No
 
     entity = BaseAprilaireEntity(coordinator)
 
-    coordinator.data["stopped"] = True
+    coordinator.data[Attribute.STOPPED] = True
     entity._update_available()
 
     assert entity._attr_available is False
@@ -59,9 +60,9 @@ async def test_update_available_no_mac(coordinator: AprilaireCoordinator) -> Non
 
     entity = BaseAprilaireEntity(coordinator)
 
-    coordinator.data["connected"] = True
-    coordinator.data["stopped"] = False
-    coordinator.data["mac_address"] = None
+    coordinator.data[Attribute.CONNECTED] = True
+    coordinator.data[Attribute.STOPPED] = False
+    coordinator.data[Attribute.MAC_ADDRESS] = None
     entity._update_available()
 
     assert entity._attr_available is False
@@ -75,9 +76,9 @@ async def test_update_available_connected_not_stopped(
 
     entity = BaseAprilaireEntity(coordinator)
 
-    coordinator.data["connected"] = True
-    coordinator.data["stopped"] = False
-    coordinator.data["mac_address"] = "1:2:3:4:5:6"
+    coordinator.data[Attribute.CONNECTED] = True
+    coordinator.data[Attribute.STOPPED] = False
+    coordinator.data[Attribute.MAC_ADDRESS] = "1:2:3:4:5:6"
     entity._update_available()
 
     assert entity._attr_available is True
@@ -91,10 +92,10 @@ async def test_update_available_reconnecting_not_stopped(
 
     entity = BaseAprilaireEntity(coordinator)
 
-    coordinator.data["connected"] = False
-    coordinator.data["reconnecting"] = True
-    coordinator.data["stopped"] = False
-    coordinator.data["mac_address"] = "1:2:3:4:5:6"
+    coordinator.data[Attribute.CONNECTED] = False
+    coordinator.data[Attribute.RECONNECTING] = True
+    coordinator.data[Attribute.STOPPED] = False
+    coordinator.data[Attribute.MAC_ADDRESS] = "1:2:3:4:5:6"
     entity._update_available()
 
     assert entity._attr_available is True
@@ -114,7 +115,7 @@ def test_unique_id(coordinator: AprilaireCoordinator) -> None:
 
     entity = BaseAprilaireEntity(coordinator)
 
-    coordinator.data["mac_address"] = "1:2:3:4:5:6"
+    coordinator.data[Attribute.MAC_ADDRESS] = "1:2:3:4:5:6"
 
     with patch(
         "custom_components.aprilaire.entity.BaseAprilaireEntity.name",
@@ -127,7 +128,7 @@ def test_extra_state_attributes(coordinator: AprilaireCoordinator) -> None:
     """Test the entity's extra state attributes."""
 
     entity = BaseAprilaireEntity(coordinator)
-    coordinator.data["location"] = "Test Location"
+    coordinator.data[Attribute.LOCATION] = "Test Location"
 
     assert entity.extra_state_attributes == {
         "device_location": "Test Location",

@@ -5,32 +5,33 @@ readme = "README.md"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["black", "bumpver", "isort", "pip-tools", "coverage", "homeassistant==2023.4.5", "pyaprilaire==0.7.2", "pytest-asyncio", "pytest-cov"]
+dev = [
+    "black",
+    "bumpver",
+    "isort",
+    "pip-tools",
+    "coverage",
+    "homeassistant==2023.11.0",
+    "pyaprilaire==0.7.2",
+    "pytest-asyncio",
+    "pytest-cov",
+]
 
 [tool.bumpver]
 current_version = "0.7.2b2"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
-commit_message  = "Bump version {old_version} -> {new_version}"
-commit          = true
-tag             = true
-push            = false
+commit_message = "Bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = false
 
 [tool.bumpver.file_patterns]
-"pyproject.toml" = [
-    'current_version = "{version}"',
-    'version = "{version}"'
-]
-"custom_components/aprilaire/manifest.json" = [
-    '"version": "{version}"'
-]
+"pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
+"custom_components/aprilaire/manifest.json" = ['"version": "{version}"']
 
 [tool.pytest.ini_options]
-testpaths = [
-    "tests",
-]
-norecursedirs = [
-    ".git",
-]
+testpaths = ["tests"]
+norecursedirs = [".git"]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"

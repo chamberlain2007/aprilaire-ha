@@ -11,7 +11,7 @@ from homeassistant.core import Event, HomeAssistant
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

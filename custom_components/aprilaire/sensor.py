@@ -205,12 +205,8 @@ class BaseAprilaireTemperatureSensor(BaseAprilaireEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Floop"
-
-    @property
     def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
         return self.hass.config.units.temperature_unit
 
     @property

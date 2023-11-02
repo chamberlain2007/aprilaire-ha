@@ -98,6 +98,11 @@ def test_device_info(coordinator: AprilaireCoordinator) -> None:
     )
 
 
+def test_no_hw_version(coordinator: AprilaireCoordinator) -> None:
+    """Test the hardware version for revision A."""
+    assert coordinator.get_hw_version({}) == "Unknown"
+
+
 def test_hw_version_a(coordinator: AprilaireCoordinator) -> None:
     """Test the hardware version for revision A."""
     assert coordinator.get_hw_version({"hardware_revision": 1}) == "1"

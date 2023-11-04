@@ -31,15 +31,12 @@ async def async_setup_entry(
 class AprilaireFanStatusSensor(BaseAprilaireEntity, BinarySensorEntity):
     """Sensor representing the fan status"""
 
+    _attr_translation_key = "fan_status"
+
     @property
     def available(self):
         """Get entity availability"""
         return super().available and Attribute.FAN_STATUS in self.coordinator.data
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Fan"
 
     @property
     def is_on(self) -> bool | None:

@@ -1,25 +1,56 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
-        "error": {
-            "connection_failed": "Connection failed. Please check that the host and port is correct."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port (usually 7000 or 8000)"
-                }
-            }
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "Port (usually 7000 or 8000)"
         }
+      }
     },
-    "entity": {
-        "climate": {
-            "thermostat": {
-                "name": "Thermostat"
-            }
-        }
+    "error": {
+      "connection_failed": "Connection failed. Please check that the host and port is correct."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "fan_status": {
+        "name": "Fan Status"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
+    "sensor": {
+      "indoor_temperature_controlling_sensor": {
+        "name": "Indoor Temperature Controlling Sensor"
+      },
+      "outdoor_temperature_controlling_sensor": {
+        "name": "Outdoor Temperature Controlling Sensor"
+      },
+      "indoor_humidity_controlling_sensor": {
+        "name": "Indoor Humidity Controlling Sensor"
+      },
+      "outdoor_humidity_controlling_sensor": {
+        "name": "Outdoor Humidity Controlling Sensor"
+      },
+      "dehumidification_status": {
+        "name": "Dehumidification Status"
+      },
+      "humidification_status": {
+        "name": "Humidification Status"
+      },
+      "ventilation_status": {
+        "name": "Ventilation Status"
+      },
+      "air_cleaning_status": {
+        "name": "Air Cleaning Status"
+      }
+    }
+  }
 }

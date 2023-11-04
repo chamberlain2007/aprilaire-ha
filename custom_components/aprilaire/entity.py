@@ -56,7 +56,7 @@ class BaseAprilaireEntity(CoordinatorEntity[AprilaireCoordinator], Entity):
         return slugify(
             self.coordinator.data[Attribute.MAC_ADDRESS].replace(":", "_")
             + "_"
-            + (self.name or "")
+            + self.name
         )
 
     @property

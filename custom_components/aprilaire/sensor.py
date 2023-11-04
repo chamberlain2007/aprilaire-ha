@@ -119,6 +119,8 @@ class AprilaireIndoorHumidityControllingSensor(
 ):
     """Sensor for indoor humidity"""
 
+    _attr_translation_key = "indoor_humidity_controlling_sensor"
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -129,11 +131,6 @@ class AprilaireIndoorHumidityControllingSensor(
             )
             == 0
         )
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Indoor Humidity Controlling Sensor"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -161,6 +158,8 @@ class AprilaireOutdoorHumidityControllingSensor(
 ):
     """Sensor for outdoor humidity"""
 
+    _attr_translation_key = "outdoor_humidity_controlling_sensor"
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -171,11 +170,6 @@ class AprilaireOutdoorHumidityControllingSensor(
             )
             == 0
         )
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Outdoor Humidity Controlling Sensor"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -223,6 +217,8 @@ class AprilaireIndoorTemperatureControllingSensor(
 ):
     """Sensor for indoor temperature"""
 
+    _attr_translation_key = "indoor_temperature_controlling_sensor"
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -233,11 +229,6 @@ class AprilaireIndoorTemperatureControllingSensor(
             )
             == 0
         )
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Indoor Temperature Controlling Sensor"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -268,6 +259,8 @@ class AprilaireOutdoorTemperatureControllingSensor(
 ):
     """Sensor for outdoor temperature"""
 
+    _attr_translation_key = "outdoor_temperature_controlling_sensor"
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -278,11 +271,6 @@ class AprilaireOutdoorTemperatureControllingSensor(
             )
             == 0
         )
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Outdoor Temperature Controlling Sensor"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -311,6 +299,8 @@ class AprilaireOutdoorTemperatureControllingSensor(
 class AprilaireDehumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
     """Sensor representing the current dehumidification status"""
 
+    _attr_translation_key = "dehumidification_status"
+
     @property
     def available(self):
         """Return True if entity is available."""
@@ -318,11 +308,6 @@ class AprilaireDehumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
             super().available
             and Attribute.DEHUMIDIFICATION_STATUS in self.coordinator.data
         )
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Dehumidification Status"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -343,6 +328,8 @@ class AprilaireDehumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
 class AprilaireHumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
     """Sensor representing the current humidification status"""
 
+    _attr_translation_key = "humidification_status"
+
     @property
     def available(self):
         """Return True if entity is available."""
@@ -350,11 +337,6 @@ class AprilaireHumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
             super().available
             and Attribute.HUMIDIFICATION_STATUS in self.coordinator.data
         )
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Humidification Status"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -375,17 +357,14 @@ class AprilaireHumidificationStatusSensor(BaseAprilaireEntity, SensorEntity):
 class AprilaireVentilationStatusSensor(BaseAprilaireEntity, SensorEntity):
     """Sensor representing the current ventilation status"""
 
+    _attr_translation_key = "ventilation_status"
+
     @property
     def available(self):
         """Return True if entity is available."""
         return (
             super().available and Attribute.VENTILATION_STATUS in self.coordinator.data
         )
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Ventilation Status"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -402,17 +381,14 @@ class AprilaireVentilationStatusSensor(BaseAprilaireEntity, SensorEntity):
 class AprilaireAirCleaningStatusSensor(BaseAprilaireEntity, SensorEntity):
     """Sensor representing the current air cleaning status"""
 
+    _attr_translation_key = "air_cleaning_status"
+
     @property
     def available(self):
         """Return True if entity is available."""
         return (
             super().available and Attribute.AIR_CLEANING_STATUS in self.coordinator.data
         )
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Air Cleaning Status"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:

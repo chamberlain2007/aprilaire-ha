@@ -113,7 +113,6 @@ async def test_indoor_humidity_controlling_sensor(
     assert sensor.native_unit_of_measurement == PERCENTAGE
     assert sensor.available is True
     assert sensor.native_value == test_value
-    assert sensor.entity_name == "Indoor Humidity Controlling Sensor"
     assert sensor.extra_state_attributes["status"] == 0
     assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
@@ -151,7 +150,6 @@ async def test_outdoor_humidity_controlling_sensor(
     assert sensor.native_unit_of_measurement == PERCENTAGE
     assert sensor.available is True
     assert sensor.native_value == test_value
-    assert sensor.entity_name == "Outdoor Humidity Controlling Sensor"
     assert sensor.extra_state_attributes["status"] == 0
     assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
@@ -190,7 +188,6 @@ async def test_indoor_temperature_controlling_sensor(
     assert sensor.native_unit_of_measurement == TEMP_CELSIUS
     assert sensor.available is True
     assert sensor.native_value == test_value
-    assert sensor.entity_name == "Indoor Temperature Controlling Sensor"
     assert sensor.extra_state_attributes["status"] == 0
     assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
@@ -229,7 +226,6 @@ async def test_outdoor_temperature_controlling_sensor(
     assert sensor.native_unit_of_measurement == TEMP_CELSIUS
     assert sensor.available is True
     assert sensor.native_value == test_value
-    assert sensor.entity_name == "Outdoor Temperature Controlling Sensor"
     assert sensor.extra_state_attributes["status"] == 0
     assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
@@ -257,7 +253,6 @@ def test_indoor_temperature_controlling_sensor_fahrenheit(
     assert sensor.unit_of_measurement == TEMP_FAHRENHEIT
     assert sensor.available is True
     assert sensor.native_value == 25
-    assert sensor.entity_name == "Indoor Temperature Controlling Sensor"
     assert sensor.extra_state_attributes["status"] == 0
     assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
@@ -284,7 +279,6 @@ def test_outdoor_temperature_controlling_sensor_fahrenheit(
     assert sensor.unit_of_measurement == TEMP_FAHRENHEIT
     assert sensor.available is True
     assert sensor.native_value == 25
-    assert sensor.entity_name == "Outdoor Temperature Controlling Sensor"
     assert sensor.extra_state_attributes["status"] == 0
     assert sensor.extra_state_attributes["raw_sensor_value"] == test_value
 
@@ -324,7 +318,6 @@ def test_dehumidification_status_sensor_0(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Dehumidification Status"
     assert sensor.native_value == "Idle"
 
 
@@ -341,7 +334,6 @@ def test_dehumidification_status_sensor_1(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Dehumidification Status"
     assert sensor.native_value == "Idle"
 
 
@@ -358,7 +350,6 @@ def test_dehumidification_status_sensor_2(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Dehumidification Status"
     assert sensor.native_value == "On"
 
 
@@ -375,7 +366,6 @@ def test_dehumidification_status_sensor_3(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Dehumidification Status"
     assert sensor.native_value == "On"
 
 
@@ -392,7 +382,6 @@ def test_dehumidification_status_sensor_4(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Dehumidification Status"
     assert sensor.native_value == "Off"
 
 
@@ -409,7 +398,6 @@ def test_dehumidification_status_sensor_5(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Dehumidification Status"
     assert sensor.native_value is None
 
 
@@ -448,7 +436,6 @@ def test_humidification_status_sensor_0(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Humidification Status"
     assert sensor.native_value == "Idle"
 
 
@@ -465,7 +452,6 @@ def test_humidification_status_sensor_1(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Humidification Status"
     assert sensor.native_value == "Idle"
 
 
@@ -482,7 +468,6 @@ def test_humidification_status_sensor_2(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Humidification Status"
     assert sensor.native_value == "On"
 
 
@@ -499,7 +484,6 @@ def test_humidification_status_sensor_3(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Humidification Status"
     assert sensor.native_value == "Off"
 
 
@@ -516,7 +500,6 @@ def test_humidification_status_sensor_4(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Humidification Status"
     assert sensor.native_value is None
 
 
@@ -555,7 +538,6 @@ def test_ventilation_status_sensor_0(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Ventilation Status"
     assert sensor.native_value == "Idle"
 
 
@@ -572,7 +554,6 @@ def test_ventilation_status_sensor_1(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Ventilation Status"
     assert sensor.native_value == "Idle"
 
 
@@ -589,7 +570,6 @@ def test_ventilation_status_sensor_2(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Ventilation Status"
     assert sensor.native_value == "On"
 
 
@@ -606,7 +586,6 @@ def test_ventilation_status_sensor_3(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Ventilation Status"
     assert sensor.native_value == "Idle"
 
 
@@ -623,7 +602,6 @@ def test_ventilation_status_sensor_4(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Ventilation Status"
     assert sensor.native_value == "Idle"
 
 
@@ -640,7 +618,6 @@ def test_ventilation_status_sensor_5(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Ventilation Status"
     assert sensor.native_value == "Idle"
 
 
@@ -657,7 +634,6 @@ def test_ventilation_status_sensor_6(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Ventilation Status"
     assert sensor.native_value == "Off"
 
 
@@ -674,7 +650,6 @@ def test_ventilation_status_sensor_7(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Ventilation Status"
     assert sensor.native_value is None
 
 
@@ -715,7 +690,6 @@ def test_air_cleaning_status_sensor_0(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Air Cleaning Status"
     assert sensor.native_value == "Idle"
 
 
@@ -732,7 +706,6 @@ def test_air_cleaning_status_sensor_1(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Air Cleaning Status"
     assert sensor.native_value == "Idle"
 
 
@@ -749,7 +722,6 @@ def test_air_cleaning_status_sensor_2(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Air Cleaning Status"
     assert sensor.native_value == "On"
 
 
@@ -766,7 +738,6 @@ def test_air_cleaning_status_sensor_3(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Air Cleaning Status"
     assert sensor.native_value == "Off"
 
 
@@ -783,5 +754,4 @@ def test_air_cleaning_status_sensor_4(
     sensor._attr_available = True
 
     assert sensor.available is True
-    assert sensor.entity_name == "Air Cleaning Status"
     assert sensor.native_value is None

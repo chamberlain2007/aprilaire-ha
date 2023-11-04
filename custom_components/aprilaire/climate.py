@@ -135,6 +135,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
     _attr_min_humidity = 10
     _attr_max_humidity = 50
+    _attr_translation_key = "thermostat"
 
     @property
     def temperature_unit(self) -> str:
@@ -146,11 +147,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             return PRECISION_HALVES
         else:
             return PRECISION_WHOLE
-
-    @property
-    def entity_name(self) -> str:
-        """Get name of entity."""
-        return "Thermostat"
 
     @property
     def supported_features(self) -> ClimateEntityFeature:

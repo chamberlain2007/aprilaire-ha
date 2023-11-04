@@ -54,7 +54,6 @@ async def test_fan_status_sensor(
     assert isinstance(fan_status_sensor, AprilaireFanStatusSensor)
 
     assert fan_status_sensor.available is True
-    assert fan_status_sensor.entity_name == "Fan"
     assert fan_status_sensor.is_on is False
 
     coordinator.data = {

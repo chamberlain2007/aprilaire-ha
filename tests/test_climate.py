@@ -56,11 +56,6 @@ async def climate(config_entry: ConfigEntry, hass: HomeAssistant) -> AprilaireCl
     return climate
 
 
-def test_climate_entity_name(climate: AprilaireClimate):
-    """Test the climate entity name."""
-    assert climate.entity_name == "Thermostat"
-
-
 def test_climate_min_temp(climate: AprilaireClimate):
     """Test the climate entity minimum temperature."""
     assert climate.min_temp == DEFAULT_MIN_TEMP

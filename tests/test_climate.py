@@ -28,7 +28,6 @@ from custom_components.aprilaire.climate import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION,
     AprilaireClimate,
-    ExtendedClimateEntityFeature,
     async_setup_entry,
 )
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
@@ -176,7 +175,6 @@ def test_supported_features_dehumidification_available(
     assert (
         climate.supported_features
         == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
     )
@@ -194,7 +192,6 @@ def test_supported_features_air_cleaning_available(
     assert (
         climate.supported_features
         == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ExtendedClimateEntityFeature.AIR_CLEANING
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
     )
@@ -212,7 +209,6 @@ def test_supported_features_ventilation_available(
     assert (
         climate.supported_features
         == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ExtendedClimateEntityFeature.FRESH_AIR
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
     )

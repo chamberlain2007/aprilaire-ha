@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from enum import IntFlag
 from typing import Any
 
 import voluptuous as vol
@@ -72,14 +71,6 @@ FAN_MODE_MAP = {
 }
 
 
-class ExtendedClimateEntityFeature(IntFlag):
-    """Supported features of the Aprilaire climate entity."""
-
-    TARGET_DEHUMIDITY = 2 << 10
-    FRESH_AIR = 2 << 11
-    AIR_CLEANING = 2 << 12
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -97,35 +88,26 @@ async def async_setup_entry(
         SERVICE_SET_DEHUMIDITY,
         {vol.Required("dehumidity"): vol.Coerce(int)},
         "async_set_dehumidity",
-        [ExtendedClimateEntityFeature.TARGET_DEHUMIDITY],
     )
 
     platform.async_register_entity_service(
         SERVICE_TRIGGER_AIR_CLEANING_EVENT,
         {vol.Required("event"): vol.Coerce(str)},
         "async_trigger_air_cleaning_event",
-        [ExtendedClimateEntityFeature.AIR_CLEANING],
     )
 
     platform.async_register_entity_service(
-        SERVICE_CANCEL_AIR_CLEANING_EVENT,
-        {},
-        "async_cancel_air_cleaning_event",
-        [ExtendedClimateEntityFeature.AIR_CLEANING],
+        SERVICE_CANCEL_AIR_CLEANING_EVENT, {}, "async_cancel_air_cleaning_event"
     )
 
     platform.async_register_entity_service(
         SERVICE_TRIGGER_FRESH_AIR_EVENT,
         {vol.Required("event"): vol.Coerce(str)},
         "async_trigger_fresh_air_event",
-        [ExtendedClimateEntityFeature.FRESH_AIR],
     )
 
     platform.async_register_entity_service(
-        SERVICE_CANCEL_FRESH_AIR_EVENT,
-        {},
-        "async_cancel_fresh_air_event",
-        [ExtendedClimateEntityFeature.FRESH_AIR],
+        SERVICE_CANCEL_FRESH_AIR_EVENT, {}, "async_cancel_fresh_air_event"
     )
 
 
@@ -160,15 +142,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if self.coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) == 2:
             features = features | ClimateEntityFeature.TARGET_HUMIDITY
-
-        if self.coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) == 1:
-            features = features | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
-
-        if self.coordinator.data.get(Attribute.AIR_CLEANING_AVAILABLE) == 1:
-            features = features | ExtendedClimateEntityFeature.AIR_CLEANING
-
-        if self.coordinator.data.get(Attribute.VENTILATION_AVAILABLE) == 1:
-            features = features | ExtendedClimateEntityFeature.FRESH_AIR
 
         features = features | ClimateEntityFeature.PRESET_MODE
 
@@ -419,7 +392,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     async def async_set_dehumidity(self, dehumidity: int) -> None:
         """Set the target dehumidification setpoint."""
 
-        if self.supported_features & ExtendedClimateEntityFeature.TARGET_DEHUMIDITY:
+        if self.coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) == 1:
             await self.coordinator.client.set_dehumidification_setpoint(dehumidity)
         else:
             raise ValueError(
@@ -429,7 +402,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     async def async_trigger_air_cleaning_event(self, event: str) -> None:
         """Triggers an air cleaning event of 3 or 24 hours."""
 
-        if self.supported_features & ExtendedClimateEntityFeature.AIR_CLEANING:
+        if self.coordinator.data.get(Attribute.AIR_CLEANING_AVAILABLE) == 1:
             current_air_cleaning_mode = self.coordinator.data.get(
                 Attribute.AIR_CLEANING_MODE, 0
             )
@@ -450,7 +423,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     async def async_cancel_air_cleaning_event(self) -> None:
         """Cancels an existing air cleaning event."""
 
-        if self.supported_features & ExtendedClimateEntityFeature.AIR_CLEANING:
+        if self.coordinator.data.get(Attribute.AIR_CLEANING_AVAILABLE) == 1:
             current_air_cleaning_mode = self.coordinator.data.get(
                 Attribute.AIR_CLEANING_MODE, 0
             )
@@ -462,7 +435,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     async def async_trigger_fresh_air_event(self, event: str) -> None:
         """Triggers a fresh air event of 3 or 24 hours."""
 
-        if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
+        if self.coordinator.data.get(Attribute.VENTILATION_AVAILABLE) == 1:
             current_fresh_air_mode = self.coordinator.data.get(
                 Attribute.FRESH_AIR_MODE, 0
             )
@@ -479,7 +452,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     async def async_cancel_fresh_air_event(self) -> None:
         """Cancels a existing fresh air event."""
 
-        if self.supported_features & ExtendedClimateEntityFeature.FRESH_AIR:
+        if self.coordinator.data.get(Attribute.VENTILATION_AVAILABLE) == 1:
             current_fresh_air_mode = self.coordinator.data.get(
                 Attribute.FRESH_AIR_MODE, 0
             )

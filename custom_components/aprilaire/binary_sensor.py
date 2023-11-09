@@ -19,7 +19,7 @@ async def async_setup_entry(
 ) -> None:
     """Add binary sensors for passed config_entry in HA."""
 
-    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
 
     entities = [
         AprilaireFanStatusSensor(coordinator),
@@ -31,17 +31,14 @@ async def async_setup_entry(
 class AprilaireFanStatusSensor(BaseAprilaireEntity, BinarySensorEntity):
     """Sensor representing the fan status"""
 
+    _attr_translation_key = "fan_status"
+
     @property
     def available(self):
         """Get entity availability"""
-        return super().available and Attribute.FAN_STATUS in self._coordinator.data
-
-    @property
-    def entity_name(self) -> str | None:
-        """Return the entity name"""
-        return "Fan"
+        return super().available and Attribute.FAN_STATUS in self.coordinator.data
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self._coordinator.data.get(Attribute.FAN_STATUS) == 1
+        return self.coordinator.data.get(Attribute.FAN_STATUS) == 1

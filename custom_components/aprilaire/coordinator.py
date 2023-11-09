@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Awaitable, Callable
-from logging import Logger
 from typing import Any
 
-import homeassistant.helpers.device_registry
+import homeassistant.helpers.device_registry as dr
 import pyaprilaire.client
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -18,27 +18,25 @@ from .const import DOMAIN
 RECONNECT_INTERVAL = 60 * 60
 RETRY_CONNECTION_INTERVAL = 10
 
+_LOGGER = logging.getLogger(__name__)
 
-class AprilaireCoordinator(DataUpdateCoordinator):
-    """Coordinator for interacting with the thermostat"""
 
-    def __init__(
-        self, hass: HomeAssistant, host: str, port: int, logger: Logger
-    ) -> None:
-        """Initialize the coordinator"""
+class AprilaireCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator for interacting with the thermostat."""
+
+    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+        """Initialize the coordinator."""
         super().__init__(
             hass,
-            logger,
+            _LOGGER,
             name=DOMAIN,
         )
-
-        self.data: dict[str, Any] = {}
 
         self.client = pyaprilaire.client.AprilaireClient(
             host,
             port,
             self.async_set_updated_data,
-            self.logger,
+            _LOGGER,
             RECONNECT_INTERVAL,
             RETRY_CONNECTION_INTERVAL,
         )
@@ -60,27 +58,30 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             and new_device_info is not None
             and old_device_info != new_device_info
         ):
-            device_registry = homeassistant.helpers.device_registry.async_get(self.hass)
+            device_registry = dr.async_get(self.hass)
 
             device = device_registry.async_get_device(old_device_info["identifiers"])
 
             if device is not None:
-                new_device_info.pop("identifiers")
+                new_device_info.pop("identifiers", None)
+                new_device_info.pop("connections", None)
 
                 device_registry.async_update_device(
-                    device_id=device.id, **new_device_info
+                    device_id=device.id, **new_device_info  # type: ignore[misc]
                 )
 
     async def start_listen(self):
-        """Start listening for data"""
+        """Start listening for data."""
         await self.client.start_listen()
 
     def stop_listen(self):
-        """Stop listening for data"""
+        """Stop listening for data."""
         self.client.stop_listen()
 
-    async def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
-        """Wait for the client to be ready"""
+    async def wait_for_ready(
+        self, ready_callback: Callable[[bool], Awaitable[bool]]
+    ) -> bool:
+        """Wait for the client to be ready."""
 
         if not self.data or Attribute.MAC_ADDRESS not in self.data:
             data = await self.client.wait_for_response(
@@ -88,10 +89,10 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             )
 
             if not data or Attribute.MAC_ADDRESS not in data:
-                self.logger.error("Missing MAC address, cannot create unique ID")
+                _LOGGER.error("Missing MAC address, cannot create unique ID")
                 await ready_callback(False)
 
-                return
+                return False
 
         if not self.data or Attribute.NAME not in self.data:
             await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 4, 30)
@@ -107,16 +108,18 @@ class AprilaireCoordinator(DataUpdateCoordinator):
 
         await ready_callback(True)
 
+        return True
+
     @property
     def device_name(self) -> str:
-        """Get the name of the thermostat"""
+        """Get the name of the thermostat."""
 
         return self.create_device_name(self.data)
 
     def create_device_name(self, data: dict[str, Any]) -> str:
-        """Create the name of the thermostat"""
+        """Create the name of the thermostat."""
 
-        name = data.get(Attribute.NAME)
+        name = None if data is None else data.get(Attribute.NAME)
 
         if name is None or len(name) == 0:
             return "Aprilaire"
@@ -124,23 +127,26 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         return name
 
     def get_hw_version(self, data: dict[str, Any]) -> str:
-        """Get the hardware version"""
+        """Get the hardware version."""
 
         if hardware_revision := data.get(Attribute.HARDWARE_REVISION):
-            if hardware_revision > ord("A"):
-                return f"Rev. {chr(hardware_revision)}"
-            else:
-                return str(hardware_revision)
+            return (
+                f"Rev. {chr(hardware_revision)}"
+                if hardware_revision > ord("A")
+                else str(hardware_revision)
+            )
+
+        return "Unknown"
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Get the device info for the thermostat"""
+    def device_info(self) -> DeviceInfo | None:
+        """Get the device info for the thermostat."""
         return self.create_device_info(self.data)
 
-    def create_device_info(self, data: dict[str, Any]) -> DeviceInfo:
-        """Create the device info for the thermostat"""
+    def create_device_info(self, data: dict[str, Any]) -> DeviceInfo | None:
+        """Create the device info for the thermostat."""
 
-        if Attribute.MAC_ADDRESS not in data:
+        if data is None or Attribute.MAC_ADDRESS not in data:
             return None
 
         device_info = DeviceInfo(

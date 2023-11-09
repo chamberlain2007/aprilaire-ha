@@ -1,32 +1,32 @@
-"""Config flow for the Aprilaire integration"""
+"""Config flow for the Aprilaire integration."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
-import pyaprilaire.client
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from pyaprilaire.const import Attribute, FunctionalDomain
+from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, LOG_NAME
+from .const import DOMAIN
+from .coordinator import AprilaireCoordinator
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=7000): int,
+        vol.Required(CONF_PORT, default=7000): cv.port,
     }
 )
 
-_LOGGER = logging.getLogger(LOG_NAME)
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Aprilaire"""
+    """Handle a config flow for Aprilaire."""
 
     VERSION = 1
 
@@ -34,44 +34,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
+        self._async_abort_entries_match(
+            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+        )
 
-        try:
-            await self.async_set_unique_id(
-                f'aprilaire_{user_input[CONF_HOST].replace(".", "")}{user_input[CONF_PORT]}'
-            )
-            self._abort_if_unique_id_configured()
-        except AbortFlow as err:
-            errors["base"] = err.reason
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = str(err)
-        else:
-            client = pyaprilaire.client.AprilaireClient(
-                user_input[CONF_HOST], user_input[CONF_PORT], lambda data: None, _LOGGER
-            )
+        coordinator = AprilaireCoordinator(
+            self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
+        )
+        await coordinator.start_listen()
 
-            await client.start_listen()
+        async def ready_callback(ready: bool):
+            if not ready:
+                _LOGGER.error("Failed to wait for ready")
 
-            data = await client.wait_for_response(
-                FunctionalDomain.IDENTIFICATION, 2, 30
-            )
+        ready = await coordinator.wait_for_ready(ready_callback)
 
-            client.stop_listen()
+        coordinator.stop_listen()
 
-            if data and Attribute.MAC_ADDRESS in data:
-                # Sleeping to not overload the socket
-                await asyncio.sleep(5)
-
-                return self.async_create_entry(title="Aprilaire", data=user_input)
-
-            errors["base"] = "connection_failed"
+        if ready:
+            return self.async_create_entry(title="Aprilaire", data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors={"base": "connection_failed"},
         )

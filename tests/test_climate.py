@@ -1005,13 +1005,13 @@ async def test_toggle_fresh_air_mode(
     """Test toggline a climate entity fresh air mode."""
 
     with pytest.raises(ValueError):
-        await climate.async_set_fresh_air_mode(0)
+        await climate.async_toggle_fresh_air_mode(0)
 
     with pytest.raises(ValueError):
-        await climate.async_set_fresh_air_mode(-1)
+        await climate.async_toggle_fresh_air_mode(-1)
 
     with pytest.raises(ValueError):
-        await climate.async_set_fresh_air_mode(2)
+        await climate.async_toggle_fresh_air_mode(2)
 
     coordinator.data[Attribute.VENTILATION_AVAILABLE] = 1
     coordinator.data[Attribute.FRESH_AIR_EVENT] = 1

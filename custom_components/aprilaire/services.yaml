@@ -41,6 +41,48 @@ cancel_air_cleaning_event:
     entity:
       domain: climate
 
+set_air_cleaning_mode:
+  name: Set air cleaning mode
+  description: Set the air cleaning mode of climate device.
+  target:
+    entity:
+      domain: climate
+  fields:
+    mode:
+      name: Mode
+      description: New air cleaning mode.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "Off"
+              value: 0
+            - label: Constant Clean
+              value: 1
+            - label: Automatic
+              value: 2
+
+toggle_air_cleaning_mode:
+  name: Toggle air cleaning mode
+  description: Toggle the air cleaning mode of climate device.
+  target:
+    entity:
+      domain: climate
+  fields:
+    mode:
+      name: Mode
+      description: New air cleaning mode.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "Off"
+              value: 0
+            - label: Constant Clean
+              value: 1
+            - label: Automatic
+              value: 2
+
 trigger_fresh_air_event:
   name: Trigger fresh air event
   description: Trigger fresh air event of climate device.
@@ -66,3 +108,41 @@ cancel_fresh_air_event:
   target:
     entity:
       domain: climate
+
+set_fresh_air_mode:
+  name: Set fresh air mode
+  description: Set the fresh air mode of climate device.
+  target:
+    entity:
+      domain: climate
+  fields:
+    mode:
+      name: Mode
+      description: New fresh air mode.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "Off"
+              value: 0
+            - label: Automatic
+              value: 1
+
+toggle_fresh_air_mode:
+  name: Toggle fresh air mode
+  description: Toggle the fresh air mode of climate device.
+  target:
+    entity:
+      domain: climate
+  fields:
+    mode:
+      name: Mode
+      description: New fresh air mode.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "Off"
+              value: 0
+            - label: Automatic
+              value: 1

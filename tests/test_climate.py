@@ -1022,5 +1022,5 @@ async def test_toggle_fresh_air_mode(
 
     coordinator.data[Attribute.FRESH_AIR_MODE] = 1
 
-    await climate.async__fresh_air_mode(1)
+    await climate.async_toggle_fresh_air_mode(1)
     client.set_fresh_air.assert_called_with(0, 1)

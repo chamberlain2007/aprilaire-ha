@@ -32,7 +32,11 @@ from .const import (
     PRESET_VACATION,
     SERVICE_CANCEL_AIR_CLEANING_EVENT,
     SERVICE_CANCEL_FRESH_AIR_EVENT,
+    SERVICE_SET_AIR_CLEANING_MODE,
     SERVICE_SET_DEHUMIDITY,
+    SERVICE_SET_FRESH_AIR_MODE,
+    SERVICE_TOGGLE_AIR_CLEANING_MODE,
+    SERVICE_TOGGLE_FRESH_AIR_MODE,
     SERVICE_TRIGGER_AIR_CLEANING_EVENT,
     SERVICE_TRIGGER_FRESH_AIR_EVENT,
 )
@@ -101,6 +105,18 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
+        SERVICE_SET_AIR_CLEANING_MODE,
+        {vol.Required("mode"): vol.Coerce(int)},
+        "async_set_air_cleaning_mode",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TOGGLE_AIR_CLEANING_MODE,
+        {vol.Required("mode"): vol.Coerce(int)},
+        "async_toggle_air_cleaning_mode",
+    )
+
+    platform.async_register_entity_service(
         SERVICE_TRIGGER_FRESH_AIR_EVENT,
         {vol.Required("event"): vol.Coerce(str)},
         "async_trigger_fresh_air_event",
@@ -108,6 +124,18 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CANCEL_FRESH_AIR_EVENT, {}, "async_cancel_fresh_air_event"
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_FRESH_AIR_MODE,
+        {vol.Required("mode"): vol.Coerce(int)},
+        "async_set_fresh_air_mode",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TOGGLE_FRESH_AIR_MODE,
+        {vol.Required("mode"): vol.Coerce(int)},
+        "async_toggle_fresh_air_mode",
     )
 
 
@@ -432,6 +460,46 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         else:
             raise ValueError("Device does not support air cleaning")
 
+    async def async_set_air_cleaning_mode(self, mode: int) -> None:
+        """Set the air cleaning mode."""
+
+        if mode < 0 or mode > 2:
+            raise ValueError("Invalid mode - only 0, 1 and 2 allowed")
+
+        if self.coordinator.data.get(Attribute.AIR_CLEANING_AVAILABLE) == 1:
+            current_air_cleaning_event = self.coordinator.data.get(
+                Attribute.AIR_CLEANING_EVENT, 0
+            )
+
+            await self.coordinator.client.set_air_cleaning(
+                mode, current_air_cleaning_event
+            )
+        else:
+            raise ValueError("Device does not support fresh air ventilation")
+
+    async def async_toggle_air_cleaning_mode(self, mode: int) -> None:
+        """Toggle the air cleaning mode."""
+
+        if mode < 0 or mode > 2:
+            raise ValueError("Invalid mode - only 0, 1 and 2 allowed")
+
+        if self.coordinator.data.get(Attribute.AIR_CLEANING_AVAILABLE) == 1:
+            current_air_cleaning_mode = self.coordinator.data.get(
+                Attribute.AIR_CLEANING_MODE, 0
+            )
+
+            new_air_cleaning_mode = 0 if current_air_cleaning_mode == mode else mode
+
+            current_air_cleaning_event = self.coordinator.data.get(
+                Attribute.AIR_CLEANING_EVENT, 0
+            )
+
+            await self.coordinator.client.set_air_cleaning(
+                new_air_cleaning_mode, current_air_cleaning_event
+            )
+        else:
+            raise ValueError("Device does not support fresh air ventilation")
+
     async def async_trigger_fresh_air_event(self, event: str) -> None:
         """Triggers a fresh air event of 3 or 24 hours."""
 
@@ -458,5 +526,43 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             )
 
             await self.coordinator.client.set_fresh_air(current_fresh_air_mode, 0)
+        else:
+            raise ValueError("Device does not support fresh air ventilation")
+
+    async def async_set_fresh_air_mode(self, mode: int) -> None:
+        """Set the fresh air mode."""
+
+        if mode < 0 or mode > 1:
+            raise ValueError("Invalid mode - only 0 and 1 allowed")
+
+        if self.coordinator.data.get(Attribute.VENTILATION_AVAILABLE) == 1:
+            current_fresh_air_event = self.coordinator.data.get(
+                Attribute.FRESH_AIR_EVENT, 0
+            )
+
+            await self.coordinator.client.set_fresh_air(mode, current_fresh_air_event)
+        else:
+            raise ValueError("Device does not support fresh air ventilation")
+
+    async def async_toggle_fresh_air_mode(self, mode: int) -> None:
+        """Toggle the fresh air mode."""
+
+        if mode < 0 or mode > 1:
+            raise ValueError("Invalid mode - only 0 and 1 allowed")
+
+        if self.coordinator.data.get(Attribute.VENTILATION_AVAILABLE) == 1:
+            current_fresh_air_mode = self.coordinator.data.get(
+                Attribute.FRESH_AIR_MODE, 0
+            )
+
+            new_fresh_air_mode = 0 if current_fresh_air_mode == mode else mode
+
+            current_fresh_air_event = self.coordinator.data.get(
+                Attribute.FRESH_AIR_EVENT, 0
+            )
+
+            await self.coordinator.client.set_fresh_air(
+                new_fresh_air_mode, current_fresh_air_event
+            )
         else:
             raise ValueError("Device does not support fresh air ventilation")

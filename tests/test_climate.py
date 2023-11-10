@@ -861,6 +861,64 @@ async def test_cancel_air_cleaning_event(
     assert coordinator.data[Attribute.AIR_CLEANING_MODE] == 2
 
 
+async def test_set_air_cleaning_mode(
+    client: AprilaireClient,
+    climate: AprilaireClimate,
+    coordinator: AprilaireCoordinator,
+):
+    """Test setting a climate entity air cleaning mode."""
+
+    with pytest.raises(ValueError):
+        await climate.async_set_air_cleaning_mode(0)
+
+    with pytest.raises(ValueError):
+        await climate.async_set_air_cleaning_mode(-1)
+
+    with pytest.raises(ValueError):
+        await climate.async_set_air_cleaning_mode(3)
+
+    coordinator.data[Attribute.AIR_CLEANING_AVAILABLE] = 1
+    coordinator.data[Attribute.AIR_CLEANING_EVENT] = 1
+
+    await climate.async_set_air_cleaning_mode(0)
+    client.set_air_cleaning.assert_called_with(0, 1)
+
+    await climate.async_set_air_cleaning_mode(1)
+    client.set_air_cleaning.assert_called_with(1, 1)
+
+    await climate.async_set_air_cleaning_mode(2)
+    client.set_air_cleaning.assert_called_with(2, 1)
+
+
+async def test_toggle_air_cleaning_mode(
+    client: AprilaireClient,
+    climate: AprilaireClimate,
+    coordinator: AprilaireCoordinator,
+):
+    """Test toggline a climate entity fresh air mode."""
+
+    with pytest.raises(ValueError):
+        await climate.async_toggle_air_cleaning_mode(0)
+
+    with pytest.raises(ValueError):
+        await climate.async_toggle_air_cleaning_mode(-1)
+
+    with pytest.raises(ValueError):
+        await climate.async_toggle_air_cleaning_mode(3)
+
+    coordinator.data[Attribute.AIR_CLEANING_AVAILABLE] = 1
+    coordinator.data[Attribute.AIR_CLEANING_EVENT] = 1
+    coordinator.data[Attribute.AIR_CLEANING_MODE] = 0
+
+    await climate.async_toggle_air_cleaning_mode(1)
+    client.set_air_cleaning.assert_called_with(1, 1)
+
+    coordinator.data[Attribute.AIR_CLEANING_MODE] = 1
+
+    await climate.async_toggle_air_cleaning_mode(1)
+    client.set_air_cleaning.assert_called_with(0, 1)
+
+
 async def test_trigger_fresh_air_event(
     client: AprilaireClient,
     climate: AprilaireClimate,
@@ -911,3 +969,58 @@ async def test_cancel_fresh_air_event(
 
     client.set_fresh_air.assert_called_with(2, 0)
     assert coordinator.data[Attribute.FRESH_AIR_MODE] == 2
+
+
+async def test_set_fresh_air_mode(
+    client: AprilaireClient,
+    climate: AprilaireClimate,
+    coordinator: AprilaireCoordinator,
+):
+    """Test setting a climate entity fresh air mode."""
+
+    with pytest.raises(ValueError):
+        await climate.async_set_fresh_air_mode(0)
+
+    with pytest.raises(ValueError):
+        await climate.async_set_fresh_air_mode(-1)
+
+    with pytest.raises(ValueError):
+        await climate.async_set_fresh_air_mode(2)
+
+    coordinator.data[Attribute.VENTILATION_AVAILABLE] = 1
+    coordinator.data[Attribute.FRESH_AIR_EVENT] = 1
+
+    await climate.async_set_fresh_air_mode(0)
+    client.set_fresh_air.assert_called_with(0, 1)
+
+    await climate.async_set_fresh_air_mode(1)
+    client.set_fresh_air.assert_called_with(1, 1)
+
+
+async def test_toggle_fresh_air_mode(
+    client: AprilaireClient,
+    climate: AprilaireClimate,
+    coordinator: AprilaireCoordinator,
+):
+    """Test toggline a climate entity fresh air mode."""
+
+    with pytest.raises(ValueError):
+        await climate.async_set_fresh_air_mode(0)
+
+    with pytest.raises(ValueError):
+        await climate.async_set_fresh_air_mode(-1)
+
+    with pytest.raises(ValueError):
+        await climate.async_set_fresh_air_mode(2)
+
+    coordinator.data[Attribute.VENTILATION_AVAILABLE] = 1
+    coordinator.data[Attribute.FRESH_AIR_EVENT] = 1
+    coordinator.data[Attribute.FRESH_AIR_MODE] = 0
+
+    await climate.async_toggle_fresh_air_mode(1)
+    client.set_fresh_air.assert_called_with(1, 1)
+
+    coordinator.data[Attribute.FRESH_AIR_MODE] = 1
+
+    await climate.async__fresh_air_mode(1)
+    client.set_fresh_air.assert_called_with(0, 1)

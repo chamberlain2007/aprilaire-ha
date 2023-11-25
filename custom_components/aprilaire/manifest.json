@@ -5,12 +5,8 @@
   "documentation": "https://github.com/chamberlain2007/aprilaire-ha",
   "issue_tracker": "https://github.com/chamberlain2007/aprilaire-ha/issues",
   "requirements": ["pyaprilaire==0.7.2"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": ["@chamberlain2007"],
   "iot_class": "local_push",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "homeassistant": "2023.4.0"
 }

@@ -1,44 +1,31 @@
-"""The Aprilaire integration"""
+"""The Aprilaire integration."""
 
 from __future__ import annotations
 
 import logging
-from logging import Logger
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 
-from .const import DOMAIN, LOG_NAME
+from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, **kwargs) -> bool:
-    """Setup Aprilaire from config entry"""
 
-    logger: Logger = kwargs.get("logger")
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry for Aprilaire."""
 
-    if not logger:  # pragma: no cover
-        logger = logging.getLogger(LOG_NAME)  # pragma: no cover
+    host = entry.data.get(CONF_HOST)
+    port = entry.data.get(CONF_PORT)
 
-    config = entry.data
-
-    host = config.get("host")
-    if host is None or len(host) == 0:
-        logger.error("Invalid host %s", host)
-        return False
-
-    port = config.get("port")
-    if port is None or port <= 0:
-        logger.error("Invalid port %s", port)
-        return False
-
-    coordinator = AprilaireCoordinator(hass, host, port, logger)
+    coordinator = AprilaireCoordinator(hass, host, port)  # type: ignore[arg-type]
     await coordinator.start_listen()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = coordinator
 
     async def ready_callback(ready: bool):
         if ready:
@@ -51,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, **kwargs) -
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
             )
         else:
-            logger.error("Failed to wait for ready")
+            _LOGGER.error("Failed to wait for ready")
 
             coordinator.stop_listen()
 
@@ -65,7 +52,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        coordinator: AprilaireCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: AprilaireCoordinator = hass.data[DOMAIN].pop(entry.unique_id)
         coordinator.stop_listen()
 
     return unload_ok

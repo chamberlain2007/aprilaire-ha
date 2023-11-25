@@ -1,90 +1,63 @@
-# pylint: skip-file
+"""Tests for the Aprilaire binary sensors."""
 
-import logging
-from unittest.mock import AsyncMock, Mock
+# pylint: disable=protected-access,redefined-outer-name
+
+from unittest.mock import Mock, patch
 
 import pytest
-from homeassistant.config_entries import ConfigEntries, ConfigEntry
-from homeassistant.core import Config, EventBus, HomeAssistant
-from homeassistant.util import uuid as uuid_util
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from pyaprilaire.const import Attribute
 
 from custom_components.aprilaire.binary_sensor import (
     AprilaireFanStatusSensor,
     async_setup_entry,
 )
-from custom_components.aprilaire.const import DOMAIN
 from custom_components.aprilaire.coordinator import AprilaireCoordinator
 
 
 @pytest.fixture
-def logger():
-    logger = logging.getLogger()
-    logger.propagate = False
-
-    return logger
-
-
-@pytest.fixture
-def coordinator(logger: logging.Logger) -> AprilaireCoordinator:
-    coordinator_mock = AsyncMock(AprilaireCoordinator)
-    coordinator_mock.data = {}
-    coordinator_mock.logger = logger
-
-    return coordinator_mock
-
-
-@pytest.fixture
-def entry_id() -> str:
-    return uuid_util.random_uuid_hex()
-
-
-@pytest.fixture
-def hass(coordinator: AprilaireCoordinator, entry_id: str) -> HomeAssistant:
-    hass_mock = AsyncMock(HomeAssistant)
-    hass_mock.data = {DOMAIN: {entry_id: coordinator}}
-    hass_mock.config_entries = AsyncMock(ConfigEntries)
-    hass_mock.bus = AsyncMock(EventBus)
-    hass_mock.config = Mock(Config)
-
-    return hass_mock
-
-
-@pytest.fixture
-def config_entry(entry_id: str) -> ConfigEntry:
-    config_entry_mock = AsyncMock(ConfigEntry)
-    config_entry_mock.data = {"host": "test123", "port": 123}
-    config_entry_mock.entry_id = entry_id
-
-    return config_entry_mock
-
-
-async def test_fan_status_sensor(
+async def fan_status_sensor(
     config_entry: ConfigEntry, coordinator: AprilaireCoordinator, hass: HomeAssistant
-):
+) -> AprilaireFanStatusSensor:
+    """Get a fan status sensor instance."""
+
     coordinator.data = {
-        "fan_status": 0,
+        Attribute.FAN_STATUS: 0,
     }
 
     async_add_entities_mock = Mock()
+    async_get_current_platform_mock = Mock()
 
-    await async_setup_entry(hass, config_entry, async_add_entities_mock)
+    with patch(
+        "homeassistant.helpers.entity_platform.async_get_current_platform",
+        new=async_get_current_platform_mock,
+    ):
+        await async_setup_entry(hass, config_entry, async_add_entities_mock)
 
-    sensors_list = async_add_entities_mock.call_args_list[0][0]
+    binary_sensors_list = async_add_entities_mock.call_args_list[0][0]
 
-    assert len(sensors_list) == 1
+    binary_sensor = binary_sensors_list[0][0]
+    binary_sensor._attr_available = True
+    binary_sensor.hass = hass
 
-    sensor = sensors_list[0][0]
+    return binary_sensor
 
-    assert isinstance(sensor, AprilaireFanStatusSensor)
 
-    sensor._attr_available = True
+async def test_fan_status_sensor(
+    fan_status_sensor: AprilaireFanStatusSensor, coordinator: AprilaireCoordinator
+):
+    """Test that a fan status sensor is created."""
 
-    assert sensor.available is True
-    assert sensor.entity_name == "Fan"
-    assert sensor.is_on is False
+    assert fan_status_sensor is not None
+
+    assert isinstance(fan_status_sensor, AprilaireFanStatusSensor)
+
+    assert fan_status_sensor.available is True
+    assert fan_status_sensor.is_on is False
 
     coordinator.data = {
-        "fan_status": 1,
+        Attribute.FAN_STATUS: 1,
     }
 
-    assert sensor.is_on is True
+    assert fan_status_sensor.is_on is True

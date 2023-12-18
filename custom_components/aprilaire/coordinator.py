@@ -153,6 +153,7 @@ class AprilaireCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             identifiers={(DOMAIN, data[Attribute.MAC_ADDRESS])},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
+            connections={(dr.CONNECTION_NETWORK_MAC, data[Attribute.MAC_ADDRESS])},
         )
 
         model_number = data.get(Attribute.MODEL_NUMBER)
